@@ -20,7 +20,7 @@
         width: 100%;
         height: 100%;
         --transition-duration: 200ms;
-        --hold-duration: 300ms;
+        --hold-duration: 400ms;
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
@@ -28,7 +28,8 @@
         --flap-height: 1.42; /* Height in em. */
         --eu-star-scale: 1; /* Uniform scale of the complete star circle, clipped to the cards. */
         --flap-gap: 0.035; /* Edge-to-edge gap between cards in em. */
-        --flap-outer-gap: 0.2px; /* Space between the flap group and adjacent plain letters. */
+        --flap-outer-gap: 4px; /* Space between the flap group and adjacent plain letters. */
+        --leading-flag-gap: 16px; /* Final space between the leading flag and the word. */
         --flap-color: #003399; /* EU flag blue. Stars use the fixed EU yellow #ffcc00. */
         --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
         --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
@@ -115,7 +116,8 @@
                 flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
                 flapHeight: parseFloat(value('--flap-height')),
                 flapGap: parseFloat(value('--flap-gap')),
-                flapOuterGap: numeric(parseFloat(value('--flap-outer-gap')), 0, 96, 0.2),
+                flapOuterGap: numeric(parseFloat(value('--flap-outer-gap')), 0, 96, 4),
+                leadingFlagGap: numeric(parseFloat(value('--leading-flag-gap')), 0, 96, 16),
                 starScale: numeric(value('--eu-star-scale') || 1, 0.25, 4, 1),
                 flapColor: normalizeColor(value('--flap-color')) || '#003399',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
@@ -173,7 +175,8 @@
                 const counterWidth = digits.length ? digitWidth + (digits.length - 1) * digitAdvance : 0;
                 // Flap boundaries have their own spacing. After the flag leads,
                 // the i joins the plain word, so its next gap uses letter tracking.
-                const outerGap = variant > 0 && digits.length ? config.flapOuterGap : config.characterSpacing;
+                const outerGap = swapped ? config.leadingFlagGap
+                    : variant > 0 && digits.length ? config.flapOuterGap : config.characterSpacing;
                 const counterX = glyphWidth + outerGap;
                 const suffixX = swapped ? counterWidth + outerGap + characterAdvance
                     : digits.length ? counterX + counterWidth + outerGap : characterAdvance;
@@ -461,10 +464,12 @@
                 let alpha = from && to ? 1 : from ? 1 - eased : eased;
                 let x = mix((from || to).x, (to || from).x, eased);
                 if (swapVariant && key === 'letter:0' && step === count) {
-                    // Reverse the countdown reveal, relocate only while invisible,
-                    // then replay the same fade at the new position. No travel or arc.
+                    // Reverse the reveal, then fade in beside the moving word.
+                    // Following its spacing keeps a large final gap from placing
+                    // the reappearing i over another letter. The baseline stays fixed.
                     alpha = progress < 0.5 ? ease(1 - 2 * progress) : ease(2 * progress - 1);
-                    x = progress < 0.5 ? from.x : to.x;
+                    x = progress < 0.5 ? from.x
+                        : mix(before.get('letter:1').x, after.get('letter:1').x, eased) - characterAdvance;
                 }
                 sprite.group.setAttribute('display', alpha > 0 ? 'inline' : 'none');
                 sprite.group.setAttribute('opacity', alpha);
@@ -551,6 +556,7 @@
                 flapHeight: numeric(next.flapHeight ?? config.flapHeight, 1, 2.5, config.flapHeight),
                 flapGap: numeric(next.flapGap ?? config.flapGap, 0, 0.5, config.flapGap),
                 flapOuterGap: numeric(next.flapOuterGap ?? config.flapOuterGap, 0, 96, config.flapOuterGap),
+                leadingFlagGap: numeric(next.leadingFlagGap ?? config.leadingFlagGap, 0, 96, config.leadingFlagGap),
                 starScale: numeric(next.starScale ?? config.starScale, 0.25, 4, config.starScale),
                 flapColor: normalizeColor(next.flapColor) || config.flapColor,
                 detailColor: normalizeColor(next.detailColor) || config.detailColor,

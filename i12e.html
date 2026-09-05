@@ -457,7 +457,7 @@
                 <div class="control">
                     <label for="hold-duration">Hold duration</label>
                     <div class="input-row"><input id="hold-duration" type="number" min="0" max="10000" step="1"
-                                                  value="300" data-config="holdDuration"/><span class="unit">ms</span>
+                                                  value="400" data-config="holdDuration"/><span class="unit">ms</span>
                     </div>
                 </div>
                 <div class="control">
@@ -509,13 +509,21 @@
                 <div class="control">
                   <label for="flap-outer-gap">Flap outer gap</label>
                   <div class="input-row">
-                    <input id="flap-outer-gap" type="number" min="0" max="96" step="0.1" value="0.2"
+                    <input id="flap-outer-gap" type="number" min="0" max="96" step="0.1" value="4"
                            data-config="flapOuterGap" data-preserve-time="true"/><span class="unit">px</span>
                   </div>
                   <p class="caption">Same space between the flap group and the letters on either side.</p>
                 </div>
+                <div class="control">
+                  <label for="leading-flag-gap">Leading flag gap</label>
+                  <div class="input-row">
+                    <input id="leading-flag-gap" type="number" min="0" max="96" step="0.1" value="16"
+                           data-config="leadingFlagGap" data-preserve-time="true"/><span class="unit">px</span>
+                  </div>
+                  <p class="caption">Variant 05: final space between the flag on the left and the word.</p>
+                </div>
                 <p class="help">Card width, height, and internal gap use em units relative to font size.
-                  The outer gap uses pixels. Letters keep their size and proportions.</p>
+                  The outer gaps use pixels. Letters keep their size and proportions.</p>
               </div>
 
               <div class="colors">
