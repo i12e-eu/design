@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none"
      role="img" aria-labelledby="title description">
     <title id="title">infrastructure</title>
-    <desc id="description">A wordmark expanding from i12e to infrastructure. Seven selectable styles compare a plain
+    <desc id="description">A logotype expanding from i12e to infrastructure. Seven selectable styles compare a plain
         countdown with mechanical split-flap digits, characters, blank places, and an EU flag that can swap with the
         leading i.
     </desc>
@@ -59,13 +59,13 @@
     <rect id="background" width="1000" height="1000"/>
     <text id="fallback" x="0" y="55">infrastructure</text>
     <defs id="flap-definitions"/>
-    <g id="wordmark" visibility="hidden" aria-hidden="true"/>
+    <g id="logotype" visibility="hidden" aria-hidden="true"/>
 
     <script><![CDATA[
     (() => {
         'use strict';
         const root = document.documentElement;
-        const layer = document.getElementById('wordmark');
+        const layer = document.getElementById('logotype');
         const fallback = document.getElementById('fallback');
         const definitions = document.getElementById('flap-definitions');
         const word = 'infrastructure';
