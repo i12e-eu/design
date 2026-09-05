@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none"
      role="img" aria-labelledby="title description">
     <title id="title">infrastructure</title>
-    <desc id="description">A wordmark expanding from i12e to infrastructure. Five selectable styles compare a plain
-        countdown with mechanical split-flap digits, characters, and blank places.
+    <desc id="description">A wordmark expanding from i12e to infrastructure. Six selectable styles compare a plain
+        countdown with mechanical split-flap digits, characters, blank places, and a final EU flag.
     </desc>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&amp;display=swap');
 
         /* Saved global controls. The HTML only displays and controls this SVG.
         variant=0: default; 1: visible digits; 2: both digit places;
-        3: visible cells; 4: all 15 cells, including blanks.
+        3: visible cells; 4: all 15 cells, including blanks; 5: persistent digit flaps becoming an EU flag.
         Use ?variant=2 to open a standalone option; &amp;preview=1 crops the canvas.
         Embed as an iframe/object or open directly to enable scripting and the
         linked font. An img/CSS image displays the static text fallback. */
@@ -22,7 +22,10 @@
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
-        --flap-color: #004494; /* Europa Component Library EC/EU primary blue. */
+        --flap-width: 1.5; /* Multiplier of the original card width; glyphs are not stretched. */
+        --flap-height: 1.42; /* Height in em. */
+        --flap-gap: 0.035; /* Gap in em, plus character spacing. */
+        --flap-color: #003399; /* EU flag blue. Stars use the fixed EU yellow #ffcc00. */
         --background-color: #ffffff;
         --flap-text-color: #f8faff;
         --text-color: #000000;
@@ -54,18 +57,26 @@
         const definitions = document.getElementById('flap-definitions');
         const word = 'infrastructure';
         const count = word.length - 2;
-        // The padded counter peaks at i[blank]1frastructure: 15 physical cells.
-        const capacity = word.length + 1;
         const params = new URLSearchParams(window.location.search);
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
         const numeric = (value, min, max, fallback) => Number.isFinite(Number(value))
             ? clamp(Number(value), min, max) : fallback;
-        const variant = Math.round(numeric(params.get('variant') || 0, 0, 4, 0));
+        const variant = Math.round(numeric(params.get('variant') || 0, 0, 5, 0));
+        const flagVariant = variant === 5;
+        const flagFace = '@eu-flag';
+        // Permanent counter cards add two places even after every letter is revealed.
+        const capacity = word.length + (flagVariant ? 2 : 1);
+        const lastModelStep = count + Number(flagVariant);
         const preview = params.get('preview') === '1';
         const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
         const clock = () => performance.timeOrigin + performance.now();
         const mix = (a, b, progress) => a + (b - a) * progress;
-        const validColor = value => typeof value === 'string' && /^#[\da-f]{6}$/i.test(value);
+        function normalizeColor(value) {
+            if (typeof value !== 'string') return null;
+            const hex = value.trim().toLowerCase();
+            if (/^#[\da-f]{3}$/.test(hex)) return '#' + [...hex.slice(1)].map(digit => digit + digit).join('');
+            return /^#[\da-f]{6}$/.test(hex) ? hex : null;
+        }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
         let config, ease, duration, advance, glyphWidth, tileWidth, tileHeight, baseline;
         let models = [], sprites = new Map();
@@ -87,7 +98,11 @@
                 holdDuration: milliseconds(value('--hold-duration')),
                 easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
                 characterSpacing: parseFloat(value('--character-spacing')),
-                flapColor: value('--flap-color'), backgroundColor: value('--background-color'),
+                flapWidth: parseFloat(value('--flap-width')),
+                flapHeight: parseFloat(value('--flap-height')),
+                flapGap: parseFloat(value('--flap-gap')),
+                flapColor: normalizeColor(value('--flap-color')) || '#003399',
+                backgroundColor: normalizeColor(value('--background-color')) || '#ffffff',
                 loop: value('--loop') === '1',
             };
         }
@@ -125,25 +140,56 @@
             return word[0] + digits + word.slice(remaining + 1);
         }
 
-        function layout(remaining) {
+        function layout(remaining, showFlag = false) {
             const state = new Map();
-            if (variant >= 3) {
+            if (variant === 3 || variant === 4) {
                 const text = stateAt(remaining, variant === 4);
                 const cells = variant === 4 ? text.padEnd(capacity, ' ') : text;
                 [...cells].forEach((character, index) => state.set(`cell:${index}`, { character, x: index * advance }));
             } else {
-                const digits = remaining ? (variant === 2 ? String(remaining).padStart(2, ' ') : String(remaining)) : '';
+                const digits = flagVariant ? (remaining ? String(remaining).padStart(2, ' ') : '  ')
+                    : remaining ? (variant === 2 ? String(remaining).padStart(2, ' ') : String(remaining)) : '';
                 state.set('letter:0', { character: word[0], x: 0 });
                 for (let index = remaining + 1; index < word.length; index++) {
                     state.set(`letter:${index}`, { character: word[index], x: (digits.length + index - remaining) * advance });
                 }
-                [...digits].forEach((character, index) => state.set(`digit:${index}`, { character, x: (index + 1) * advance }));
+                [...digits].forEach((character, index) => state.set(`digit:${index}`, {
+                    character: showFlag ? flagFace : character, x: (index + 1) * advance,
+                }));
             }
             return state;
         }
 
+        function makeFlagArtwork() {
+            // One shared circle spans both cards. Each half-face clips its own
+            // translated copy, so neither the stars nor a background can bridge
+            // the existing gap. Fit the EU's 3:2 reference within custom cards.
+            const pairWidth = advance + tileWidth;
+            const referenceHeight = Math.min(tileHeight, pairWidth / 1.5);
+            const ringRadius = referenceHeight / 3;
+            const starRadius = referenceHeight / 18;
+            const innerRadius = starRadius * Math.sin(Math.PI / 10) / Math.sin(3 * Math.PI / 10);
+            const cx = pairWidth / 2, cy = tileHeight / 2;
+            const stars = create('g', {
+                id: 'eu-flag-stars', fill: '#ffcc00', 'data-ring-radius': ringRadius,
+                'data-star-radius': starRadius, 'data-center-x': cx, 'data-center-y': cy,
+            }, definitions);
+            for (let star = 0; star < 12; star++) {
+                const angle = -Math.PI / 2 + star * Math.PI / 6;
+                const x = cx + ringRadius * Math.cos(angle), y = cy + ringRadius * Math.sin(angle);
+                const points = Array.from({ length: 10 }, (_, point) => {
+                    const radius = point % 2 ? innerRadius : starRadius;
+                    // Every star points up, independently of its ring position.
+                    const direction = -Math.PI / 2 + point * Math.PI / 5;
+                    return `${x + radius * Math.cos(direction)},${y + radius * Math.sin(direction)}`;
+                }).join(' ');
+                create('polygon', { points, 'data-star': star }, stars);
+            }
+        }
+
         function text(character, parent, attributes = {}) {
-            const node = create('text', { x: glyphWidth / 2, y: baseline, 'text-anchor': 'middle', ...attributes }, parent);
+            const cellWidth = variant === 0 ? glyphWidth : tileWidth;
+            const node = create('text', { x: cellWidth / 2, y: baseline, 'text-anchor': 'middle', ...attributes }, parent);
             node.textContent = character;
             return node;
         }
@@ -158,7 +204,7 @@
             };
         }
 
-        function makeFlap(parent) {
+        function makeFlap(parent, column) {
             const tile = create('g', { 'data-flap': 'true' }, parent);
             const half = tileHeight / 2;
             function face(part) {
@@ -169,28 +215,36 @@
                 create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045, class: 'flap-surface' }, clipped);
                 const glyph = text('', clipped, { x: tileWidth / 2, class: 'flap-text' });
                 const shadow = create('rect', { width: tileWidth, height: tileHeight, fill: '#000', opacity: 0 }, clipped);
-                return { wrapper, glyph, shadow };
+                // Artwork belongs to the rotating face, just like the digits.
+                // Draw stars above the shade to retain their specified yellow.
+                const stars = flagVariant && Number.isInteger(column)
+                    ? create('use', { href: '#eu-flag-stars', transform: `translate(${-column * advance} 0)`, display: 'none' }, clipped)
+                    : null;
+                return { wrapper, glyph, shadow, stars };
+            }
+            function setFace(face, content) {
+                const flag = content === flagFace;
+                face.glyph.textContent = flag ? '' : content;
+                if (face.stars) face.stars.setAttribute('display', flag ? 'inline' : 'none');
             }
             const top = face('top'), bottom = face('bottom');
             const fallingTop = face('top'), arrivingBottom = face('bottom');
             fallingTop.wrapper.dataset.face = 'outgoing-top';
             arrivingBottom.wrapper.dataset.face = 'incoming-bottom';
-            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, fill: '#07172f', opacity: 0.65 }, tile);
+            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, fill: '#777777', opacity: 0.35 }, tile);
             for (const x of [0, tileWidth - 1.5]) {
-                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, fill: '#081a31', opacity: 0.7 }, tile);
+                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, fill: '#666666', opacity: 0.7 }, tile);
             }
-            const gapInset = (glyphWidth - tileWidth) / 2;
-            tile.setAttribute('transform', `translate(${gapInset} 0)`);
             let previousPair = '';
             return (before, after, progress) => {
                 const changing = before !== after;
                 const pair = `${before}\0${after}`;
                 if (pair !== previousPair) {
                     // New top and old bottom are stationary underneath the leaf.
-                    top.glyph.textContent = after;
-                    bottom.glyph.textContent = before;
-                    fallingTop.glyph.textContent = before;
-                    arrivingBottom.glyph.textContent = after;
+                    setFace(top, after);
+                    setFace(bottom, before);
+                    setFace(fallingTop, before);
+                    setFace(arrivingBottom, after);
                     previousPair = pair;
                 }
                 // Orthographic projection of a leaf rotating around its X axis:
@@ -199,17 +253,18 @@
                 const bottomScale = changing && progress >= 0.5 ? Math.sin((progress - 0.5) * Math.PI) : 0;
                 fallingTop.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${topScale}) translate(0 ${-half})`);
                 arrivingBottom.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${bottomScale}) translate(0 ${-half})`);
-                fallingTop.wrapper.setAttribute('visibility', topScale > 0.00001 ? 'visible' : 'hidden');
-                arrivingBottom.wrapper.setAttribute('visibility', bottomScale > 0.00001 ? 'visible' : 'hidden');
+                fallingTop.wrapper.setAttribute('display', topScale > 0.00001 ? 'inline' : 'none');
+                arrivingBottom.wrapper.setAttribute('display', bottomScale > 0.00001 ? 'inline' : 'none');
                 fallingTop.shadow.setAttribute('opacity', (1 - topScale) * 0.28);
                 arrivingBottom.shadow.setAttribute('opacity', (1 - bottomScale) * 0.28);
                 top.shadow.setAttribute('opacity', 0.025);
                 bottom.shadow.setAttribute('opacity', 0.07);
                 // Holds (including p=1 when manually sampled) show the new face.
-                if (!changing || progress >= 1) bottom.glyph.textContent = after;
-                else bottom.glyph.textContent = before;
+                setFace(bottom, !changing || progress >= 1 ? after : before);
                 tile.dataset.flipping = String(changing && progress > 0 && progress < 1);
-                tile.dataset.empty = String((progress < 0.5 ? before : after).trim() === '');
+                const content = progress < 0.5 ? before : after;
+                tile.dataset.empty = String(content === flagFace || content.trim() === '');
+                tile.dataset.flag = String(content === flagFace);
             };
         }
 
@@ -234,25 +289,37 @@
             measure.textContent = 'M';
             glyphWidth = measure.getComputedTextLength();
             measure.remove();
-            advance = glyphWidth + config.characterSpacing;
-            tileWidth = glyphWidth - config.fontSize * 0.035;
-            tileHeight = config.fontSize * 1.42;
+            tileWidth = (glyphWidth - config.fontSize * 0.035) * config.flapWidth;
+            tileHeight = config.fontSize * (variant === 0 ? 1.42 : config.flapHeight);
+            // Wider cards reserve wider cells, so neighbouring flaps never overlap.
+            // Keep the plain reference unchanged and centre mixed text within cards' cells.
+            advance = (variant === 0 ? glyphWidth : tileWidth + config.fontSize * config.flapGap)
+                + config.characterSpacing;
             baseline = tileHeight / 2 + config.fontSize * 0.32;
             root.dataset.characterAdvance = String(advance);
+            root.dataset.flapWidth = String(tileWidth);
+            root.dataset.flapHeight = String(tileHeight);
             root.dataset.variant = String(variant);
-            duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            // All comparison previews share the extra final cycle. The original
+            // styles hold their completed word while variant 5 turns into a flag.
+            // Their standalone timings remain unchanged.
+            const cycles = count + Number(preview || flagVariant);
+            duration = cycles * (config.holdDuration + config.transitionDuration) + config.holdDuration;
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
                 const clip = create('clipPath', { id: `flap-${part}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
                 create('rect', { x: 0, y, width: tileWidth, height: tileHeight / 2 }, clip);
             }
+            if (flagVariant) makeFlagArtwork();
             models = Array.from({ length: count + 1 }, (_, step) => layout(count - step));
+            if (flagVariant) models.push(layout(0, true));
             const keys = new Set(models.flatMap(model => [...model.keys()]));
             for (const key of keys) {
                 const group = create('g', { 'data-key': key });
-                const flapped = variant >= 3 || (variant > 0 && key.startsWith('digit:'));
-                sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group) : makePlain(group) });
+                const digit = key.startsWith('digit:');
+                const flapped = variant === 3 || variant === 4 || (variant > 0 && digit);
+                sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group, digit ? Number(key.split(':')[1]) : null) : makePlain(group) });
             }
             const canvasHeight = preview ? 180 : 1000;
             root.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
@@ -260,8 +327,9 @@
             document.getElementById('background').setAttribute('height', canvasHeight);
             // Keep the reference origin in standalone mode; add preview gutters.
             const inset = preview ? 24 : 0;
-            const scale = Math.min(1, (1000 - inset * 2) / (capacity * advance));
-            const y = preview ? (canvasHeight - tileHeight * scale) / 2 : (config.fontSize * 55 / 48 - baseline) * scale;
+            const scale = Math.min(1, (1000 - inset * 2) / (capacity * advance), (canvasHeight - inset * 2) / tileHeight);
+            const y = preview ? (canvasHeight - tileHeight * scale) / 2
+                : Math.max(0, config.fontSize * 55 / 48 - baseline) * scale;
             layer.setAttribute('transform', `translate(${inset} ${y}) scale(${scale})`);
             root.dataset.fitScale = String(scale);
             fallback.setAttribute('visibility', 'hidden');
@@ -276,19 +344,26 @@
 
         function sample(time) {
             const stepDuration = config.holdDuration + config.transitionDuration;
-            const step = Math.min(count, Math.floor(time / stepDuration));
-            const progress = step === count ? 0 : clamp((time - step * stepDuration - config.holdDuration) / config.transitionDuration, 0, 1);
+            const step = Math.min(lastModelStep, Math.floor(time / stepDuration));
+            const progress = step === lastModelStep ? 0 : clamp((time - step * stepDuration - config.holdDuration) / config.transitionDuration, 0, 1);
             return { step, progress, eased: ease(progress) };
         }
 
         function render(time) {
             const { step, eased } = sample(time);
-            const before = models[step], after = models[Math.min(count, step + 1)];
+            const before = models[step], after = models[Math.min(lastModelStep, step + 1)];
             for (const [key, sprite] of sprites) {
                 const from = before.get(key), to = after.get(key);
-                if (!from && !to) { sprite.group.setAttribute('visibility', 'hidden'); continue; }
+                if (!from && !to) {
+                    // visibility:hidden is inherited and a child can override it.
+                    // Remove the entire retired tile from painting, including old
+                    // moving half-faces, when stepping forward or scrubbing back.
+                    sprite.group.setAttribute('display', 'none');
+                    sprite.group.setAttribute('opacity', 0);
+                    continue;
+                }
                 const alpha = from && to ? 1 : from ? 1 - eased : eased;
-                sprite.group.setAttribute('visibility', alpha > 0 ? 'visible' : 'hidden');
+                sprite.group.setAttribute('display', alpha > 0 ? 'inline' : 'none');
                 sprite.group.setAttribute('opacity', alpha);
                 sprite.group.setAttribute('transform', `translate(${mix((from || to).x, (to || from).x, eased)} 0)`);
                 if (!sprite.flapped && (!from || !to)) {
@@ -298,8 +373,10 @@
                     sprite.draw(character, character, eased);
                 } else sprite.draw(from?.character || '', to?.character || '', eased);
             }
-            root.dataset.state = stateAt(count - step);
-            root.dataset.displayState = stateAt(count - step, variant === 2 || variant === 4);
+            const remaining = count - Math.min(count, step);
+            root.dataset.state = stateAt(remaining);
+            root.dataset.displayState = flagVariant && remaining === 0
+                ? word[0] + '  ' + word.slice(1) : stateAt(remaining, variant === 2 || variant === 4 || flagVariant);
         }
 
         function snapshot() {
@@ -307,7 +384,9 @@
             const { step, progress } = sample(time);
             return {
                 type: 'i12e:state', variant, config: { ...config }, duration, currentTime: time, playing,
-                step, state: stateAt(count - step), reducedMotion: motionPreference.matches,
+                step: Math.min(count, step), totalSteps: lastModelStep,
+                state: stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
+                ...(flagVariant ? { flagPhase: step < count ? 'countdown' : step > count ? 'flag' : progress > 0 ? 'turning' : 'empty' } : {}),
                 phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
             };
         }
@@ -349,7 +428,7 @@
             publish();
         }
         function seek(time) { pause(numeric(time, 0, duration, currentTime())); }
-        function seekStep(step) { seek(Math.round(numeric(step, 0, count, 0)) * (config.holdDuration + config.transitionDuration)); }
+        function seekStep(step) { seek(Math.round(numeric(step, 0, lastModelStep, 0)) * (config.holdDuration + config.transitionDuration)); }
         function restart(options = {}) { play({ ...options, time: 0 }); }
         function configure(next = {}, options = {}) {
             const resume = typeof options.playing === 'boolean' ? options.playing : playing;
@@ -362,8 +441,11 @@
                 easing: typeof next.easing === 'string' && easingFor(next.easing) ? next.easing : config.easing,
                 fontSize: numeric(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
                 characterSpacing: numeric(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
-                flapColor: validColor(next.flapColor) ? next.flapColor.toLowerCase() : config.flapColor,
-                backgroundColor: validColor(next.backgroundColor) ? next.backgroundColor.toLowerCase() : config.backgroundColor,
+                flapWidth: numeric(next.flapWidth ?? config.flapWidth, 1, 3, config.flapWidth),
+                flapHeight: numeric(next.flapHeight ?? config.flapHeight, 1, 2.5, config.flapHeight),
+                flapGap: numeric(next.flapGap ?? config.flapGap, 0, 0.5, config.flapGap),
+                flapColor: normalizeColor(next.flapColor) || config.flapColor,
+                backgroundColor: normalizeColor(next.backgroundColor) || config.backgroundColor,
                 loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
             };
             build();

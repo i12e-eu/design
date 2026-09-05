@@ -168,7 +168,7 @@
             color: inherit;
         }
 
-        .colors {
+        .colors, .proportions {
           border-top: 1px solid #d8d8d8;
           padding-top: 18px;
           margin-top: 22px;
@@ -324,7 +324,7 @@
 <div class="page">
     <header>
         <h1>i12e <span>/ infrastructure wordmark</span></h1>
-      <span class="time">Five synchronized variants</span>
+      <span class="time">Six synchronized variants</span>
     </header>
 
     <main class="workspace">
@@ -362,9 +362,21 @@
           </div>
           <p class="caption">Digit flaps include the empty tens position.</p>
         </article>
+        <article class="variant" aria-labelledby="variant-5-title">
+          <div class="variant-heading">
+            <h2 id="variant-5-title">04 / Digits → EU flag</h2>
+            <a href="./i12e.svg?variant=5" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=5&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — counter flaps become an EU flag" data-variant="5"></iframe>
+          </div>
+          <p class="caption">Persistent counter flaps make one final flip into a shared EU flag, preserving their
+            gap.</p>
+        </article>
         <article class="variant" aria-labelledby="variant-3-title">
           <div class="variant-heading">
-            <h2 id="variant-3-title">04 / Visible glyphs</h2>
+            <h2 id="variant-3-title">05 / Visible glyphs</h2>
             <a href="./i12e.svg?variant=3" target="_blank" rel="noopener">Open SVG ↗</a>
           </div>
           <div class="artboard">
@@ -375,7 +387,7 @@
         </article>
         <article class="variant" aria-labelledby="variant-4-title">
           <div class="variant-heading">
-            <h2 id="variant-4-title">05 / Glyphs + blank slots</h2>
+            <h2 id="variant-4-title">06 / Glyphs + blank slots</h2>
             <a href="./i12e.svg?variant=4" target="_blank" rel="noopener">Open SVG ↗</a>
           </div>
           <div class="artboard">
@@ -387,7 +399,7 @@
         </section>
 
         <aside class="settings" aria-label="Animation controls">
-          <p id="loading" role="status">Loading previews… 0 / 5</p>
+          <p id="loading" role="status">Loading previews… 0 / 6</p>
             <fieldset id="controls" disabled aria-label="Preview settings">
                 <div class="control">
                     <label for="transition-duration">Transition duration</label>
@@ -424,12 +436,38 @@
                             class="unit">px</span></div>
                 </div>
 
+              <div class="proportions">
+                <div class="control">
+                  <label for="flap-width">Flap width</label>
+                  <div class="input-row">
+                    <input id="flap-width" type="number" min="1" max="3" step="0.05" value="1.5"
+                           data-config="flapWidth" data-preserve-time="true"/><span class="unit">×</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <label for="flap-height">Flap height</label>
+                  <div class="input-row">
+                    <input id="flap-height" type="number" min="1" max="2.5" step="0.01" value="1.42"
+                           data-config="flapHeight" data-preserve-time="true"/><span class="unit">em</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <label for="flap-gap">Flap gap</label>
+                  <div class="input-row">
+                    <input id="flap-gap" type="number" min="0" max="0.5" step="0.005" value="0.035"
+                           data-config="flapGap" data-preserve-time="true"/><span class="unit">em</span>
+                  </div>
+                </div>
+                <p class="help">Shared across flap variants. Width scales the cards; height and gap scale with
+                  font size. The glyphs keep their proportions.</p>
+              </div>
+
               <div class="colors">
                 <div class="control">
                   <label for="flap-color">Flap color</label>
                   <div class="input-row">
-                    <input id="flap-color" type="color" value="#004494" data-config="flapColor"/>
-                    <input id="flap-color-hex" type="text" value="#004494" pattern="#[0-9a-fA-F]{6}"
+                    <input id="flap-color" type="color" value="#003399" data-config="flapColor"/>
+                    <input id="flap-color-hex" type="text" value="#003399" pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
                            maxlength="7" required spellcheck="false" autocomplete="off"
                            aria-label="Flap color hexadecimal value" data-color-for="flap-color"/>
                   </div>
@@ -438,7 +476,8 @@
                   <label for="background-color">Background color</label>
                   <div class="input-row">
                     <input id="background-color" type="color" value="#ffffff" data-config="backgroundColor"/>
-                    <input id="background-color-hex" type="text" value="#ffffff" pattern="#[0-9a-fA-F]{6}"
+                    <input id="background-color-hex" type="text" value="#ffffff"
+                           pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
                            maxlength="7" required spellcheck="false" autocomplete="off"
                            aria-label="Background color hexadecimal value" data-color-for="background-color"/>
                   </div>
@@ -462,9 +501,9 @@
                 <output id="current-state">i12e</output>
                 <p id="phase">Waiting for SVG</p>
             </div>
-          <p class="help">Controls apply to all five previews. Timing and typography changes restart their shared
+          <p class="help">Controls apply to all six previews. Timing and typography changes restart their shared
             timeline;
-            colors update the current frame.
+            colors and flap proportions update the current frame.
             Edit the CSS variables in i12e.svg to save defaults.</p>
             <p id="motion-note" class="help" hidden>Reduced motion is enabled. Use Play to preview the animation.</p>
         </aside>
@@ -525,19 +564,28 @@
         });
         }
 
+      function normalizeHex(value) {
+        if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toLowerCase();
+        if (/^#[0-9a-fA-F]{3}$/.test(value)) {
+          return '#' + [...value.slice(1)].map(digit => digit + digit).join('').toLowerCase();
+        }
+        return null;
+      }
+
       configInputs.forEach(input => {
         if (input.type === "color") {
           input.addEventListener("input", () => {
             document.getElementById(`${input.id}-hex`).value = input.value;
             configure(true);
           });
-        } else input.addEventListener("change", configure);
+        } else input.addEventListener("change", () => configure(input.dataset.preserveTime === "true"));
       });
 
       colorHexInputs.forEach(input => {
         input.addEventListener("input", () => {
-          if (!/^#[0-9a-fA-F]{6}$/.test(input.value)) return;
-          document.getElementById(input.dataset.colorFor).value = input.value;
+          const color = normalizeHex(input.value);
+          if (!color) return;
+          document.getElementById(input.dataset.colorFor).value = color;
           configure(true);
         });
         input.addEventListener("change", () => {
@@ -570,7 +618,7 @@
               if (input.tagName === "SELECT" && ![...input.options].some(option => option.value === value)) {
                 input.add(new Option(value, value));
               }
-              input.value = value;
+              input.value = input.type === "color" ? normalizeHex(value) || input.value : value;
               if (hex) hex.value = value;
             }
           }
