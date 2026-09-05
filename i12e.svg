@@ -90,7 +90,8 @@
             return /^#[\da-f]{6}$/.test(hex) ? hex : null;
         }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
-        let config, ease, duration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline, swapLift;
+        let config, ease, duration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
+        let flagArtwork, joinedFlag, solidClips = [];
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
         let lastPublished = -Infinity, ready = false;
@@ -166,7 +167,7 @@
                 const digits = flagVariant ? (remaining ? String(remaining).padStart(2, ' ') : '  ')
                     : remaining ? (variant === 2 ? String(remaining).padStart(2, ' ') : String(remaining)) : '';
                 const digitWidth = variant === 0 ? glyphWidth : tileWidth;
-                const digitAdvance = variant === 0 ? characterAdvance : flapAdvance;
+                const digitAdvance = variant === 0 ? characterAdvance : swapped ? tileWidth : flapAdvance;
                 const counterWidth = digits.length ? digitWidth + (digits.length - 1) * digitAdvance : 0;
                 // Only the counter reserves card-sized cells. Tracking separates
                 // plain letters and the text/counter boundaries; the card gap is independent.
@@ -193,7 +194,7 @@
             const starRadius = referenceHeight / 18 * config.starScale;
             const innerRadius = starRadius * Math.sin(Math.PI / 10) / Math.sin(3 * Math.PI / 10);
             const cx = pairWidth / 2, cy = tileHeight / 2;
-            const stars = create('g', {
+            const stars = flagArtwork = create('g', {
                 id: 'eu-flag-stars', fill: '#ffcc00', 'data-ring-radius': ringRadius,
                 'data-star-radius': starRadius, 'data-center-x': cx, 'data-center-y': cy,
             }, definitions);
@@ -208,6 +209,30 @@
                 }).join(' ');
                 create('polygon', { points, 'data-star': star }, stars);
             }
+        }
+
+        function roundedCardPath(x, width, leftRadius, rightRadius) {
+            return `M ${x + leftRadius} 0 H ${x + width - rightRadius}
+                A ${rightRadius} ${rightRadius} 0 0 1 ${x + width} ${rightRadius}
+                V ${tileHeight - rightRadius} A ${rightRadius} ${rightRadius} 0 0 1 ${x + width - rightRadius} ${tileHeight}
+                H ${x + leftRadius} A ${leftRadius} ${leftRadius} 0 0 1 ${x} ${tileHeight - leftRadius}
+                V ${leftRadius} A ${leftRadius} ${leftRadius} 0 0 1 ${x + leftRadius} 0 Z`;
+        }
+
+        function updateFlagGeometry(progress) {
+            const originalWidth = tileWidth + flapAdvance;
+            const pairWidth = tileWidth + mix(flapAdvance, tileWidth, progress);
+            // Keep the whole star circle centred and uniformly scaled as the gap
+            // closes. Translating two fixed crops would break the circular artwork.
+            const scale = Math.min(tileHeight, pairWidth / 1.5) / Math.min(tileHeight, originalWidth / 1.5);
+            flagArtwork.setAttribute('transform', `translate(${pairWidth / 2} ${tileHeight / 2}) scale(${scale}) translate(${-originalWidth / 2} ${-tileHeight / 2})`);
+            const radius = config.fontSize * 0.045;
+            solidClips.forEach((path, column) => path.setAttribute('d', roundedCardPath(0, tileWidth,
+                column === 0 ? radius : radius * (1 - progress),
+                column === 1 ? radius : radius * (1 - progress))));
+            // One uninterrupted final face avoids a raster seam between touching cards.
+            joinedFlag.setAttribute('display', progress === 1 ? 'inline' : 'none');
+            root.dataset.flagGap = String(pairWidth - 2 * tileWidth);
         }
 
         function text(character, parent, attributes = {}) {
@@ -228,7 +253,7 @@
 
         function makeFlap(parent, column) {
             const tile = create('g', { 'data-flap': 'true' }, parent);
-            if (swapVariant) tile.setAttribute('clip-path', 'url(#flap-solid)');
+            if (swapVariant) tile.setAttribute('clip-path', `url(#flap-solid-${column})`);
             const half = tileHeight / 2;
             function face(part) {
                 // Transform the wrapper AFTER clipping its child, so the glyph
@@ -262,17 +287,22 @@
             // and hardware over the stars. Recolouring the seam alone leaves a
             // blue cut through oversized stars. Each card still clips separately.
             const solid = swapVariant ? create('g', {
-                'data-solid-flag': 'true', 'clip-path': 'url(#flap-solid)', display: 'none',
+                'data-solid-flag': 'true', 'clip-path': `url(#flap-solid-${column})`, display: 'none',
             }, tile) : null;
+            let solidStars;
             if (solid) {
                 create('rect', { width: tileWidth, height: tileHeight, class: 'flap-surface' }, solid);
-                create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)` }, solid);
+                solidStars = create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)` }, solid);
             }
             let previousPair = '';
             return (before, after, progress, solidProgress = 0) => {
                 if (solid) {
                     solid.setAttribute('display', solidProgress > 0 ? 'inline' : 'none');
                     solid.setAttribute('opacity', solidProgress);
+                    const offset = -column * mix(flapAdvance, tileWidth, solidProgress);
+                    for (const stars of [top.stars, bottom.stars, fallingTop.stars, arrivingBottom.stars, solidStars]) {
+                        stars.setAttribute('transform', `translate(${offset} 0)`);
+                    }
                 }
                 const changing = before !== after;
                 const pair = `${before}\0${after}`;
@@ -322,6 +352,7 @@
             layer.replaceChildren();
             definitions.replaceChildren();
             sprites = new Map();
+            solidClips = [];
             root.style.setProperty('--font-size', `${config.fontSize}px`);
             root.style.setProperty('--character-spacing', `${config.characterSpacing}px`);
             applyColors();
@@ -352,8 +383,12 @@
                 create('rect', { x: 0, y, width: tileWidth, height: tileHeight / 2 }, clip);
             }
             if (swapVariant) {
-                const clip = create('clipPath', { id: 'flap-solid', clipPathUnits: 'userSpaceOnUse' }, definitions);
-                create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045 }, clip);
+                for (const column of [0, 1]) {
+                    const clip = create('clipPath', { id: `flap-solid-${column}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
+                    solidClips.push(create('path', {}, clip));
+                }
+                const joinedClip = create('clipPath', { id: 'flag-joined', clipPathUnits: 'userSpaceOnUse' }, definitions);
+                create('rect', { width: 2 * tileWidth, height: tileHeight, rx: config.fontSize * 0.045 }, joinedClip);
             }
             if (flagVariant) makeFlagArtwork();
             models = Array.from({ length: count + 1 }, (_, step) => layout(count - step));
@@ -365,8 +400,12 @@
                 const flapped = variant === 3 || variant === 4 || (variant > 0 && digit);
                 sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group, digit ? Number(key.split(':')[1]) : null) : makePlain(group) });
             }
-            // Keep the moving i readable as its short arc passes the flag.
-            if (swapVariant) layer.append(sprites.get('letter:0').group);
+            if (swapVariant) {
+                joinedFlag = create('g', { 'data-joined-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
+                create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'flap-surface' }, joinedFlag);
+                create('use', { href: '#eu-flag-stars' }, joinedFlag);
+                layer.append(sprites.get('letter:0').group);
+            }
             const canvasHeight = preview ? 180 : 1000;
             root.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
             root.setAttribute('height', canvasHeight);
@@ -379,7 +418,6 @@
             const scale = Math.min(1, (1000 - inset * 2) / contentWidth, (canvasHeight - inset * 2) / tileHeight);
             const y = preview ? (canvasHeight - tileHeight * scale) / 2
                 : Math.max(0, config.fontSize * 55 / 48 - baseline) * scale;
-            swapLift = Math.min(tileHeight * 0.9, Math.max(0, (canvasHeight - y) / scale - tileHeight));
             layer.setAttribute('transform', `translate(${inset} ${y}) scale(${scale})`);
             root.dataset.fitScale = String(scale);
             root.dataset.contentWidth = String(contentWidth);
@@ -401,8 +439,9 @@
         }
 
         function render(time) {
-            const { step, eased } = sample(time);
+            const { step, progress, eased } = sample(time);
             const swapProgress = swapVariant ? (step > count ? 1 : step === count ? eased : 0) : 0;
+            if (swapVariant) updateFlagGeometry(swapProgress);
             const before = models[step], after = models[Math.min(lastModelStep, step + 1)];
             for (const [key, sprite] of sprites) {
                 const from = before.get(key), to = after.get(key);
@@ -414,12 +453,17 @@
                     sprite.group.setAttribute('opacity', 0);
                     continue;
                 }
-                const alpha = from && to ? 1 : from ? 1 - eased : eased;
+                let alpha = from && to ? 1 : from ? 1 - eased : eased;
+                let x = mix((from || to).x, (to || from).x, eased);
+                if (swapVariant && key === 'letter:0' && step === count) {
+                    // Reverse the countdown reveal, relocate only while invisible,
+                    // then replay the same fade at the new position. No travel or arc.
+                    alpha = progress < 0.5 ? ease(1 - 2 * progress) : ease(2 * progress - 1);
+                    x = progress < 0.5 ? from.x : to.x;
+                }
                 sprite.group.setAttribute('display', alpha > 0 ? 'inline' : 'none');
                 sprite.group.setAttribute('opacity', alpha);
-                const y = swapVariant && key === 'letter:0' && swapProgress > 0 && swapProgress < 1
-                    ? Math.sin(Math.PI * swapProgress) * swapLift : 0;
-                sprite.group.setAttribute('transform', `translate(${mix((from || to).x, (to || from).x, eased)} ${y})`);
+                sprite.group.setAttribute('transform', `translate(${x} 0)`);
                 if (!sprite.flapped && (!from || !to)) {
                     // The outer opacity already handles a new/removed letter.
                     // Avoid applying the easing twice through a second fade.
