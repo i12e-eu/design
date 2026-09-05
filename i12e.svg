@@ -1,0 +1,305 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none" role="img"
+     aria-labelledby="title description">
+    <title id="title">infrastructure</title>
+    <desc id="description">A wordmark that expands from i12e to infrastructure, revealing one letter from right to left
+        with each countdown step.
+    </desc>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&amp;display=swap');
+
+        /* Global controls. Durations accept ms or s; typography uses SVG pixels.
+        Edit these defaults here. The HTML is only a viewer for this SVG.
+        Open as a document, or embed with an iframe/object to enable scripting
+        and the linked font. An img/CSS image displays the static fallback. */
+        :root {
+        width: 100%;
+        height: 100%;
+        display: block;
+        --transition-duration: 200ms;
+        --hold-duration: 800ms;
+        --easing: cubic-bezier(0.5, 0, 0.5, 1);
+        --font-size: 48px;
+        --character-spacing: 0.2px;
+        --loop: 1;
+        }
+
+        text {
+        fill: #000;
+        font-family: 'Roboto Mono', monospace;
+        font-size: var(--font-size);
+        font-weight: 400;
+        font-kerning: none;
+        font-variant-ligatures: none;
+        transform-origin: 0 0;
+        transform-box: view-box;
+        }
+
+        #fallback { letter-spacing: var(--character-spacing); }
+    </style>
+
+    <rect width="1000" height="1000" fill="#fff"/>
+    <!-- A readable fallback when scripting is unavailable. -->
+    <text id="fallback" x="0" y="55">infrastructure</text>
+    <g id="wordmark" visibility="hidden" aria-hidden="true"/>
+
+    <script><![CDATA[
+  (() => {
+    'use strict';
+
+    const root = document.documentElement;
+    const layer = document.getElementById('wordmark');
+    const fallback = document.getElementById('fallback');
+    const word = 'infrastructure';
+    const count = word.length - 2;
+    const ns = 'http://www.w3.org/2000/svg';
+    const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+    const number = (value, min, max, previous) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : previous;
+    };
+    const milliseconds = (value) => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
+
+    function readDefaults() {
+      const styles = getComputedStyle(root);
+      return {
+        transitionDuration: milliseconds(styles.getPropertyValue('--transition-duration').trim()),
+        holdDuration: milliseconds(styles.getPropertyValue('--hold-duration').trim()),
+        easing: styles.getPropertyValue('--easing').trim(),
+        fontSize: parseFloat(styles.getPropertyValue('--font-size')),
+        characterSpacing: parseFloat(styles.getPropertyValue('--character-spacing')),
+        loop: styles.getPropertyValue('--loop').trim() === '1',
+      };
+    }
+    let config;
+    let animations = [];
+    let duration = 0;
+    let playing = false;
+    let frame = 0;
+    let lastPublished = -Infinity;
+    let ready = false;
+
+    function stateAt(step) {
+      const remaining = count - step;
+      return remaining ? word[0] + remaining + word.slice(remaining + 1) : word;
+    }
+
+    function currentTime() {
+      return Math.min(duration, Math.max(0, Number(animations[0]?.currentTime) || 0));
+    }
+
+    function snapshot() {
+      const time = currentTime();
+      const stepDuration = config.holdDuration + config.transitionDuration;
+      const step = Math.min(count, Math.floor(time / stepDuration));
+      const transitioning = step < count && time - step * stepDuration > config.holdDuration;
+      return {
+        type: 'i12e:state', config: { ...config }, duration, currentTime: time,
+        playing, step, state: stateAt(step),
+        phase: time >= duration ? 'complete' : transitioning ? 'transition' : 'hold',
+        reducedMotion: motionPreference.matches,
+      };
+    }
+
+    function publish() {
+      const state = snapshot();
+      root.dataset.state = state.state;
+      root.dataset.phase = state.phase;
+      root.dataset.playing = String(playing);
+      if (window.parent !== window) window.parent.postMessage(state, '*');
+    }
+
+    function setTime(time) {
+      animations.forEach((animation) => { animation.currentTime = time; });
+    }
+
+    function tick(now) {
+      if (!playing) return;
+      if (currentTime() >= duration) {
+        if (config.loop) {
+          setTime(0);
+          startTogether();
+        } else {
+          pause();
+          return;
+        }
+      }
+      if (now - lastPublished >= 80) {
+        publish();
+        lastPublished = now;
+      }
+      frame = requestAnimationFrame(tick);
+    }
+
+    // All effects share one timeline origin, including numeral crossfades.
+    function startTogether() {
+      const start = document.timeline.currentTime - currentTime();
+      animations.forEach((animation) => {
+        animation.play();
+        animation.startTime = start;
+      });
+    }
+
+    function play() {
+      if (!ready || playing) return;
+      if (currentTime() >= duration) setTime(0);
+      playing = true;
+      startTogether();
+      frame = requestAnimationFrame(tick);
+      publish();
+    }
+
+    function pause() {
+      playing = false;
+      cancelAnimationFrame(frame);
+      animations.forEach((animation) => animation.pause());
+      publish();
+    }
+
+    function seek(time) {
+      pause();
+      setTime(number(time, 0, duration, currentTime()));
+      publish();
+    }
+
+    function seekStep(step) {
+      seek(Math.round(number(step, 0, count, 0)) * (config.holdDuration + config.transitionDuration));
+    }
+
+    function restart() {
+      pause();
+      setTime(0);
+      play();
+    }
+
+    function makeText(character, x, baseline, parent = layer) {
+      const text = document.createElementNS(ns, 'text');
+      text.textContent = character;
+      text.setAttribute('x', x);
+      text.setAttribute('y', baseline);
+      parent.append(text);
+      return text;
+    }
+
+    // Every state has an explicit hold, including the initial and final words.
+    // Easing belongs to the outgoing hold frame, so movement and opacity use
+    // the very same curve over the following transition segment.
+    function animateStates(element, stateFor) {
+      const keyframes = [];
+      for (let step = 0; step <= count; step++) {
+        const time = step * (config.holdDuration + config.transitionDuration);
+        const state = stateFor(count - step);
+        keyframes.push({ ...state, offset: time / duration, easing: 'linear' });
+        keyframes.push({ ...state, offset: (time + config.holdDuration) / duration, easing: config.easing });
+      }
+      const animation = element.animate(keyframes, { duration, fill: 'both' });
+      animation.pause();
+      animation.currentTime = 0;
+      animations.push(animation);
+    }
+
+    function build() {
+      cancelAnimationFrame(frame);
+      animations.forEach((animation) => animation.cancel());
+      animations = [];
+      layer.replaceChildren();
+      root.style.setProperty('--font-size', `${config.fontSize}px`);
+      root.style.setProperty('--character-spacing', `${config.characterSpacing}px`);
+      const baseline = config.fontSize * 55 / 48;
+      fallback.setAttribute('y', baseline);
+
+      // Measure the linked font after it loads; never assume a fallback's width.
+      const measure = makeText('M', 0, baseline);
+      const advance = measure.getComputedTextLength() + config.characterSpacing;
+      measure.remove();
+      root.dataset.characterAdvance = String(advance);
+      duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+
+      // Stable identities by word index preserve repeated r/u/t characters.
+      [...word].forEach((character, index) => {
+        const text = makeText(character, 0, baseline);
+        text.dataset.letterIndex = String(index);
+        animateStates(text, (remaining) => {
+          if (index === 0) return { transform: 'translateX(0px)', opacity: 1 };
+          const visible = index > remaining;
+          const digits = remaining ? String(remaining).length : 0;
+          // Hidden letters wait at their eventual insertion point and fade in
+          // there while all already-visible letters slide to their new cells.
+          const revealCount = index - 1;
+          const insertion = 1 + (revealCount ? String(revealCount).length : 0);
+          const cell = visible ? digits + index - remaining : insertion;
+          return { transform: `translateX(${cell * advance}px)`, opacity: visible ? 1 : 0 };
+        });
+      });
+
+      // No visible zero: the final n replaces the last numeral in its own cell.
+      // At 10 -> 9, the removed digit likewise frees the new t's cell; the
+      // existing suffix stays put at these two natural-width boundaries.
+      const numeralCells = new Set();
+      for (let remaining = count; remaining >= 1; remaining--) {
+        [...String(remaining)].forEach((digit, column) => numeralCells.add(`${column}:${digit}`));
+      }
+      // Keep an unchanged digit fully opaque (e.g. the 1 in 12 -> 11 -> 10).
+      for (const cell of numeralCells) {
+        const [column, digit] = cell.split(':');
+        const text = makeText(digit, (Number(column) + 1) * advance, baseline);
+        text.dataset.numeralCell = cell;
+        animateStates(text, (remaining) => ({
+          opacity: remaining > 0 && String(remaining)[Number(column)] === digit ? 1 : 0,
+        }));
+      }
+
+      fallback.setAttribute('visibility', 'hidden');
+      layer.setAttribute('visibility', 'visible');
+    }
+
+    function configure(next = {}) {
+      const resume = playing;
+      playing = false;
+      config = {
+        transitionDuration: number(next.transitionDuration ?? config.transitionDuration, 1, 5000, config.transitionDuration),
+        holdDuration: number(next.holdDuration ?? config.holdDuration, 0, 10000, config.holdDuration),
+        easing: typeof next.easing === 'string' && CSS.supports('animation-timing-function', next.easing) ? next.easing : config.easing,
+        fontSize: number(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
+        characterSpacing: number(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
+        loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
+      };
+      build();
+      if (motionPreference.matches && !resume) setTime(duration);
+      if (resume) play();
+      else publish();
+    }
+
+    async function init() {
+      config = readDefaults();
+      // The font stays hosted by Google; no font files are bundled here.
+      try { await document.fonts.load(`400 ${config.fontSize}px "Roboto Mono"`, word + '0123456789'); }
+      catch { /* Keep a usable monospaced fallback if the font is offline. */ }
+      build();
+      ready = true;
+      window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, getState: snapshot });
+
+      window.addEventListener('message', (event) => {
+        if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
+        const { action, config: next, time, step } = event.data;
+        if (action === 'configure') configure(next);
+        else if (action === 'seek') seek(time);
+        else if (action === 'seekStep') seekStep(step);
+        else if (action === 'play') play();
+        else if (action === 'pause') pause();
+        else if (action === 'restart') restart();
+        else if (action === 'status') publish();
+      });
+
+      motionPreference.addEventListener('change', (event) => {
+        if (event.matches) seek(duration);
+      });
+      if (motionPreference.matches) seek(duration);
+      else play();
+    }
+
+    // Wait for the imported stylesheet to register its font-face before load().
+    if (document.readyState === 'complete') init();
+    else window.addEventListener('load', init, { once: true });
+  })();
+  ]]></script>
+</svg>
