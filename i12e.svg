@@ -541,9 +541,31 @@
         function seek(time) { pause(numeric(time, 0, duration, currentTime())); }
         function seekStep(step) { seek(Math.round(numeric(step, 0, lastModelStep, 0)) * (config.holdDuration + config.transitionDuration)); }
         function restart(options = {}) { play({ ...options, time: 0 }); }
+        function remapTime(time, previousTiming) {
+            const oldTime = clamp(time, 0, previousTiming.duration);
+            if (oldTime >= previousTiming.duration) return duration;
+            if (previousTiming.holdDuration === config.holdDuration
+                && previousTiming.transitionDuration === config.transitionDuration) return clamp(oldTime, 0, duration);
+            // Preserve the fraction of the current hold or transition, including
+            // the comparison rows' extra wait while the leading flag moves.
+            const cycle = Math.floor(oldTime / (previousTiming.holdDuration + previousTiming.transitionDuration));
+            const within = oldTime - cycle * (previousTiming.holdDuration + previousTiming.transitionDuration);
+            const offset = within < previousTiming.holdDuration
+                ? within / previousTiming.holdDuration * config.holdDuration
+                : config.holdDuration + (within - previousTiming.holdDuration) / previousTiming.transitionDuration * config.transitionDuration;
+            return clamp(cycle * (config.holdDuration + config.transitionDuration) + offset, 0, duration);
+        }
+
         function configure(next = {}, options = {}) {
             const resume = typeof options.playing === 'boolean' ? options.playing : playing;
             const time = Number.isFinite(options.time) ? options.time : currentTime();
+            // The dashboard supplies the timing basis for its sampled time. This
+            // also handles rapid edits before it receives the previous update.
+            const supplied = options.timing;
+            const previousTiming = supplied
+                && [supplied.holdDuration, supplied.transitionDuration, supplied.duration].every(Number.isFinite)
+                && supplied.holdDuration >= 0 && supplied.transitionDuration > 0 && supplied.duration > 0
+                ? supplied : { holdDuration: config.holdDuration, transitionDuration: config.transitionDuration, duration };
             playing = false;
             cancelAnimationFrame(frame);
             config = {
@@ -566,8 +588,9 @@
                 loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
             };
             build();
-            position = motionPreference.matches && !resume ? duration : clamp(time, 0, duration);
-            if (resume) play({ ...options, time: position });
+            position = remapTime(time, previousTiming);
+            // Editing a completed animation must never invoke play()'s replay behaviour.
+            if (resume && position < duration) play({ ...options, time: position });
             else { render(position); publish(); }
         }
 

@@ -481,7 +481,7 @@
                     <div class="input-row"><input id="character-spacing" type="number" min="0" max="8" step="0.1"
                                                   value="0.2" data-config="characterSpacing"/><span
                             class="unit">px</span></div>
-                  <p class="caption">Spacing between unboxed letters.</p>
+                  <p class="caption">Added to each unboxed letter’s natural font width.</p>
                 </div>
 
               <div class="proportions">
@@ -489,28 +489,28 @@
                   <label for="flap-width">Flap width</label>
                   <div class="input-row">
                     <input id="flap-width" type="number" min="0.6" max="2" step="0.01" value="0.85"
-                           data-config="flapWidth" data-preserve-time="true"/><span class="unit">em</span>
+                           data-config="flapWidth"/><span class="unit">em</span>
                   </div>
                 </div>
                 <div class="control">
                   <label for="flap-height">Flap height</label>
                   <div class="input-row">
                     <input id="flap-height" type="number" min="1" max="2.5" step="0.01" value="1.42"
-                           data-config="flapHeight" data-preserve-time="true"/><span class="unit">em</span>
+                           data-config="flapHeight"/><span class="unit">em</span>
                   </div>
                 </div>
                 <div class="control">
                   <label for="flap-gap">Gap between flaps</label>
                   <div class="input-row">
                     <input id="flap-gap" type="number" min="0" max="0.5" step="0.005" value="0.035"
-                           data-config="flapGap" data-preserve-time="true"/><span class="unit">em</span>
+                           data-config="flapGap"/><span class="unit">em</span>
                   </div>
                 </div>
                 <div class="control">
                   <label for="flap-outer-gap">Flap outer gap</label>
                   <div class="input-row">
                     <input id="flap-outer-gap" type="number" min="0" max="96" step="0.1" value="4"
-                           data-config="flapOuterGap" data-preserve-time="true"/><span class="unit">px</span>
+                           data-config="flapOuterGap"/><span class="unit">px</span>
                   </div>
                   <p class="caption">Same space between the flap group and the letters on either side.</p>
                 </div>
@@ -518,7 +518,7 @@
                   <label for="leading-flag-gap">Leading flag gap</label>
                   <div class="input-row">
                     <input id="leading-flag-gap" type="number" min="0" max="96" step="0.1" value="16"
-                           data-config="leadingFlagGap" data-preserve-time="true"/><span class="unit">px</span>
+                           data-config="leadingFlagGap"/><span class="unit">px</span>
                   </div>
                   <p class="caption">Variant 05: final space between the flag on the left and the word.</p>
                 </div>
@@ -548,12 +548,12 @@
                   <p class="caption">Middle line and edge pieces.</p>
                   <label class="detail-toggle">
                     <input id="flap-details-visible" type="checkbox" checked data-config="detailsVisible"
-                           data-preserve-time="true"/>Show flap details
+                    />Show flap details
                   </label>
                   <label for="flap-detail-opacity">Detail opacity</label>
                   <div class="input-row">
                     <input id="flap-detail-opacity" type="range" min="0" max="100" step="1" value="100"
-                           data-config="detailOpacity" data-scale="100" data-preserve-time="true"/>
+                           data-config="detailOpacity" data-scale="100"/>
                     <output id="flap-detail-opacity-value" class="opacity-readout" for="flap-detail-opacity">100%</output>
                   </div>
                 </div>
@@ -561,7 +561,7 @@
                   <label for="eu-star-scale">EU star scale</label>
                   <div class="input-row">
                     <input id="eu-star-scale" type="range" min="25" max="400" step="1" value="100"
-                           data-config="starScale" data-scale="100" data-preserve-time="true"/>
+                           data-config="starScale" data-scale="100"/>
                     <output id="eu-star-scale-value" class="opacity-readout" for="eu-star-scale">100%</output>
                   </div>
                   <p class="caption">Scales the whole star circle proportionately. Oversized stars crop at the flap
@@ -579,9 +579,11 @@
                 </div>
               </div>
 
-                <p class="help">Controls apply to all seven previews. Timing and typography changes restart their shared
-                  timeline; appearance controls update the current frame.
+                <p class="help">Controls update all seven previews in place, whether playing, paused, or finished.
+                  Timing edits preserve the current step and progress. Use Restart to replay.
                   Edit the CSS variables in i12e.svg to save defaults.</p>
+                <p class="help">Previews scale down to fit. Large dimensions or gaps can reduce the apparent text size
+                  and spacing.</p>
                 <p id="motion-note" class="help" hidden>Reduced motion is enabled. Use Play to preview the
                   animation.</p>
               </div>
@@ -631,8 +633,8 @@
         }
 
       // Every child receives the same absolute clock origin for synchronized playback.
-      function startedAt() {
-        return performance.timeOrigin + performance.now() + 50;
+      function startedAt(delay = 50) {
+        return performance.timeOrigin + performance.now() + delay;
       }
 
       function sharedTime() {
@@ -643,12 +645,12 @@
                 ? time % latestState.duration : Math.min(latestState.duration, time);
         }
 
-      function configure(preserveTime = false) {
+      function configure({reportInvalid = true} = {}) {
         if (!initialized) return;
             const config = {};
             for (const input of configInputs) {
                 if (!input.checkValidity()) {
-                    input.reportValidity();
+                  if (reportInvalid) input.reportValidity();
                     return;
                 }
                 const key = input.dataset.config;
@@ -659,8 +661,13 @@
                 config[key] = value;
             }
         command("configure", {
-          config, time: preserveTime === true ? sharedTime() : 0,
-          playing: Boolean(latestState?.playing), startedAt: startedAt()
+          config, time: sharedTime(),
+          timing: {
+            holdDuration: latestState.config.holdDuration,
+            transitionDuration: latestState.config.transitionDuration,
+            duration: latestState.duration
+          },
+          playing: Boolean(latestState?.playing), startedAt: startedAt(0)
         });
         }
 
@@ -687,14 +694,17 @@
         if (input.type === "color") {
           input.addEventListener("input", () => {
             document.getElementById(`${input.id}-hex`).value = input.value;
-            configure(true);
+            configure({reportInvalid: false});
           });
         } else if (input.type === "range") {
           input.addEventListener("input", () => {
             updateRangeReadouts();
-            configure(true);
+            configure({reportInvalid: false});
           });
-        } else input.addEventListener("change", () => configure(input.dataset.preserveTime === "true"));
+        } else {
+          if (input.type === "number") input.addEventListener("input", () => configure({reportInvalid: false}));
+          input.addEventListener("change", () => configure());
+        }
       });
 
       colorHexInputs.forEach(input => {
@@ -702,7 +712,7 @@
           const color = normalizeHex(input.value);
           if (!color) return;
           document.getElementById(input.dataset.colorFor).value = color;
-          configure(true);
+          configure({reportInvalid: false});
         });
         input.addEventListener("change", () => {
           if (!input.checkValidity()) input.reportValidity();
