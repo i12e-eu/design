@@ -28,6 +28,7 @@
         --flap-height: 1.42; /* Height in em. */
         --eu-star-scale: 1; /* Uniform scale of the complete star circle, clipped to the cards. */
         --flap-gap: 0.035; /* Edge-to-edge gap between cards in em. */
+        --flap-outer-gap: 0.2px; /* Space between the flap group and adjacent plain letters. */
         --flap-color: #003399; /* EU flag blue. Stars use the fixed EU yellow #ffcc00. */
         --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
         --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
@@ -35,7 +36,7 @@
         --background-color: #ffffff;
         --flap-text-color: #f8faff;
         --text-color: #000000;
-        --loop: 1;
+        --loop: 0;
         }
         text {
         fill: var(--text-color);
@@ -114,6 +115,7 @@
                 flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
                 flapHeight: parseFloat(value('--flap-height')),
                 flapGap: parseFloat(value('--flap-gap')),
+                flapOuterGap: numeric(parseFloat(value('--flap-outer-gap')), 0, 96, 0.2),
                 starScale: numeric(value('--eu-star-scale') || 1, 0.25, 4, 1),
                 flapColor: normalizeColor(value('--flap-color')) || '#003399',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
@@ -169,16 +171,19 @@
                 const digitWidth = variant === 0 ? glyphWidth : tileWidth;
                 const digitAdvance = variant === 0 ? characterAdvance : swapped ? tileWidth : flapAdvance;
                 const counterWidth = digits.length ? digitWidth + (digits.length - 1) * digitAdvance : 0;
-                // Only the counter reserves card-sized cells. Tracking separates
-                // plain letters and the text/counter boundaries; the card gap is independent.
-                const suffixX = characterAdvance + counterWidth + (digits.length ? config.characterSpacing : 0);
-                state.set('letter:0', { character: word[0], x: swapped ? counterWidth + config.characterSpacing : 0 });
+                // Flap boundaries have their own spacing. After the flag leads,
+                // the i joins the plain word, so its next gap uses letter tracking.
+                const outerGap = variant > 0 && digits.length ? config.flapOuterGap : config.characterSpacing;
+                const counterX = glyphWidth + outerGap;
+                const suffixX = swapped ? counterWidth + outerGap + characterAdvance
+                    : digits.length ? counterX + counterWidth + outerGap : characterAdvance;
+                state.set('letter:0', { character: word[0], x: swapped ? counterWidth + outerGap : 0 });
                 for (let index = remaining + 1; index < word.length; index++) {
                     state.set(`letter:${index}`, { character: word[index], x: suffixX + (index - remaining - 1) * characterAdvance });
                 }
                 [...digits].forEach((character, index) => state.set(`digit:${index}`, {
                     character: flagVariant && remaining === 0 ? flagFace : character,
-                    x: (swapped ? 0 : characterAdvance) + index * digitAdvance,
+                    x: (swapped ? 0 : counterX) + index * digitAdvance,
                 }));
             }
             return state;
@@ -545,6 +550,7 @@
                 flapWidth: numeric(next.flapWidth ?? config.flapWidth, 0.6, 2, config.flapWidth),
                 flapHeight: numeric(next.flapHeight ?? config.flapHeight, 1, 2.5, config.flapHeight),
                 flapGap: numeric(next.flapGap ?? config.flapGap, 0, 0.5, config.flapGap),
+                flapOuterGap: numeric(next.flapOuterGap ?? config.flapOuterGap, 0, 96, config.flapOuterGap),
                 starScale: numeric(next.starScale ?? config.starScale, 0.25, 4, config.starScale),
                 flapColor: normalizeColor(next.flapColor) || config.flapColor,
                 detailColor: normalizeColor(next.detailColor) || config.detailColor,
