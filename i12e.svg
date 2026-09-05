@@ -78,7 +78,7 @@
         const flagVariant = variant === 5 || variant === 6;
         const swapVariant = variant === 6;
         const flagFace = '@eu-flag';
-        const flagCleanupFraction = 0.35; // Remove the gap and hardware early in the final turn.
+        const flagTravelDelay = 0.1; // Join the flag before its leftward travel begins.
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
         const lastModelStep = count;
@@ -230,7 +230,7 @@
                 V ${leftRadius} A ${leftRadius} ${leftRadius} 0 0 1 ${x + leftRadius} 0 Z`;
         }
 
-        function updateFlagGeometry(progress, complete) {
+        function updateFlagGeometry(progress, visible, x) {
             const originalWidth = tileWidth + flapAdvance;
             const pairWidth = tileWidth + mix(flapAdvance, tileWidth, progress);
             // Keep the whole star circle centred and uniformly scaled as the gap
@@ -238,8 +238,10 @@
             const scale = Math.min(tileHeight, pairWidth / 1.5) / Math.min(tileHeight, originalWidth / 1.5);
             flagArtwork.setAttribute('transform', `translate(${pairWidth / 2} ${tileHeight / 2}) scale(${scale}) translate(${-originalWidth / 2} ${-tileHeight / 2})`);
             solidClips.forEach((path, column) => path.setAttribute('d', flapOutline(column, progress)));
-            // One uninterrupted final face avoids a raster seam between touching cards.
-            joinedFlag.setAttribute('display', complete ? 'inline' : 'none');
+            // The shared face travels beneath the outgoing digits. Separate card
+            // clips can expose antialiased seams even when their numeric gap is zero.
+            joinedFlag.setAttribute('display', visible ? 'inline' : 'none');
+            joinedFlag.setAttribute('transform', `translate(${x} 0)`);
             root.dataset.flagGap = String(pairWidth - 2 * tileWidth);
         }
 
@@ -293,6 +295,12 @@
             }
             const top = face('top'), bottom = face('bottom');
             const fallingTop = face('top'), arrivingBottom = face('bottom');
+            let bottomMask;
+            if (swapVariant) {
+                const clip = create('clipPath', { id: `flap-outgoing-bottom-${column}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
+                bottomMask = create('rect', { y: half, width: tileWidth, height: half }, clip);
+                bottom.wrapper.setAttribute('clip-path', `url(#flap-outgoing-bottom-${column})`);
+            }
             fallingTop.wrapper.dataset.face = 'outgoing-top';
             arrivingBottom.wrapper.dataset.face = 'incoming-bottom';
             const details = create('g', { 'data-flap-details': 'true' }, tile);
@@ -300,33 +308,18 @@
             for (const x of [0, tileWidth - 1.5]) {
                 create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, details);
             }
-            // A clean face replaces the entire mechanism, including its shadows
-            // and hardware over the stars. Recolouring the seam alone leaves a
-            // blue cut through oversized stars. Each card still clips separately.
-            const solid = swapVariant ? create('g', {
-                'data-solid-flag': 'true', 'clip-path': `url(#flap-solid-${column})`, display: 'none',
-            }, tile) : null;
-            let solidStars;
-            if (solid) {
-                create('rect', { width: tileWidth, height: tileHeight, class: 'flap-surface' }, solid);
-                solidStars = create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)` }, solid);
-            }
             let previousPair = '';
             return (before, after, progress, cleanupProgress = 0) => {
                 const formingFlag = swapVariant && before !== after && after === flagFace;
                 details.setAttribute('opacity', swapVariant ? 1 - cleanupProgress : 1);
-                if (solid) {
-                    // Let the hinge reveal the incoming artwork. A whole-card
-                    // overlay during this turn would ghost stars over the old digits.
-                    solid.setAttribute('display', !formingFlag && cleanupProgress > 0 ? 'inline' : 'none');
-                    solid.setAttribute('opacity', formingFlag ? 0 : cleanupProgress);
+                if (swapVariant) {
                     const offset = -column * mix(flapAdvance, tileWidth, cleanupProgress);
                     // The face silhouettes close their inner corners too; changing
                     // only the outer clip would leave a notch in the blue surfaces.
                     for (const face of [top, bottom, fallingTop, arrivingBottom]) {
                         face.surface.setAttribute('d', flapOutline(column, cleanupProgress));
                     }
-                    for (const stars of [top.stars, bottom.stars, fallingTop.stars, arrivingBottom.stars, solidStars]) {
+                    for (const stars of [top.stars, bottom.stars, fallingTop.stars, arrivingBottom.stars]) {
                         stars.setAttribute('transform', `translate(${offset} 0)`);
                     }
                 }
@@ -347,12 +340,20 @@
                 fallingTop.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${topScale}) translate(0 ${-half})`);
                 arrivingBottom.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${bottomScale}) translate(0 ${-half})`);
                 fallingTop.wrapper.setAttribute('display', topScale > 0.00001 ? 'inline' : 'none');
-                arrivingBottom.wrapper.setAttribute('display', bottomScale > 0.00001 ? 'inline' : 'none');
-                fallingTop.shadow.setAttribute('opacity', (1 - topScale) * 0.28);
+                top.wrapper.setAttribute('display', formingFlag ? 'none' : 'inline');
+                arrivingBottom.wrapper.setAttribute('display', !formingFlag && bottomScale > 0.00001 ? 'inline' : 'none');
+                if (bottomMask) {
+                    // Match the incoming leaf's reveal boundary, but expose the
+                    // continuous flag below instead of painting separate star crops.
+                    const revealed = formingFlag ? half * bottomScale : 0;
+                    bottomMask.setAttribute('y', half + revealed);
+                    bottomMask.setAttribute('height', half - revealed);
+                }
+                fallingTop.shadow.setAttribute('opacity', formingFlag ? 0 : (1 - topScale) * 0.28);
                 arrivingBottom.shadow.setAttribute('opacity', swapVariant && after === flagFace ? 0 : (1 - bottomScale) * 0.28);
                 top.shadow.setAttribute('opacity', swapVariant && after === flagFace ? 0 : 0.025);
                 const bottomContent = !changing || progress >= 1 ? after : before;
-                bottom.shadow.setAttribute('opacity', swapVariant && bottomContent === flagFace ? 0 : 0.07);
+                bottom.shadow.setAttribute('opacity', formingFlag || (swapVariant && bottomContent === flagFace) ? 0 : 0.07);
                 // Holds (including p=1 when manually sampled) show the new face.
                 setFace(bottom, bottomContent);
                 tile.dataset.flipping = String(changing && progress > 0 && progress < 1);
@@ -418,6 +419,13 @@
             }
             if (flagVariant) makeFlagArtwork();
             models = Array.from({ length: count + 1 }, (_, step) => layout(count - step, swapVariant && step === count));
+            if (swapVariant) {
+                // Paint a single flag first; outgoing digit faces above it mask
+                // and reveal the artwork without a white seam during movement.
+                joinedFlag = create('g', { 'data-joined-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
+                create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'flap-surface' }, joinedFlag);
+                create('use', { href: '#eu-flag-stars' }, joinedFlag);
+            }
             const keys = new Set(models.flatMap(model => [...model.keys()]));
             for (const key of keys) {
                 const group = create('g', { 'data-key': key });
@@ -426,9 +434,6 @@
                 sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group, digit ? Number(key.split(':')[1]) : null) : makePlain(group) });
             }
             if (swapVariant) {
-                joinedFlag = create('g', { 'data-joined-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
-                create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'flap-surface' }, joinedFlag);
-                create('use', { href: '#eu-flag-stars' }, joinedFlag);
                 layer.append(sprites.get('letter:0').group);
             }
             const canvasHeight = preview ? 180 : 1000;
@@ -465,11 +470,13 @@
 
         function render(time) {
             const { step, progress, eased } = sample(time);
-            const swapProgress = swapVariant ? (step === count ? 1 : step === count - 1 ? eased : 0) : 0;
-            const cleanupProgress = swapVariant ? (step === count ? 1 : step === count - 1
-                ? ease(clamp(progress / flagCleanupFraction, 0, 1)) : 0) : 0;
-            if (swapVariant) updateFlagGeometry(cleanupProgress, step === count);
+            const finalTurn = swapVariant && step === count - 1;
+            const movement = finalTurn ? ease(clamp((progress - flagTravelDelay) / (1 - flagTravelDelay), 0, 1)) : eased;
+            const swapProgress = swapVariant ? (step === count ? 1 : finalTurn ? movement : 0) : 0;
+            const cleanupProgress = swapVariant && (step === count || (finalTurn && progress > 0)) ? 1 : 0;
             const before = models[step], after = models[Math.min(lastModelStep, step + 1)];
+            if (swapVariant) updateFlagGeometry(cleanupProgress, cleanupProgress > 0,
+                mix(before.get('digit:0').x, after.get('digit:0').x, movement));
             for (const [key, sprite] of sprites) {
                 const from = before.get(key), to = after.get(key);
                 if (!from && !to) {
@@ -481,19 +488,19 @@
                     continue;
                 }
                 let alpha = from && to ? 1 : from ? 1 - eased : eased;
-                let x = mix((from || to).x, (to || from).x, eased);
-                if (swapVariant && step === count - 1 && key.startsWith('digit:')) {
-                    // Keep the flag's overall travel at its normal pace while the
-                    // two cards, their clips, and their shared artwork close sooner.
+                let x = mix((from || to).x, (to || from).x, movement);
+                if (finalTurn && key.startsWith('digit:')) {
+                    // Close both numeric spacing and painted coverage before travel.
                     const column = Number(key.split(':')[1]);
-                    x = mix(before.get('digit:0').x, after.get('digit:0').x, eased)
+                    x = mix(before.get('digit:0').x, after.get('digit:0').x, movement)
                         + column * mix(flapAdvance, tileWidth, cleanupProgress);
                 }
-                if (swapVariant && step === count - 1 && (key === 'letter:0' || key === 'letter:1')) {
+                if (swapVariant && step === count && key.startsWith('digit:')) alpha = 0;
+                if (finalTurn && (key === 'letter:0' || key === 'letter:1')) {
                     // Reverse the reveal, then fade in beside the moving word.
                     // Following its spacing keeps a large final gap from placing
                     // the reappearing i over another letter. The baseline stays fixed.
-                    const firstLetterX = mix(before.get('letter:2').x, after.get('letter:2').x, eased) - 2 * characterAdvance;
+                    const firstLetterX = mix(before.get('letter:2').x, after.get('letter:2').x, movement) - 2 * characterAdvance;
                     if (key === 'letter:0') {
                         alpha = progress < 0.5 ? ease(1 - 2 * progress) : ease(2 * progress - 1);
                         x = progress < 0.5 ? from.x : firstLetterX;
