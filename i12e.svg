@@ -155,21 +155,23 @@
             };
         }
 
-        function stateAt(remaining, padded = false) {
+        function stateAt(remaining, padded = variant > 0) {
             if (!remaining) return word;
-            const digits = padded ? String(remaining).padStart(2, ' ') : String(remaining);
+            const digits = padded ? String(remaining).padStart(2, '0') : String(remaining);
             return word[0] + digits + word.slice(remaining + 1);
         }
 
         function layout(remaining, swapped = false) {
             const state = new Map();
             if (variant === 3 || variant === 4) {
-                const text = stateAt(remaining, variant === 4);
+                const text = stateAt(remaining);
                 const cells = variant === 4 ? text.padEnd(capacity, ' ') : text;
                 [...cells].forEach((character, index) => state.set(`cell:${index}`, { character, x: index * flapAdvance }));
             } else {
-                const digits = flagVariant ? (remaining ? String(remaining).padStart(2, ' ') : '  ')
-                    : remaining ? (variant === 2 ? String(remaining).padStart(2, ' ') : String(remaining)) : '';
+                // Every split-flap counter keeps two digits. At zero, persistent
+                // counter places turn directly into flag faces below.
+                const digits = remaining ? String(remaining).padStart(variant > 0 ? 2 : 1, '0')
+                    : flagVariant ? '00' : '';
                 const digitWidth = variant === 0 ? glyphWidth : tileWidth;
                 const digitAdvance = variant === 0 ? characterAdvance : swapped ? tileWidth : flapAdvance;
                 const counterWidth = digits.length ? digitWidth + (digits.length - 1) * digitAdvance : 0;
@@ -485,7 +487,7 @@
             root.dataset.state = stateAt(remaining);
             root.dataset.displayState = swapVariant && step > count ? '  ' + word
                 : flagVariant && remaining === 0 ? word[0] + '  ' + word.slice(1)
-                : stateAt(remaining, variant === 2 || variant === 4 || flagVariant);
+                : stateAt(remaining);
             if (swapVariant) root.dataset.swapProgress = String(swapProgress);
         }
 
