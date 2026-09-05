@@ -26,6 +26,9 @@
         --flap-height: 1.42; /* Height in em. */
         --flap-gap: 0.035; /* Gap in em, plus character spacing. */
         --flap-color: #003399; /* EU flag blue. Stars use the fixed EU yellow #ffcc00. */
+        --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
+        --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
+        --flap-details-visible: 1; /* Toggle without losing the chosen opacity. */
         --background-color: #ffffff;
         --flap-text-color: #f8faff;
         --text-color: #000000;
@@ -39,6 +42,11 @@
         }
         .flap-text { fill: var(--flap-text-color); }
         .flap-surface { fill: var(--flap-color); }
+        .flap-detail {
+        fill: var(--flap-detail-color);
+        opacity: var(--flap-detail-opacity);
+        display: var(--flap-detail-display, inline);
+        }
         #background { fill: var(--background-color); }
         #fallback { letter-spacing: var(--character-spacing); }
     </style>
@@ -66,7 +74,7 @@
         const flagFace = '@eu-flag';
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
-        const lastModelStep = count + Number(flagVariant);
+        const lastModelStep = count;
         const preview = params.get('preview') === '1';
         const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
         const clock = () => performance.timeOrigin + performance.now();
@@ -102,6 +110,9 @@
                 flapHeight: parseFloat(value('--flap-height')),
                 flapGap: parseFloat(value('--flap-gap')),
                 flapColor: normalizeColor(value('--flap-color')) || '#003399',
+                detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
+                detailOpacity: numeric(value('--flap-detail-opacity') || 1, 0, 1, 1),
+                detailsVisible: value('--flap-details-visible') !== '0',
                 backgroundColor: normalizeColor(value('--background-color')) || '#ffffff',
                 loop: value('--loop') === '1',
             };
@@ -140,7 +151,7 @@
             return word[0] + digits + word.slice(remaining + 1);
         }
 
-        function layout(remaining, showFlag = false) {
+        function layout(remaining) {
             const state = new Map();
             if (variant === 3 || variant === 4) {
                 const text = stateAt(remaining, variant === 4);
@@ -154,7 +165,7 @@
                     state.set(`letter:${index}`, { character: word[index], x: (digits.length + index - remaining) * advance });
                 }
                 [...digits].forEach((character, index) => state.set(`digit:${index}`, {
-                    character: showFlag ? flagFace : character, x: (index + 1) * advance,
+                    character: flagVariant && remaining === 0 ? flagFace : character, x: (index + 1) * advance,
                 }));
             }
             return state;
@@ -231,9 +242,9 @@
             const fallingTop = face('top'), arrivingBottom = face('bottom');
             fallingTop.wrapper.dataset.face = 'outgoing-top';
             arrivingBottom.wrapper.dataset.face = 'incoming-bottom';
-            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, fill: '#777777', opacity: 0.35 }, tile);
+            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, class: 'flap-detail' }, tile);
             for (const x of [0, tileWidth - 1.5]) {
-                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, fill: '#666666', opacity: 0.7 }, tile);
+                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, tile);
             }
             let previousPair = '';
             return (before, after, progress) => {
@@ -270,6 +281,9 @@
 
         function applyColors() {
             root.style.setProperty('--flap-color', config.flapColor);
+            root.style.setProperty('--flap-detail-color', config.detailColor);
+            root.style.setProperty('--flap-detail-opacity', String(config.detailOpacity));
+            root.style.setProperty('--flap-detail-display', config.detailsVisible ? 'inline' : 'none');
             root.style.setProperty('--background-color', config.backgroundColor);
             // The default and unboxed letters remain readable on shared dark backgrounds.
             const rgb = config.backgroundColor.match(/[\da-f]{2}/gi).map(value => parseInt(value, 16) / 255);
@@ -300,11 +314,9 @@
             root.dataset.flapWidth = String(tileWidth);
             root.dataset.flapHeight = String(tileHeight);
             root.dataset.variant = String(variant);
-            // All comparison previews share the extra final cycle. The original
-            // styles hold their completed word while variant 5 turns into a flag.
-            // Their standalone timings remain unchanged.
-            const cycles = count + Number(preview || flagVariant);
-            duration = cycles * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            // The final countdown turn reveals both the last letter and the flag.
+            // Every variant reaches its completed state together, then holds.
+            duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
@@ -313,7 +325,6 @@
             }
             if (flagVariant) makeFlagArtwork();
             models = Array.from({ length: count + 1 }, (_, step) => layout(count - step));
-            if (flagVariant) models.push(layout(0, true));
             const keys = new Set(models.flatMap(model => [...model.keys()]));
             for (const key of keys) {
                 const group = create('g', { 'data-key': key });
@@ -386,7 +397,7 @@
                 type: 'i12e:state', variant, config: { ...config }, duration, currentTime: time, playing,
                 step: Math.min(count, step), totalSteps: lastModelStep,
                 state: stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
-                ...(flagVariant ? { flagPhase: step < count ? 'countdown' : step > count ? 'flag' : progress > 0 ? 'turning' : 'empty' } : {}),
+                ...(flagVariant ? { flagPhase: step === count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
                 phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
             };
         }
@@ -445,6 +456,9 @@
                 flapHeight: numeric(next.flapHeight ?? config.flapHeight, 1, 2.5, config.flapHeight),
                 flapGap: numeric(next.flapGap ?? config.flapGap, 0, 0.5, config.flapGap),
                 flapColor: normalizeColor(next.flapColor) || config.flapColor,
+                detailColor: normalizeColor(next.detailColor) || config.detailColor,
+                detailOpacity: numeric(next.detailOpacity ?? config.detailOpacity, 0, 1, config.detailOpacity),
+                detailsVisible: typeof next.detailsVisible === 'boolean' ? next.detailsVisible : config.detailsVisible,
                 backgroundColor: normalizeColor(next.backgroundColor) || config.backgroundColor,
                 loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
             };

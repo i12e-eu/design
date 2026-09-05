@@ -142,6 +142,16 @@
             margin-bottom: 7px;
         }
 
+        .control .detail-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 14px 0;
+        }
+
+        .detail-toggle input { margin: 0; accent-color: #191919; }
+        .opacity-readout { min-width: 4ch; text-align: right; }
+
         .input-row {
             display: flex;
             align-items: center;
@@ -371,8 +381,7 @@
             <iframe src="./i12e.svg?variant=5&amp;preview=1&amp;autoplay=0"
                     title="Infrastructure wordmark — counter flaps become an EU flag" data-variant="5"></iframe>
           </div>
-          <p class="caption">Persistent counter flaps make one final flip into a shared EU flag, preserving their
-            gap.</p>
+          <p class="caption">The last digit flips directly into a shared EU flag; both cards and their gap remain.</p>
         </article>
         <article class="variant" aria-labelledby="variant-3-title">
           <div class="variant-heading">
@@ -473,6 +482,27 @@
                   </div>
                 </div>
                 <div class="control">
+                  <label for="flap-detail-color">Flap detail color</label>
+                  <div class="input-row">
+                    <input id="flap-detail-color" type="color" value="#ffffff" data-config="detailColor"/>
+                    <input id="flap-detail-color-hex" type="text" value="#ffffff"
+                           pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
+                           maxlength="7" required spellcheck="false" autocomplete="off"
+                           aria-label="Flap detail color hexadecimal value" data-color-for="flap-detail-color"/>
+                  </div>
+                  <p class="caption">Middle line and edge pieces.</p>
+                  <label class="detail-toggle">
+                    <input id="flap-details-visible" type="checkbox" checked data-config="detailsVisible"
+                           data-preserve-time="true"/>Show flap details
+                  </label>
+                  <label for="flap-detail-opacity">Detail opacity</label>
+                  <div class="input-row">
+                    <input id="flap-detail-opacity" type="range" min="0" max="100" step="1" value="100"
+                           data-config="detailOpacity" data-scale="100" data-preserve-time="true"/>
+                    <output id="flap-detail-opacity-value" class="opacity-readout" for="flap-detail-opacity">100%</output>
+                  </div>
+                </div>
+                <div class="control">
                   <label for="background-color">Background color</label>
                   <div class="input-row">
                     <input id="background-color" type="color" value="#ffffff" data-config="backgroundColor"/>
@@ -503,7 +533,7 @@
             </div>
           <p class="help">Controls apply to all six previews. Timing and typography changes restart their shared
             timeline;
-            colors and flap proportions update the current frame.
+            appearance controls update the current frame.
             Edit the CSS variables in i12e.svg to save defaults.</p>
             <p id="motion-note" class="help" hidden>Reduced motion is enabled. Use Play to preview the animation.</p>
         </aside>
@@ -554,7 +584,8 @@
                 }
                 const key = input.dataset.config;
                 const value = input.type === "checkbox" ? input.checked
-                    : input.type === "number" ? input.valueAsNumber : input.value;
+                    : input.type === "number" || input.type === "range"
+                        ? input.valueAsNumber / Number(input.dataset.scale || 1) : input.value;
                 if (typeof value === "number" && !Number.isFinite(value)) return;
                 config[key] = value;
             }
@@ -572,10 +603,23 @@
         return null;
       }
 
+      function updateDetailOpacity() {
+        const input = document.getElementById("flap-detail-opacity");
+        const label = `${input.value}%`;
+        document.getElementById("flap-detail-opacity-value").textContent = label;
+        input.setAttribute("aria-valuetext", label);
+      }
+      updateDetailOpacity();
+
       configInputs.forEach(input => {
         if (input.type === "color") {
           input.addEventListener("input", () => {
             document.getElementById(`${input.id}-hex`).value = input.value;
+            configure(true);
+          });
+        } else if (input.type === "range") {
+          input.addEventListener("input", () => {
+            updateDetailOpacity();
             configure(true);
           });
         } else input.addEventListener("change", () => configure(input.dataset.preserveTime === "true"));
@@ -612,18 +656,20 @@
           for (const input of configInputs) {
             const value = state.config?.[input.dataset.config];
             const hex = input.type === "color" ? document.getElementById(`${input.id}-hex`) : null;
-            if (value === undefined || input === document.activeElement || hex === document.activeElement) continue;
+            if (value === undefined || input === document.activeElement || (hex && hex === document.activeElement)) continue;
             if (input.type === "checkbox") input.checked = Boolean(value);
             else {
               if (input.tagName === "SELECT" && ![...input.options].some(option => option.value === value)) {
                 input.add(new Option(value, value));
               }
-              input.value = input.type === "color" ? normalizeHex(value) || input.value : value;
+              input.value = input.type === "color" ? normalizeHex(value) || input.value
+                  : input.dataset.scale ? Number(value) * Number(input.dataset.scale) : value;
               if (hex) hex.value = value;
             }
           }
           lastConfig = signature;
             }
+            updateDetailOpacity();
 
             const duration = Math.max(0, Number(state.duration) || 0);
             const currentTime = Math.min(duration, Math.max(0, Number(state.currentTime) || 0));
