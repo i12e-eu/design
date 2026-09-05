@@ -30,7 +30,7 @@
         --flap-gap: 0.035; /* Edge-to-edge gap between cards in em. */
         --flap-outer-gap: 4px; /* Space between the flap group and adjacent plain letters. */
         --leading-flag-gap: 16px; /* Final space between the leading flag and the word. */
-        --flap-color: #003399; /* EU flag blue. Stars use the fixed EU yellow #ffcc00. */
+        --flap-color: #003399; /* Customizable countdown cards; the flag keeps its official colors. */
         --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
         --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
         --flap-details-visible: 1; /* Toggle without losing the chosen opacity. */
@@ -46,7 +46,8 @@
         font-variant-ligatures: none;
         }
         .flap-text { fill: var(--flap-text-color); }
-        .flap-surface { fill: var(--flap-color); }
+        .flap-surface { fill: var(--rendered-flap-color, var(--flap-color)); }
+        .eu-flag-surface { fill: #003399; }
         .flap-detail {
         fill: var(--flap-detail-color);
         opacity: var(--flap-detail-opacity);
@@ -78,6 +79,7 @@
         const flagVariant = variant === 5 || variant === 6;
         const swapVariant = variant === 6;
         const flagFace = '@eu-flag';
+        const euFlagBlue = '#003399';
         const flagTravelDelay = 0.1; // Join the flag before its leftward travel begins.
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
@@ -91,6 +93,14 @@
             const hex = value.trim().toLowerCase();
             if (/^#[\da-f]{3}$/.test(hex)) return '#' + [...hex.slice(1)].map(digit => digit + digit).join('');
             return /^#[\da-f]{6}$/.test(hex) ? hex : null;
+        }
+        function mixColor(from, to, progress) {
+            if (progress <= 0) return from;
+            if (progress >= 1) return to;
+            return '#' + [1, 3, 5].map(index => Math.round(mix(
+                parseInt(from.slice(index, index + 2), 16),
+                parseInt(to.slice(index, index + 2), 16), progress,
+            )).toString(16).padStart(2, '0')).join('');
         }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
         let config, ease, duration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
@@ -290,6 +300,7 @@
             }
             function setFace(face, content) {
                 const flag = content === flagFace;
+                face.surface.setAttribute('class', flag ? 'eu-flag-surface' : 'flap-surface');
                 face.glyph.textContent = flag ? '' : content;
                 if (face.stars) face.stars.setAttribute('display', flag ? 'inline' : 'none');
             }
@@ -349,11 +360,12 @@
                     bottomMask.setAttribute('y', half + revealed);
                     bottomMask.setAttribute('height', half - revealed);
                 }
-                fallingTop.shadow.setAttribute('opacity', formingFlag ? 0 : (1 - topScale) * 0.28);
-                arrivingBottom.shadow.setAttribute('opacity', swapVariant && after === flagFace ? 0 : (1 - bottomScale) * 0.28);
-                top.shadow.setAttribute('opacity', swapVariant && after === flagFace ? 0 : 0.025);
+                // Mechanical shading must not tint the flag's specified blue.
+                fallingTop.shadow.setAttribute('opacity', formingFlag || before === flagFace ? 0 : (1 - topScale) * 0.28);
+                arrivingBottom.shadow.setAttribute('opacity', after === flagFace ? 0 : (1 - bottomScale) * 0.28);
+                top.shadow.setAttribute('opacity', after === flagFace ? 0 : 0.025);
                 const bottomContent = !changing || progress >= 1 ? after : before;
-                bottom.shadow.setAttribute('opacity', formingFlag || (swapVariant && bottomContent === flagFace) ? 0 : 0.07);
+                bottom.shadow.setAttribute('opacity', formingFlag || bottomContent === flagFace ? 0 : 0.07);
                 // Holds (including p=1 when manually sampled) show the new face.
                 setFace(bottom, bottomContent);
                 tile.dataset.flipping = String(changing && progress > 0 && progress < 1);
@@ -423,7 +435,7 @@
                 // Paint a single flag first; outgoing digit faces above it mask
                 // and reveal the artwork without a white seam during movement.
                 joinedFlag = create('g', { 'data-joined-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
-                create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'flap-surface' }, joinedFlag);
+                create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'eu-flag-surface' }, joinedFlag);
                 create('use', { href: '#eu-flag-stars' }, joinedFlag);
             }
             const keys = new Set(models.flatMap(model => [...model.keys()]));
@@ -470,6 +482,10 @@
 
         function render(time) {
             const { step, progress, eased } = sample(time);
+            // Blend outgoing countdown faces during the last turn. Incoming flag
+            // faces are always EU blue; sampling keeps edits and seeks deterministic.
+            const colorProgress = flagVariant ? (step === count ? 1 : step === count - 1 ? eased : 0) : 0;
+            root.style.setProperty('--rendered-flap-color', mixColor(config.flapColor, euFlagBlue, colorProgress));
             const finalTurn = swapVariant && step === count - 1;
             const movement = finalTurn ? ease(clamp((progress - flagTravelDelay) / (1 - flagTravelDelay), 0, 1)) : eased;
             const swapProgress = swapVariant ? (step === count ? 1 : finalTurn ? movement : 0) : 0;
