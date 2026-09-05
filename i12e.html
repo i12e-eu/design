@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>i12e — Infrastructure logotype</title>
+  <title>i12e — Logotype</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet"/>
@@ -178,6 +178,30 @@
         .control label {
             display: block;
             margin-bottom: 7px;
+        }
+
+        .flag-interaction {
+          margin-top: 18px;
+        }
+
+        .flag-interaction legend {
+          padding: 0 0 10px;
+        }
+
+        .flag-controls {
+          display: flex;
+          align-items: flex-end;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .flag-controls .control {
+          flex: 1 1 130px;
+          margin: 0;
+        }
+
+        .flag-interaction .help {
+          margin-top: 9px;
         }
 
         .control .detail-toggle {
@@ -370,14 +394,14 @@
 <body>
 <div class="page">
     <header>
-      <h1>i12e <span>/ infrastructure logotype</span></h1>
+      <h1>i12e <span>/ logotype</span></h1>
       <span class="time">Seven synchronized variants</span>
     </header>
 
     <main class="workspace">
       <section class="previews" aria-label="Logotype variants">
         <section class="variant-group" aria-labelledby="final-variants-title">
-          <h2 class="group-title" id="final-variants-title">Final</h2>
+          <h2 class="group-title" id="final-variants-title">v1</h2>
           <article class="variant" aria-labelledby="variant-6-title">
             <div class="variant-heading">
               <h3 id="variant-6-title">05 / EU flag → leading flag</h3>
@@ -385,10 +409,45 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=6&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
+                      title="Logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
             </div>
             <p class="caption">The last counter turn reveals a clean leading flag, with no intermediate hold.
               The i fades out and reappears as the cards move left and close into one seamless face.</p>
+            <fieldset class="flag-interaction" id="flag-interaction" disabled>
+              <legend>Flag interaction</legend>
+              <div class="flag-controls">
+                <div class="control">
+                  <label for="flag-country">Country</label>
+                  <select id="flag-country" data-config="flagCountry">
+                    <option value="NL" selected>Netherlands</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="LU">Luxembourg</option>
+                    <option value="CH">Switzerland</option>
+                    <option value="DK">Denmark</option>
+                  </select>
+                </div>
+                <div class="control">
+                  <label for="flag-return-mode">Return mode</label>
+                  <select id="flag-return-mode" data-config="flagReturnMode">
+                    <option value="auto" selected>Automatic return</option>
+                    <option value="manual">Return on trigger</option>
+                  </select>
+                </div>
+                <div class="control">
+                  <label for="flag-hold-duration">Return delay</label>
+                  <div class="input-row">
+                    <input id="flag-hold-duration" type="number" min="0" max="10000" step="1" value="1000"
+                           data-config="flagHoldDuration"/><span class="unit">ms</span>
+                  </div>
+                </div>
+                <button id="flag-trigger" type="button" aria-describedby="flag-interaction-help" disabled>Show country
+                  flag
+                </button>
+              </div>
+              <p class="help" id="flag-interaction-help">Available at the end of the countdown. Separate from Loop
+                animation.</p>
+            </fieldset>
           </article>
         </section>
         <section class="variant-group" aria-labelledby="draft-variants-title">
@@ -400,7 +459,7 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=0&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — default" data-variant="0"></iframe>
+                      title="Logotype — default" data-variant="0"></iframe>
             </div>
             <p class="caption">Original countdown and letter reveal.</p>
           </article>
@@ -411,7 +470,7 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=1&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — visible digit flaps" data-variant="1"></iframe>
+                      title="Logotype — visible digit flaps" data-variant="1"></iframe>
             </div>
             <p class="caption">Flaps show a two-digit countdown, including leading zeros.</p>
           </article>
@@ -422,7 +481,7 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=2&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — digit flaps including leading zeros" data-variant="2"></iframe>
+                      title="Logotype — digit flaps including leading zeros" data-variant="2"></iframe>
             </div>
             <p class="caption">The tens flap shows zero during single-digit counts.</p>
           </article>
@@ -433,7 +492,7 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=5&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — counter flaps become an EU flag" data-variant="5"></iframe>
+                      title="Logotype — counter flaps become an EU flag" data-variant="5"></iframe>
             </div>
             <p class="caption">The last digit flips directly into a shared EU flag; both cards and their gap remain.</p>
           </article>
@@ -444,7 +503,7 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=3&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — flaps for all visible glyphs" data-variant="3"></iframe>
+                      title="Logotype — flaps for all visible glyphs" data-variant="3"></iframe>
             </div>
             <p class="caption">Visible letters and digits flip in fixed character positions.</p>
           </article>
@@ -455,7 +514,7 @@
             </div>
             <div class="artboard">
               <iframe src="./i12e.svg?variant=4&amp;preview=1&amp;autoplay=0"
-                      title="Infrastructure logotype — flaps including blank character slots" data-variant="4"></iframe>
+                      title="Logotype — flaps including blank character slots" data-variant="4"></iframe>
             </div>
             <p class="caption">Fixed flaps include leading zeros and blank trailing character positions.</p>
           </article>
@@ -638,6 +697,11 @@
       const colorHexInputs = [...document.querySelectorAll("[data-color-for]")];
         const playPause = document.getElementById("play-pause");
         const timeline = document.getElementById("timeline");
+      const flagInteraction = document.getElementById("flag-interaction");
+      const flagCountry = document.getElementById("flag-country");
+      const flagReturnMode = document.getElementById("flag-return-mode");
+      const flagHoldDuration = document.getElementById("flag-hold-duration");
+      const flagTrigger = document.getElementById("flag-trigger");
       const readyFrames = new Set();
       const states = new Map();
         let latestState = null;
@@ -668,6 +732,7 @@
         if (!initialized) return;
             const config = {};
             for (const input of configInputs) {
+              if (input.disabled) continue;
                 if (!input.checkValidity()) {
                   if (reportInvalid) input.reportValidity();
                     return;
@@ -707,7 +772,22 @@
         }
       }
 
+      function updateFlagControls(state) {
+        const interaction = state?.flagInteraction;
+        const phase = interaction?.phase || "idle";
+        flagInteraction.disabled = !initialized;
+        flagCountry.disabled = phase !== "idle";
+        flagHoldDuration.disabled = flagReturnMode.value === "manual";
+        flagTrigger.disabled = !initialized || !interaction?.available || state?.playing
+                || !["idle", "hold", "country"].includes(phase);
+        flagTrigger.textContent = phase === "outbound" ? "Showing country flag…"
+                : phase === "returning" ? "Returning to EU flag…"
+                        : phase === "hold" || phase === "country" ? "Return to EU flag"
+                                : "Show country flag";
+      }
+
       updateRangeReadouts();
+      flagReturnMode.addEventListener("change", () => updateFlagControls(latestState));
 
       configInputs.forEach(input => {
         if (input.type === "color") {
@@ -747,6 +827,17 @@
       document.getElementById("restart").addEventListener("click", () => command("restart", {startedAt: startedAt()}));
         timeline.addEventListener("input", () => command("seek", {time: timeline.valueAsNumber}));
 
+      flagTrigger.addEventListener("click", () => {
+        const interaction = latestState?.flagInteraction;
+        if (!initialized || flagTrigger.disabled || !interaction?.available || latestState.playing
+                || !["idle", "hold", "country"].includes(interaction.phase)) return;
+        const frame = frames[transportIndex];
+        if (!frame?.contentWindow) return;
+        // This interaction belongs only to the completed leading flag in variant 05.
+        flagTrigger.disabled = true;
+        frame.contentWindow.postMessage({type: "i12e:command", action: "triggerFlag"}, "*");
+      });
+
       function updateUI(state) {
             latestState = state;
         latestReceivedAt = performance.now();
@@ -771,6 +862,7 @@
           lastConfig = signature;
             }
         updateRangeReadouts();
+        updateFlagControls(state);
 
             const duration = Math.max(0, Number(state.duration) || 0);
             const currentTime = Math.min(duration, Math.max(0, Number(state.currentTime) || 0));

@@ -12,6 +12,8 @@
         variant=0: default; 1: visible digits; 2: both digit places;
         3: visible cells; 4: all 15 cells, including blanks; 5: persistent digit flaps becoming an EU flag;
         6: the last counter turn reveals a clean flag directly in the leading position.
+        On the completed variant 6, i12e.triggerFlag() folds to the selected country;
+        it returns automatically or on a second trigger, separately from the countdown.
         Use ?variant=2 to open a standalone option; &amp;preview=1 crops the canvas.
         Embed as an iframe/object or open directly to enable scripting and the
         linked font. An img/CSS image displays the static text fallback. */
@@ -38,6 +40,9 @@
         --flap-text-color: #f8faff;
         --text-color: #000000;
         --loop: 0;
+        --flag-country: NL;
+        --flag-return-mode: auto; /* auto = timed return; manual = trigger to return. */
+        --flag-hold-duration: 1000ms;
         }
         text {
         fill: var(--text-color);
@@ -80,6 +85,17 @@
         const swapVariant = variant === 6;
         const flagFace = '@eu-flag';
         const euFlagBlue = '#003399';
+        // Native proportions; RGB approximates cloth standards where necessary.
+        const countryFlags = {
+            NL: { width: 3, height: 2, stripes: 'horizontal', colors: ['#ae1c28', '#ffffff', '#21468b'] },
+            DE: { width: 5, height: 3, stripes: 'horizontal', colors: ['#000000', '#ff0000', '#ffcc00'] },
+            FR: { width: 3, height: 2, stripes: 'vertical', colors: ['#002654', '#ffffff', '#ed2939'] },
+            LU: { width: 5, height: 3, stripes: 'horizontal', colors: ['#ef3340', '#ffffff', '#00a3e0'] },
+            CH: { width: 32, height: 32, colors: ['#ff0000', '#ffffff'] },
+            DK: { width: 37, height: 28, colors: ['#c8102e', '#ffffff'] },
+        };
+        const countryFor = (value, fallback = 'NL') => typeof value === 'string'
+            && Object.hasOwn(countryFlags, value.toUpperCase()) ? value.toUpperCase() : fallback;
         const flagTravelDelay = 0.1; // Join the flag before its leftward travel begins.
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
@@ -104,10 +120,12 @@
         }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
         let config, ease, duration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
-        let flagArtwork, joinedFlag, solidClips = [];
+        let flagArtwork, joinedFlag, drawFlagFold, solidClips = [];
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
         let lastPublished = -Infinity, ready = false;
+        let flagFrame = 0;
+        const flagRun = { phase: 'idle', country: 'NL', startedAt: 0 };
 
         function create(tag, attributes = {}, parent = layer) {
             const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -136,6 +154,9 @@
                 detailsVisible: value('--flap-details-visible') !== '0',
                 backgroundColor: normalizeColor(value('--background-color')) || '#ffffff',
                 loop: value('--loop') === '1',
+                flagCountry: countryFor(value('--flag-country')),
+                flagReturnMode: value('--flag-return-mode') === 'manual' ? 'manual' : 'auto',
+                flagHoldDuration: numeric(milliseconds(value('--flag-hold-duration')), 0, 10000, 1000),
             };
         }
 
@@ -230,6 +251,97 @@
                 }).join(' ');
                 create('polygon', { points, 'data-star': star }, stars);
             }
+        }
+
+        function makeCountryFlags() {
+            const width = 2 * tileWidth;
+            for (const [country, flag] of Object.entries(countryFlags)) {
+                // Uniform cover scaling keeps crosses proportionate in custom cards.
+                const scale = Math.max(width / flag.width, tileHeight / flag.height);
+                // Compose the stripes/cross into one paint before clipping a leaf;
+                // separately clipped colors can leave a hairline at the hinge.
+                const paint = create('pattern', {
+                    id: `flag-country-${country}-paint`, patternUnits: 'userSpaceOnUse',
+                    width, height: tileHeight,
+                }, definitions);
+                const artwork = create('g', {
+                    transform: `translate(${width / 2} ${tileHeight / 2}) scale(${scale}) translate(${-flag.width / 2} ${-flag.height / 2})`,
+                }, paint);
+                const rectangle = (x, y, w, h, fill) => create('rect', { x, y, width: w, height: h, fill }, artwork);
+                rectangle(0, 0, flag.width, flag.height, flag.colors[0]);
+                if (flag.stripes) {
+                    flag.colors.slice(1).forEach((color, index) => {
+                        const stripe = index + 1;
+                        if (flag.stripes === 'vertical') rectangle(stripe * flag.width / 3, 0, flag.width / 3, flag.height, color);
+                        else rectangle(0, stripe * flag.height / 3, flag.width, flag.height / 3, color);
+                    });
+                } else if (country === 'CH') {
+                    rectangle(13, 6, 6, 20, flag.colors[1]);
+                    rectangle(6, 13, 20, 6, flag.colors[1]);
+                } else if (country === 'DK') {
+                    rectangle(12, 0, 4, 28, flag.colors[1]);
+                    rectangle(0, 12, 37, 4, flag.colors[1]);
+                }
+                const surface = create('g', { id: `flag-country-${country}`, 'data-country': country }, definitions);
+                create('rect', { width, height: tileHeight, fill: `url(#flag-country-${country}-paint)` }, surface);
+            }
+        }
+
+        function makeFlagFold() {
+            const half = tileHeight / 2;
+            const full = create('g', { id: 'flag-interaction-eu' }, definitions);
+            create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'eu-flag-surface' }, full);
+            create('use', { href: '#eu-flag-stars' }, full);
+            for (const [part, y] of [['top', 0], ['bottom', half]]) {
+                const clip = create('clipPath', { id: `flag-fold-${part}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
+                create('rect', { y, width: 2 * tileWidth, height: half }, clip);
+            }
+            const fold = create('g', { 'data-flag-fold': 'true' }, joinedFlag);
+            // A complete backing prevents transparent seams beneath the rotating leaves.
+            const previousBacking = create('use', { display: 'none' }, fold);
+            const backing = create('use', { href: '#flag-interaction-eu' }, fold);
+            const revealClip = create('clipPath', { id: 'flag-fold-reveal', clipPathUnits: 'userSpaceOnUse' }, definitions);
+            const revealMask = create('rect', { width: 2 * tileWidth, height: tileHeight }, revealClip);
+            backing.setAttribute('clip-path', 'url(#flag-fold-reveal)');
+            function leaf(part) {
+                const wrapper = create('g', {}, fold);
+                const clipped = create('g', { 'clip-path': `url(#flag-fold-${part})` }, wrapper);
+                const artwork = create('use', {}, clipped);
+                return { wrapper, artwork };
+            }
+            const bottom = leaf('bottom'), outgoing = leaf('top'), incoming = leaf('bottom');
+            const bottomClip = create('clipPath', { id: 'flag-fold-old-bottom', clipPathUnits: 'userSpaceOnUse' }, definitions);
+            const bottomMask = create('rect', { y: half, width: 2 * tileWidth, height: half }, bottomClip);
+            bottom.wrapper.setAttribute('clip-path', 'url(#flag-fold-old-bottom)');
+            outgoing.wrapper.dataset.face = 'flag-outgoing-top';
+            incoming.wrapper.dataset.face = 'flag-incoming-bottom';
+            const href = country => country === 'EU' ? '#flag-interaction-eu' : `#flag-country-${country}`;
+            return (before, after, progress) => {
+                const turning = before !== after && progress > 0 && progress < 1;
+                backing.setAttribute('href', href(progress <= 0 ? before : after));
+                bottom.artwork.setAttribute('href', href(before));
+                outgoing.artwork.setAttribute('href', href(before));
+                incoming.artwork.setAttribute('href', href(after));
+                const topScale = turning && progress < 0.5 ? Math.cos(progress * Math.PI) : 0;
+                const bottomScale = turning && progress >= 0.5 ? Math.sin((progress - 0.5) * Math.PI) : 0;
+                // Reveal the incoming top only above the falling leaf. Its color
+                // must not peek through the two old half-faces at the hinge.
+                previousBacking.setAttribute('href', href(before));
+                previousBacking.setAttribute('display', topScale > 0 ? 'inline' : 'none');
+                revealMask.setAttribute('height', topScale > 0 ? half * (1 - topScale) : tileHeight);
+                // Remove the covered old face too, so its color cannot fringe
+                // through the incoming leaf's antialiased edge at the hinge.
+                bottomMask.setAttribute('y', half + half * bottomScale);
+                bottomMask.setAttribute('height', half * (1 - bottomScale));
+                bottom.wrapper.setAttribute('display', turning ? 'inline' : 'none');
+                outgoing.wrapper.setAttribute('display', topScale > 0.00001 ? 'inline' : 'none');
+                incoming.wrapper.setAttribute('display', bottomScale > 0.00001 ? 'inline' : 'none');
+                outgoing.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${topScale}) translate(0 ${-half})`);
+                incoming.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${bottomScale}) translate(0 ${-half})`);
+                fold.dataset.from = before;
+                fold.dataset.to = after;
+                fold.dataset.progress = String(progress);
+            };
         }
 
         function roundedCardPath(x, width, leftRadius, rightRadius) {
@@ -435,8 +547,8 @@
                 // Paint a single flag first; outgoing digit faces above it mask
                 // and reveal the artwork without a white seam during movement.
                 joinedFlag = create('g', { 'data-joined-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
-                create('rect', { width: 2 * tileWidth, height: tileHeight, class: 'eu-flag-surface' }, joinedFlag);
-                create('use', { href: '#eu-flag-stars' }, joinedFlag);
+                makeCountryFlags();
+                drawFlagFold = makeFlagFold();
             }
             const keys = new Set(models.flatMap(model => [...model.keys()]));
             for (const key of keys) {
@@ -540,7 +652,86 @@
             if (swapVariant) {
                 root.dataset.swapProgress = String(swapProgress);
                 root.dataset.flagCleanupProgress = String(cleanupProgress);
+                renderFlagInteraction(clock());
             }
+        }
+
+        function flagSegmentDuration(phase = flagRun.phase) {
+            if (phase === 'hold') return config.flagHoldDuration;
+            return phase === 'outbound' || phase === 'returning'
+                ? motionPreference.matches ? 0 : config.transitionDuration : 0;
+        }
+
+        function flagTriggerAvailable() {
+            return swapVariant && ready && !playing
+                && currentTime() >= count * (config.holdDuration + config.transitionDuration)
+                && flagRun.phase !== 'outbound' && flagRun.phase !== 'returning';
+        }
+
+        function resetFlagInteraction() {
+            cancelAnimationFrame(flagFrame);
+            flagFrame = 0;
+            flagRun.phase = 'idle';
+        }
+
+        function advanceFlagInteraction(now) {
+            // Changing the return mode affects a held country without replaying its fold.
+            if (flagRun.phase === 'hold' && config.flagReturnMode === 'manual') flagRun.phase = 'country';
+            else if (flagRun.phase === 'country' && config.flagReturnMode === 'auto') {
+                flagRun.phase = 'hold';
+                flagRun.startedAt = now;
+            }
+            while (['outbound', 'hold', 'returning'].includes(flagRun.phase)) {
+                const segment = flagSegmentDuration();
+                if (now - flagRun.startedAt < segment) break;
+                flagRun.startedAt += segment;
+                if (flagRun.phase === 'outbound') flagRun.phase = config.flagReturnMode === 'auto' ? 'hold' : 'country';
+                else if (flagRun.phase === 'hold') flagRun.phase = 'returning';
+                else flagRun.phase = 'idle';
+            }
+        }
+
+        function renderFlagInteraction(now) {
+            if (!swapVariant) return;
+            const phase = flagRun.phase;
+            if (phase === 'idle') drawFlagFold('EU', 'EU', 1);
+            else if (phase === 'hold' || phase === 'country') drawFlagFold(flagRun.country, flagRun.country, 1);
+            else {
+                const span = flagSegmentDuration();
+                const progress = span ? ease(clamp((now - flagRun.startedAt) / span, 0, 1)) : 1;
+                drawFlagFold(phase === 'outbound' ? 'EU' : flagRun.country,
+                    phase === 'outbound' ? flagRun.country : 'EU', progress);
+            }
+            root.dataset.flagInteractionPhase = phase;
+        }
+
+        function scheduleFlagFrame() {
+            cancelAnimationFrame(flagFrame);
+            flagFrame = ['outbound', 'hold', 'returning'].includes(flagRun.phase)
+                ? requestAnimationFrame(tickFlagInteraction) : 0;
+        }
+
+        function tickFlagInteraction() {
+            const now = clock(), previousPhase = flagRun.phase;
+            advanceFlagInteraction(now);
+            renderFlagInteraction(now);
+            if (flagRun.phase !== previousPhase) publish();
+            scheduleFlagFrame();
+        }
+
+        function triggerFlag() {
+            if (!flagTriggerAvailable()) return false;
+            const now = clock();
+            if (flagRun.phase === 'idle') {
+                flagRun.country = config.flagCountry;
+                flagRun.phase = 'outbound';
+            } else flagRun.phase = 'returning';
+            flagRun.startedAt = now;
+            advanceFlagInteraction(now);
+            renderFlagInteraction(now);
+            scheduleFlagFrame();
+            publish();
+            return true;
         }
 
         function snapshot() {
@@ -552,6 +743,11 @@
                 state: stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
                 ...(flagVariant ? { flagPhase: step >= count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
                 ...(swapVariant ? { swapPhase: step === count ? 'complete' : step === count - 1 && progress > 0 ? 'swapping' : 'waiting' } : {}),
+                ...(swapVariant ? { flagInteraction: {
+                    available: flagTriggerAvailable(), phase: flagRun.phase,
+                    country: flagRun.phase === 'idle' ? config.flagCountry : flagRun.country,
+                    mode: config.flagReturnMode,
+                } } : {}),
                 phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
             };
         }
@@ -575,6 +771,7 @@
         }
         function play(options = {}) {
             if (!ready) return;
+            resetFlagInteraction();
             cancelAnimationFrame(frame);
             position = Number.isFinite(options.time) ? clamp(options.time, 0, duration) : currentTime();
             if (position >= duration) position = 0;
@@ -586,6 +783,7 @@
             publish();
         }
         function pause(time) {
+            resetFlagInteraction();
             position = Number.isFinite(time) ? clamp(time, 0, duration) : currentTime();
             playing = false;
             cancelAnimationFrame(frame);
@@ -610,6 +808,11 @@
         }
 
         function configure(next = {}, options = {}) {
+            const flagTime = clock();
+            advanceFlagInteraction(flagTime);
+            const flagSpan = flagSegmentDuration();
+            const flagProgress = flagSpan ? clamp((flagTime - flagRun.startedAt) / flagSpan, 0, 1) : 0;
+            cancelAnimationFrame(flagFrame);
             const resume = typeof options.playing === 'boolean' ? options.playing : playing;
             const time = Number.isFinite(options.time) ? options.time : currentTime();
             // The dashboard supplies the timing basis for its sampled time. This
@@ -639,12 +842,24 @@
                 detailsVisible: typeof next.detailsVisible === 'boolean' ? next.detailsVisible : config.detailsVisible,
                 backgroundColor: normalizeColor(next.backgroundColor) || config.backgroundColor,
                 loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
+                flagCountry: countryFor(next.flagCountry, config.flagCountry),
+                flagReturnMode: ['auto', 'manual'].includes(next.flagReturnMode) ? next.flagReturnMode : config.flagReturnMode,
+                flagHoldDuration: numeric(next.flagHoldDuration ?? config.flagHoldDuration, 0, 10000, config.flagHoldDuration),
             };
             build();
             position = remapTime(time, previousTiming);
             // Editing a completed animation must never invoke play()'s replay behaviour.
             if (resume && position < duration) play({ ...options, time: position });
-            else { render(position); publish(); }
+            else {
+                if (position < count * (config.holdDuration + config.transitionDuration)) resetFlagInteraction();
+                else {
+                    if (flagSpan) flagRun.startedAt = flagTime - flagProgress * flagSegmentDuration();
+                    advanceFlagInteraction(flagTime);
+                }
+                render(position);
+                scheduleFlagFrame();
+                publish();
+            }
         }
 
         async function init() {
@@ -653,7 +868,7 @@
             catch { /* A network failure retains the monospaced system fallback. */ }
             build();
             ready = true;
-            window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, getState: snapshot });
+            window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, triggerFlag, getState: snapshot });
             window.addEventListener('message', event => {
                 if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
                 const data = event.data;
@@ -663,6 +878,7 @@
                 else if (data.action === 'play') play(data);
                 else if (data.action === 'pause') pause(data.time);
                 else if (data.action === 'restart') restart(data);
+                else if (data.action === 'triggerFlag') triggerFlag();
                 else if (data.action === 'status') publish();
             });
             motionPreference.addEventListener('change', event => { if (event.matches) seek(duration); });
