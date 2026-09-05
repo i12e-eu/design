@@ -108,9 +108,35 @@
         .settings {
           position: sticky;
           top: 24px;
+          display: flex;
+          flex-direction: column;
           max-height: calc(100svh - 48px);
+          overflow: hidden;
+        }
+
+        #controls {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        .settings-scroll {
+          flex: 1;
+          min-height: 0;
           overflow-y: auto;
-          padding-bottom: 4px;
+          padding: 4px 8px 18px 4px;
+        }
+
+        .settings-scroll:focus-visible {
+          outline-offset: -2px;
+        }
+
+        .playback-controls {
+          flex-shrink: 0;
+          border-top: 1px solid #d8d8d8;
+          padding: 14px 4px 4px;
         }
 
         iframe {
@@ -221,7 +247,6 @@
         .transport {
             display: flex;
             gap: 8px;
-            margin-top: 23px;
         }
 
         .transport button {
@@ -232,7 +257,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin: 13px 0 23px;
+          margin: 12px 0;
         }
 
         .loop input {
@@ -262,8 +287,8 @@
 
         .readout {
             border-top: 1px solid #d8d8d8;
-            margin-top: 22px;
-            padding-top: 17px;
+          margin-top: 14px;
+          padding-top: 12px;
         }
 
         #current-state {
@@ -287,6 +312,7 @@
         }
 
         #loading {
+          flex-shrink: 0;
             margin: 0 0 15px;
             color: #737373;
             font-size: 10px;
@@ -322,8 +348,7 @@
 
             .settings {
               position: static;
-              max-height: none;
-              overflow: visible;
+              max-height: calc(100svh - 36px);
                 max-width: 400px;
                 width: 100%;
             }
@@ -422,6 +447,7 @@
         <aside class="settings" aria-label="Animation controls">
           <p id="loading" role="status">Loading previews… 0 / 7</p>
             <fieldset id="controls" disabled aria-label="Preview settings">
+              <div class="settings-scroll" role="region" aria-label="Appearance and timing settings" tabindex="0">
                 <div class="control">
                     <label for="transition-duration">Transition duration</label>
                     <div class="input-row"><input id="transition-duration" type="number" min="1" max="5000" step="1"
@@ -431,7 +457,7 @@
                 <div class="control">
                     <label for="hold-duration">Hold duration</label>
                     <div class="input-row"><input id="hold-duration" type="number" min="0" max="10000" step="1"
-                                                  value="800" data-config="holdDuration"/><span class="unit">ms</span>
+                                                  value="300" data-config="holdDuration"/><span class="unit">ms</span>
                     </div>
                 </div>
                 <div class="control">
@@ -537,6 +563,14 @@
                 </div>
               </div>
 
+                <p class="help">Controls apply to all seven previews. Timing and typography changes restart their shared
+                  timeline; appearance controls update the current frame.
+                  Edit the CSS variables in i12e.svg to save defaults.</p>
+                <p id="motion-note" class="help" hidden>Reduced motion is enabled. Use Play to preview the
+                  animation.</p>
+              </div>
+
+              <div class="playback-controls" role="group" aria-label="Playback controls">
                 <div class="transport">
                     <button id="play-pause" type="button">Pause</button>
                     <button id="restart" type="button">Restart</button>
@@ -548,17 +582,12 @@
                     <output id="time" class="time" for="timeline">0.0 / 0.0 s</output>
                 </div>
                 <input id="timeline" type="range" min="0" max="1" step="1" value="0" aria-label="Animation timeline"/>
-            </fieldset>
-
             <div class="readout">
                 <output id="current-state">i12e</output>
                 <p id="phase">Waiting for SVG</p>
             </div>
-          <p class="help">Controls apply to all seven previews. Timing and typography changes restart their shared
-            timeline;
-            appearance controls update the current frame.
-            Edit the CSS variables in i12e.svg to save defaults.</p>
-            <p id="motion-note" class="help" hidden>Reduced motion is enabled. Use Play to preview the animation.</p>
+              </div>
+            </fieldset>
         </aside>
     </main>
 </div>
