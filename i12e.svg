@@ -11,7 +11,7 @@
         /* Saved global controls. The HTML only displays and controls this SVG.
         variant=0: default; 1: visible digits; 2: both digit places;
         3: visible cells; 4: all 15 cells, including blanks; 5: persistent digit flaps becoming an EU flag;
-        6: the EU flag swaps with the leading i and loses its mechanical details.
+        6: the last counter turn reveals a clean flag directly in the leading position.
         Use ?variant=2 to open a standalone option; &amp;preview=1 crops the canvas.
         Embed as an iframe/object or open directly to enable scripting and the
         linked font. An img/CSS image displays the static text fallback. */
@@ -80,7 +80,7 @@
         const flagFace = '@eu-flag';
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
-        const lastModelStep = count + Number(swapVariant);
+        const lastModelStep = count;
         const preview = params.get('preview') === '1';
         const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
         const clock = () => performance.timeOrigin + performance.now();
@@ -236,13 +236,17 @@
             // closes. Translating two fixed crops would break the circular artwork.
             const scale = Math.min(tileHeight, pairWidth / 1.5) / Math.min(tileHeight, originalWidth / 1.5);
             flagArtwork.setAttribute('transform', `translate(${pairWidth / 2} ${tileHeight / 2}) scale(${scale}) translate(${-originalWidth / 2} ${-tileHeight / 2})`);
-            const radius = config.fontSize * 0.045;
-            solidClips.forEach((path, column) => path.setAttribute('d', roundedCardPath(0, tileWidth,
-                column === 0 ? radius : radius * (1 - progress),
-                column === 1 ? radius : radius * (1 - progress))));
+            solidClips.forEach((path, column) => path.setAttribute('d', flapOutline(column, progress)));
             // One uninterrupted final face avoids a raster seam between touching cards.
             joinedFlag.setAttribute('display', progress === 1 ? 'inline' : 'none');
             root.dataset.flagGap = String(pairWidth - 2 * tileWidth);
+        }
+
+        function flapOutline(column, progress) {
+            const radius = config.fontSize * 0.045;
+            return roundedCardPath(0, tileWidth,
+                column === 0 ? radius : radius * (1 - progress),
+                column === 1 ? radius : radius * (1 - progress));
         }
 
         function text(character, parent, attributes = {}) {
@@ -270,7 +274,8 @@
                 // and its half-card rotate together about the centre hinge.
                 const wrapper = create('g', {}, tile);
                 const clipped = create('g', { 'clip-path': `url(#flap-${part})` }, wrapper);
-                create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045, class: 'flap-surface' }, clipped);
+                const surface = swapVariant ? create('path', { class: 'flap-surface' }, clipped)
+                    : create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045, class: 'flap-surface' }, clipped);
                 const glyph = text('', clipped, { x: tileWidth / 2, class: 'flap-text' });
                 const shadow = create('rect', { width: tileWidth, height: tileHeight, fill: '#000', opacity: 0 }, clipped);
                 // Artwork belongs to the rotating face, just like the digits.
@@ -278,7 +283,7 @@
                 const stars = flagVariant && Number.isInteger(column)
                     ? create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)`, display: 'none' }, clipped)
                     : null;
-                return { wrapper, glyph, shadow, stars };
+                return { wrapper, surface, glyph, shadow, stars };
             }
             function setFace(face, content) {
                 const flag = content === flagFace;
@@ -289,9 +294,10 @@
             const fallingTop = face('top'), arrivingBottom = face('bottom');
             fallingTop.wrapper.dataset.face = 'outgoing-top';
             arrivingBottom.wrapper.dataset.face = 'incoming-bottom';
-            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, class: 'flap-detail' }, tile);
+            const details = create('g', { 'data-flap-details': 'true' }, tile);
+            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, class: 'flap-detail' }, details);
             for (const x of [0, tileWidth - 1.5]) {
-                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, tile);
+                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, details);
             }
             // A clean face replaces the entire mechanism, including its shadows
             // and hardware over the stars. Recolouring the seam alone leaves a
@@ -306,10 +312,19 @@
             }
             let previousPair = '';
             return (before, after, progress, solidProgress = 0) => {
+                const formingFlag = swapVariant && before !== after && after === flagFace;
+                details.setAttribute('opacity', formingFlag ? 1 - progress : 1);
                 if (solid) {
-                    solid.setAttribute('display', solidProgress > 0 ? 'inline' : 'none');
-                    solid.setAttribute('opacity', solidProgress);
+                    // Let the hinge reveal the incoming artwork. A whole-card
+                    // overlay during this turn would ghost stars over the old digits.
+                    solid.setAttribute('display', !formingFlag && solidProgress > 0 ? 'inline' : 'none');
+                    solid.setAttribute('opacity', formingFlag ? 0 : solidProgress);
                     const offset = -column * mix(flapAdvance, tileWidth, solidProgress);
+                    // The face silhouettes close their inner corners too; changing
+                    // only the outer clip would leave a notch in the blue surfaces.
+                    for (const face of [top, bottom, fallingTop, arrivingBottom]) {
+                        face.surface.setAttribute('d', flapOutline(column, solidProgress));
+                    }
                     for (const stars of [top.stars, bottom.stars, fallingTop.stars, arrivingBottom.stars, solidStars]) {
                         stars.setAttribute('transform', `translate(${offset} 0)`);
                     }
@@ -333,11 +348,12 @@
                 fallingTop.wrapper.setAttribute('display', topScale > 0.00001 ? 'inline' : 'none');
                 arrivingBottom.wrapper.setAttribute('display', bottomScale > 0.00001 ? 'inline' : 'none');
                 fallingTop.shadow.setAttribute('opacity', (1 - topScale) * 0.28);
-                arrivingBottom.shadow.setAttribute('opacity', (1 - bottomScale) * 0.28);
-                top.shadow.setAttribute('opacity', 0.025);
-                bottom.shadow.setAttribute('opacity', 0.07);
+                arrivingBottom.shadow.setAttribute('opacity', swapVariant && after === flagFace ? 0 : (1 - bottomScale) * 0.28);
+                top.shadow.setAttribute('opacity', swapVariant && after === flagFace ? 0 : 0.025);
+                const bottomContent = !changing || progress >= 1 ? after : before;
+                bottom.shadow.setAttribute('opacity', swapVariant && bottomContent === flagFace ? 0 : 0.07);
                 // Holds (including p=1 when manually sampled) show the new face.
-                setFace(bottom, !changing || progress >= 1 ? after : before);
+                setFace(bottom, bottomContent);
                 tile.dataset.flipping = String(changing && progress > 0 && progress < 1);
                 const content = progress < 0.5 ? before : after;
                 tile.dataset.empty = String(content === flagFace || content.trim() === '');
@@ -382,10 +398,9 @@
             root.dataset.flapWidth = String(tileWidth);
             root.dataset.flapHeight = String(tileHeight);
             root.dataset.variant = String(variant);
-            // Comparison rows hold their finished states while the swap runs,
-            // then all loop together. Original standalone timings stay the same.
-            const cycles = count + Number(preview || swapVariant);
-            duration = cycles * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            // The final counter turn also completes the leading flag. Every
+            // variant reaches its finished state together, with no extra cycle.
+            duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
@@ -401,8 +416,7 @@
                 create('rect', { width: 2 * tileWidth, height: tileHeight, rx: config.fontSize * 0.045 }, joinedClip);
             }
             if (flagVariant) makeFlagArtwork();
-            models = Array.from({ length: count + 1 }, (_, step) => layout(count - step));
-            if (swapVariant) models.push(layout(0, true));
+            models = Array.from({ length: count + 1 }, (_, step) => layout(count - step, swapVariant && step === count));
             const keys = new Set(models.flatMap(model => [...model.keys()]));
             for (const key of keys) {
                 const group = create('g', { 'data-key': key });
@@ -450,7 +464,7 @@
 
         function render(time) {
             const { step, progress, eased } = sample(time);
-            const swapProgress = swapVariant ? (step > count ? 1 : step === count ? eased : 0) : 0;
+            const swapProgress = swapVariant ? (step === count ? 1 : step === count - 1 ? eased : 0) : 0;
             if (swapVariant) updateFlagGeometry(swapProgress);
             const before = models[step], after = models[Math.min(lastModelStep, step + 1)];
             for (const [key, sprite] of sprites) {
@@ -465,13 +479,15 @@
                 }
                 let alpha = from && to ? 1 : from ? 1 - eased : eased;
                 let x = mix((from || to).x, (to || from).x, eased);
-                if (swapVariant && key === 'letter:0' && step === count) {
+                if (swapVariant && step === count - 1 && (key === 'letter:0' || key === 'letter:1')) {
                     // Reverse the reveal, then fade in beside the moving word.
                     // Following its spacing keeps a large final gap from placing
                     // the reappearing i over another letter. The baseline stays fixed.
-                    alpha = progress < 0.5 ? ease(1 - 2 * progress) : ease(2 * progress - 1);
-                    x = progress < 0.5 ? from.x
-                        : mix(before.get('letter:1').x, after.get('letter:1').x, eased) - characterAdvance;
+                    const firstLetterX = mix(before.get('letter:2').x, after.get('letter:2').x, eased) - 2 * characterAdvance;
+                    if (key === 'letter:0') {
+                        alpha = progress < 0.5 ? ease(1 - 2 * progress) : ease(2 * progress - 1);
+                        x = progress < 0.5 ? from.x : firstLetterX;
+                    } else x = firstLetterX + characterAdvance;
                 }
                 sprite.group.setAttribute('display', alpha > 0 ? 'inline' : 'none');
                 sprite.group.setAttribute('opacity', alpha);
@@ -485,7 +501,7 @@
             }
             const remaining = count - Math.min(count, step);
             root.dataset.state = stateAt(remaining);
-            root.dataset.displayState = swapVariant && step > count ? '  ' + word
+            root.dataset.displayState = swapVariant && step === count ? '  ' + word
                 : flagVariant && remaining === 0 ? word[0] + '  ' + word.slice(1)
                 : stateAt(remaining);
             if (swapVariant) root.dataset.swapProgress = String(swapProgress);
@@ -499,7 +515,7 @@
                 step, totalSteps: lastModelStep,
                 state: stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
                 ...(flagVariant ? { flagPhase: step >= count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
-                ...(swapVariant ? { swapPhase: step > count ? 'complete' : step === count && progress > 0 ? 'swapping' : 'waiting' } : {}),
+                ...(swapVariant ? { swapPhase: step === count ? 'complete' : step === count - 1 && progress > 0 ? 'swapping' : 'waiting' } : {}),
                 phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
             };
         }
@@ -548,8 +564,7 @@
             if (oldTime >= previousTiming.duration) return duration;
             if (previousTiming.holdDuration === config.holdDuration
                 && previousTiming.transitionDuration === config.transitionDuration) return clamp(oldTime, 0, duration);
-            // Preserve the fraction of the current hold or transition, including
-            // the comparison rows' extra wait while the leading flag moves.
+            // Preserve the fraction of the current hold or transition.
             const cycle = Math.floor(oldTime / (previousTiming.holdDuration + previousTiming.transitionDuration));
             const within = oldTime - cycle * (previousTiming.holdDuration + previousTiming.transitionDuration);
             const offset = within < previousTiming.holdDuration
