@@ -78,6 +78,7 @@
         const flagVariant = variant === 5 || variant === 6;
         const swapVariant = variant === 6;
         const flagFace = '@eu-flag';
+        const flagCleanupFraction = 0.35; // Remove the gap and hardware early in the final turn.
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
         const lastModelStep = count;
@@ -229,7 +230,7 @@
                 V ${leftRadius} A ${leftRadius} ${leftRadius} 0 0 1 ${x + leftRadius} 0 Z`;
         }
 
-        function updateFlagGeometry(progress) {
+        function updateFlagGeometry(progress, complete) {
             const originalWidth = tileWidth + flapAdvance;
             const pairWidth = tileWidth + mix(flapAdvance, tileWidth, progress);
             // Keep the whole star circle centred and uniformly scaled as the gap
@@ -238,7 +239,7 @@
             flagArtwork.setAttribute('transform', `translate(${pairWidth / 2} ${tileHeight / 2}) scale(${scale}) translate(${-originalWidth / 2} ${-tileHeight / 2})`);
             solidClips.forEach((path, column) => path.setAttribute('d', flapOutline(column, progress)));
             // One uninterrupted final face avoids a raster seam between touching cards.
-            joinedFlag.setAttribute('display', progress === 1 ? 'inline' : 'none');
+            joinedFlag.setAttribute('display', complete ? 'inline' : 'none');
             root.dataset.flagGap = String(pairWidth - 2 * tileWidth);
         }
 
@@ -311,19 +312,19 @@
                 solidStars = create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)` }, solid);
             }
             let previousPair = '';
-            return (before, after, progress, solidProgress = 0) => {
+            return (before, after, progress, cleanupProgress = 0) => {
                 const formingFlag = swapVariant && before !== after && after === flagFace;
-                details.setAttribute('opacity', formingFlag ? 1 - progress : 1);
+                details.setAttribute('opacity', swapVariant ? 1 - cleanupProgress : 1);
                 if (solid) {
                     // Let the hinge reveal the incoming artwork. A whole-card
                     // overlay during this turn would ghost stars over the old digits.
-                    solid.setAttribute('display', !formingFlag && solidProgress > 0 ? 'inline' : 'none');
-                    solid.setAttribute('opacity', formingFlag ? 0 : solidProgress);
-                    const offset = -column * mix(flapAdvance, tileWidth, solidProgress);
+                    solid.setAttribute('display', !formingFlag && cleanupProgress > 0 ? 'inline' : 'none');
+                    solid.setAttribute('opacity', formingFlag ? 0 : cleanupProgress);
+                    const offset = -column * mix(flapAdvance, tileWidth, cleanupProgress);
                     // The face silhouettes close their inner corners too; changing
                     // only the outer clip would leave a notch in the blue surfaces.
                     for (const face of [top, bottom, fallingTop, arrivingBottom]) {
-                        face.surface.setAttribute('d', flapOutline(column, solidProgress));
+                        face.surface.setAttribute('d', flapOutline(column, cleanupProgress));
                     }
                     for (const stars of [top.stars, bottom.stars, fallingTop.stars, arrivingBottom.stars, solidStars]) {
                         stars.setAttribute('transform', `translate(${offset} 0)`);
@@ -465,7 +466,9 @@
         function render(time) {
             const { step, progress, eased } = sample(time);
             const swapProgress = swapVariant ? (step === count ? 1 : step === count - 1 ? eased : 0) : 0;
-            if (swapVariant) updateFlagGeometry(swapProgress);
+            const cleanupProgress = swapVariant ? (step === count ? 1 : step === count - 1
+                ? ease(clamp(progress / flagCleanupFraction, 0, 1)) : 0) : 0;
+            if (swapVariant) updateFlagGeometry(cleanupProgress, step === count);
             const before = models[step], after = models[Math.min(lastModelStep, step + 1)];
             for (const [key, sprite] of sprites) {
                 const from = before.get(key), to = after.get(key);
@@ -479,6 +482,13 @@
                 }
                 let alpha = from && to ? 1 : from ? 1 - eased : eased;
                 let x = mix((from || to).x, (to || from).x, eased);
+                if (swapVariant && step === count - 1 && key.startsWith('digit:')) {
+                    // Keep the flag's overall travel at its normal pace while the
+                    // two cards, their clips, and their shared artwork close sooner.
+                    const column = Number(key.split(':')[1]);
+                    x = mix(before.get('digit:0').x, after.get('digit:0').x, eased)
+                        + column * mix(flapAdvance, tileWidth, cleanupProgress);
+                }
                 if (swapVariant && step === count - 1 && (key === 'letter:0' || key === 'letter:1')) {
                     // Reverse the reveal, then fade in beside the moving word.
                     // Following its spacing keeps a large final gap from placing
@@ -497,14 +507,17 @@
                     // Avoid applying the easing twice through a second fade.
                     const character = (from || to).character;
                     sprite.draw(character, character, eased);
-                } else sprite.draw(from?.character || '', to?.character || '', eased, swapProgress);
+                } else sprite.draw(from?.character || '', to?.character || '', eased, cleanupProgress);
             }
             const remaining = count - Math.min(count, step);
             root.dataset.state = stateAt(remaining);
             root.dataset.displayState = swapVariant && step === count ? '  ' + word
                 : flagVariant && remaining === 0 ? word[0] + '  ' + word.slice(1)
                 : stateAt(remaining);
-            if (swapVariant) root.dataset.swapProgress = String(swapProgress);
+            if (swapVariant) {
+                root.dataset.swapProgress = String(swapProgress);
+                root.dataset.flagCleanupProgress = String(cleanupProgress);
+            }
         }
 
         function snapshot() {
