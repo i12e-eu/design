@@ -437,7 +437,7 @@
                 <div class="control">
                   <label for="flag-hold-duration">Return delay</label>
                   <div class="input-row">
-                    <input id="flag-hold-duration" type="number" min="0" max="10000" step="1" value="1000"
+                    <input id="flag-hold-duration" type="number" min="0" max="10000" step="1" value="5000"
                            data-config="flagHoldDuration"/><span class="unit">ms</span>
                   </div>
                 </div>
@@ -605,14 +605,34 @@
 
               <div class="colors">
                 <div class="control">
+                  <label for="text-color">Infrastructure text color</label>
+                  <div class="input-row">
+                    <input id="text-color" type="color" value="#000000" data-config="textColor"/>
+                    <input id="text-color-hex" type="text" value="#000000"
+                           pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
+                           maxlength="7" required spellcheck="false" autocomplete="off"
+                           aria-label="Infrastructure text color hexadecimal value" data-color-for="text-color"/>
+                  </div>
+                </div>
+                <div class="control">
                   <label for="flap-color">Flap color</label>
                   <div class="input-row">
-                    <input id="flap-color" type="color" value="#003399" data-config="flapColor"/>
-                    <input id="flap-color-hex" type="text" value="#003399" pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
+                    <input id="flap-color" type="color" value="#000000" data-config="flapColor"/>
+                    <input id="flap-color-hex" type="text" value="#000000" pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
                            maxlength="7" required spellcheck="false" autocomplete="off"
                            aria-label="Flap color hexadecimal value" data-color-for="flap-color"/>
                   </div>
                   <p class="caption">Countdown cards blend into the flag’s fixed EU blue.</p>
+                </div>
+                <div class="control">
+                  <label for="flap-text-color">Flap text color</label>
+                  <div class="input-row">
+                    <input id="flap-text-color" type="color" value="#f8faff" data-config="flapTextColor"/>
+                    <input id="flap-text-color-hex" type="text" value="#f8faff"
+                           pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
+                           maxlength="7" required spellcheck="false" autocomplete="off"
+                           aria-label="Flap text color hexadecimal value" data-color-for="flap-text-color"/>
+                  </div>
                 </div>
                 <div class="control">
                   <label for="flap-detail-color">Flap detail color</label>

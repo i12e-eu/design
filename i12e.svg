@@ -32,7 +32,7 @@
         --flap-gap: 0.035; /* Edge-to-edge gap between cards in em. */
         --flap-outer-gap: 4px; /* Space between the flap group and adjacent plain letters. */
         --leading-flag-gap: 16px; /* Final space between the leading flag and the word. */
-        --flap-color: #003399; /* Customizable countdown cards; the flag keeps its official colors. */
+        --flap-color: #000000; /* Customizable countdown cards; the flag keeps its official colors. */
         --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
         --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
         --flap-details-visible: 1; /* Toggle without losing the chosen opacity. */
@@ -42,7 +42,7 @@
         --loop: 0;
         --flag-country: NL;
         --flag-return-mode: auto; /* auto = timed return; manual = trigger to return. */
-        --flag-hold-duration: 1000ms;
+        --flag-hold-duration: 5000ms;
         }
         text {
         fill: var(--text-color);
@@ -148,7 +148,9 @@
                 flapOuterGap: numeric(parseFloat(value('--flap-outer-gap')), 0, 96, 4),
                 leadingFlagGap: numeric(parseFloat(value('--leading-flag-gap')), 0, 96, 16),
                 starScale: numeric(value('--eu-star-scale') || 1, 0.25, 4, 1),
-                flapColor: normalizeColor(value('--flap-color')) || '#003399',
+                flapColor: normalizeColor(value('--flap-color')) || '#000000',
+                textColor: normalizeColor(value('--text-color')) || '#000000',
+                flapTextColor: normalizeColor(value('--flap-text-color')) || '#f8faff',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
                 detailOpacity: numeric(value('--flap-detail-opacity') || 1, 0, 1, 1),
                 detailsVisible: value('--flap-details-visible') !== '0',
@@ -156,7 +158,7 @@
                 loop: value('--loop') === '1',
                 flagCountry: countryFor(value('--flag-country')),
                 flagReturnMode: value('--flag-return-mode') === 'manual' ? 'manual' : 'auto',
-                flagHoldDuration: numeric(milliseconds(value('--flag-hold-duration')), 0, 10000, 1000),
+                flagHoldDuration: numeric(milliseconds(value('--flag-hold-duration')), 0, 10000, 5000),
             };
         }
 
@@ -493,11 +495,8 @@
             root.style.setProperty('--flap-detail-opacity', String(config.detailOpacity));
             root.style.setProperty('--flap-detail-display', config.detailsVisible ? 'inline' : 'none');
             root.style.setProperty('--background-color', config.backgroundColor);
-            // The default and unboxed letters remain readable on shared dark backgrounds.
-            const rgb = config.backgroundColor.match(/[\da-f]{2}/gi).map(value => parseInt(value, 16) / 255);
-            const light = rgb.map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
-            const luminance = light[0] * 0.2126 + light[1] * 0.7152 + light[2] * 0.0722;
-            root.style.setProperty('--text-color', luminance > 0.179 ? '#000000' : '#f8faff');
+            root.style.setProperty('--text-color', config.textColor);
+            root.style.setProperty('--flap-text-color', config.flapTextColor);
         }
 
         function build() {
@@ -837,6 +836,8 @@
                 leadingFlagGap: numeric(next.leadingFlagGap ?? config.leadingFlagGap, 0, 96, config.leadingFlagGap),
                 starScale: numeric(next.starScale ?? config.starScale, 0.25, 4, config.starScale),
                 flapColor: normalizeColor(next.flapColor) || config.flapColor,
+                textColor: normalizeColor(next.textColor) || config.textColor,
+                flapTextColor: normalizeColor(next.flapTextColor) || config.flapTextColor,
                 detailColor: normalizeColor(next.detailColor) || config.detailColor,
                 detailOpacity: numeric(next.detailOpacity ?? config.detailOpacity, 0, 1, config.detailOpacity),
                 detailsVisible: typeof next.detailsVisible === 'boolean' ? next.detailsVisible : config.detailsVisible,
