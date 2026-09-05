@@ -1,305 +1,402 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none" role="img"
-     aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none"
+     role="img" aria-labelledby="title description">
     <title id="title">infrastructure</title>
-    <desc id="description">A wordmark that expands from i12e to infrastructure, revealing one letter from right to left
-        with each countdown step.
+    <desc id="description">A wordmark expanding from i12e to infrastructure. Five selectable styles compare a plain
+        countdown with mechanical split-flap digits, characters, and blank places.
     </desc>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&amp;display=swap');
 
-        /* Global controls. Durations accept ms or s; typography uses SVG pixels.
-        Edit these defaults here. The HTML is only a viewer for this SVG.
-        Open as a document, or embed with an iframe/object to enable scripting
-        and the linked font. An img/CSS image displays the static fallback. */
+        /* Saved global controls. The HTML only displays and controls this SVG.
+        variant=0: default; 1: visible digits; 2: both digit places;
+        3: visible cells; 4: all 15 cells, including blanks.
+        Use ?variant=2 to open a standalone option; &amp;preview=1 crops the canvas.
+        Embed as an iframe/object or open directly to enable scripting and the
+        linked font. An img/CSS image displays the static text fallback. */
         :root {
+        display: block;
         width: 100%;
         height: 100%;
-        display: block;
         --transition-duration: 200ms;
         --hold-duration: 800ms;
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
+        --flap-color: #004494; /* Europa Component Library EC/EU primary blue. */
+        --background-color: #ffffff;
+        --flap-text-color: #f8faff;
+        --text-color: #000000;
         --loop: 1;
         }
-
         text {
-        fill: #000;
-        font-family: 'Roboto Mono', monospace;
-        font-size: var(--font-size);
-        font-weight: 400;
+        fill: var(--text-color);
+        font: 400 var(--font-size) 'Roboto Mono', monospace;
         font-kerning: none;
         font-variant-ligatures: none;
-        transform-origin: 0 0;
-        transform-box: view-box;
         }
-
+        .flap-text { fill: var(--flap-text-color); }
+        .flap-surface { fill: var(--flap-color); }
+        #background { fill: var(--background-color); }
         #fallback { letter-spacing: var(--character-spacing); }
     </style>
 
-    <rect width="1000" height="1000" fill="#fff"/>
-    <!-- A readable fallback when scripting is unavailable. -->
+    <rect id="background" width="1000" height="1000"/>
     <text id="fallback" x="0" y="55">infrastructure</text>
+    <defs id="flap-definitions"/>
     <g id="wordmark" visibility="hidden" aria-hidden="true"/>
 
     <script><![CDATA[
-  (() => {
-    'use strict';
+    (() => {
+        'use strict';
+        const root = document.documentElement;
+        const layer = document.getElementById('wordmark');
+        const fallback = document.getElementById('fallback');
+        const definitions = document.getElementById('flap-definitions');
+        const word = 'infrastructure';
+        const count = word.length - 2;
+        // The padded counter peaks at i[blank]1frastructure: 15 physical cells.
+        const capacity = word.length + 1;
+        const params = new URLSearchParams(window.location.search);
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const numeric = (value, min, max, fallback) => Number.isFinite(Number(value))
+            ? clamp(Number(value), min, max) : fallback;
+        const variant = Math.round(numeric(params.get('variant') || 0, 0, 4, 0));
+        const preview = params.get('preview') === '1';
+        const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+        const clock = () => performance.timeOrigin + performance.now();
+        const mix = (a, b, progress) => a + (b - a) * progress;
+        const validColor = value => typeof value === 'string' && /^#[\da-f]{6}$/i.test(value);
+        const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
+        let config, ease, duration, advance, glyphWidth, tileWidth, tileHeight, baseline;
+        let models = [], sprites = new Map();
+        let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
+        let lastPublished = -Infinity, ready = false;
 
-    const root = document.documentElement;
-    const layer = document.getElementById('wordmark');
-    const fallback = document.getElementById('fallback');
-    const word = 'infrastructure';
-    const count = word.length - 2;
-    const ns = 'http://www.w3.org/2000/svg';
-    const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
-    const number = (value, min, max, previous) => {
-      const parsed = Number(value);
-      return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : previous;
-    };
-    const milliseconds = (value) => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
-
-    function readDefaults() {
-      const styles = getComputedStyle(root);
-      return {
-        transitionDuration: milliseconds(styles.getPropertyValue('--transition-duration').trim()),
-        holdDuration: milliseconds(styles.getPropertyValue('--hold-duration').trim()),
-        easing: styles.getPropertyValue('--easing').trim(),
-        fontSize: parseFloat(styles.getPropertyValue('--font-size')),
-        characterSpacing: parseFloat(styles.getPropertyValue('--character-spacing')),
-        loop: styles.getPropertyValue('--loop').trim() === '1',
-      };
-    }
-    let config;
-    let animations = [];
-    let duration = 0;
-    let playing = false;
-    let frame = 0;
-    let lastPublished = -Infinity;
-    let ready = false;
-
-    function stateAt(step) {
-      const remaining = count - step;
-      return remaining ? word[0] + remaining + word.slice(remaining + 1) : word;
-    }
-
-    function currentTime() {
-      return Math.min(duration, Math.max(0, Number(animations[0]?.currentTime) || 0));
-    }
-
-    function snapshot() {
-      const time = currentTime();
-      const stepDuration = config.holdDuration + config.transitionDuration;
-      const step = Math.min(count, Math.floor(time / stepDuration));
-      const transitioning = step < count && time - step * stepDuration > config.holdDuration;
-      return {
-        type: 'i12e:state', config: { ...config }, duration, currentTime: time,
-        playing, step, state: stateAt(step),
-        phase: time >= duration ? 'complete' : transitioning ? 'transition' : 'hold',
-        reducedMotion: motionPreference.matches,
-      };
-    }
-
-    function publish() {
-      const state = snapshot();
-      root.dataset.state = state.state;
-      root.dataset.phase = state.phase;
-      root.dataset.playing = String(playing);
-      if (window.parent !== window) window.parent.postMessage(state, '*');
-    }
-
-    function setTime(time) {
-      animations.forEach((animation) => { animation.currentTime = time; });
-    }
-
-    function tick(now) {
-      if (!playing) return;
-      if (currentTime() >= duration) {
-        if (config.loop) {
-          setTime(0);
-          startTogether();
-        } else {
-          pause();
-          return;
+        function create(tag, attributes = {}, parent = layer) {
+            const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+            parent.append(element);
+            return element;
         }
-      }
-      if (now - lastPublished >= 80) {
-        publish();
-        lastPublished = now;
-      }
-      frame = requestAnimationFrame(tick);
-    }
 
-    // All effects share one timeline origin, including numeral crossfades.
-    function startTogether() {
-      const start = document.timeline.currentTime - currentTime();
-      animations.forEach((animation) => {
-        animation.play();
-        animation.startTime = start;
-      });
-    }
+        function readDefaults() {
+            const css = getComputedStyle(root);
+            const value = name => css.getPropertyValue(name).trim();
+            return {
+                transitionDuration: milliseconds(value('--transition-duration')),
+                holdDuration: milliseconds(value('--hold-duration')),
+                easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
+                characterSpacing: parseFloat(value('--character-spacing')),
+                flapColor: value('--flap-color'), backgroundColor: value('--background-color'),
+                loop: value('--loop') === '1',
+            };
+        }
 
-    function play() {
-      if (!ready || playing) return;
-      if (currentTime() >= duration) setTime(0);
-      playing = true;
-      startTogether();
-      frame = requestAnimationFrame(tick);
-      publish();
-    }
+        // One easing function drives position, opacity, and the two-stage hinge.
+        // Bisection solves CSS cubic-bezier's x coordinate, rather than treating
+        // its parameter as elapsed time. Reject unsupported curves atomically.
+        function easingFor(value) {
+            const presets = {
+                linear: [0, 0, 1, 1], ease: [0.25, 0.1, 0.25, 1],
+                'ease-in': [0.42, 0, 1, 1], 'ease-out': [0, 0, 0.58, 1],
+                'ease-in-out': [0.42, 0, 0.58, 1],
+            };
+            const match = /^cubic-bezier\(([^)]+)\)$/.exec(value);
+            const points = presets[value] || (match && match[1].split(',').map(Number));
+            if (!points || points.length !== 4 || !points.every(Number.isFinite)
+                || points.some(number => number < 0 || number > 1)) return null;
+            const [x1, y1, x2, y2] = points;
+            const curve = (t, a, b) => 3 * (1 - t) ** 2 * t * a + 3 * (1 - t) * t * t * b + t ** 3;
+            return progress => {
+                if (progress <= 0 || progress >= 1) return clamp(progress, 0, 1);
+                let low = 0, high = 1;
+                for (let i = 0; i < 24; i++) {
+                    const middle = (low + high) / 2;
+                    if (curve(middle, x1, x2) < progress) low = middle;
+                    else high = middle;
+                }
+                return curve((low + high) / 2, y1, y2);
+            };
+        }
 
-    function pause() {
-      playing = false;
-      cancelAnimationFrame(frame);
-      animations.forEach((animation) => animation.pause());
-      publish();
-    }
+        function stateAt(remaining, padded = false) {
+            if (!remaining) return word;
+            const digits = padded ? String(remaining).padStart(2, ' ') : String(remaining);
+            return word[0] + digits + word.slice(remaining + 1);
+        }
 
-    function seek(time) {
-      pause();
-      setTime(number(time, 0, duration, currentTime()));
-      publish();
-    }
+        function layout(remaining) {
+            const state = new Map();
+            if (variant >= 3) {
+                const text = stateAt(remaining, variant === 4);
+                const cells = variant === 4 ? text.padEnd(capacity, ' ') : text;
+                [...cells].forEach((character, index) => state.set(`cell:${index}`, { character, x: index * advance }));
+            } else {
+                const digits = remaining ? (variant === 2 ? String(remaining).padStart(2, ' ') : String(remaining)) : '';
+                state.set('letter:0', { character: word[0], x: 0 });
+                for (let index = remaining + 1; index < word.length; index++) {
+                    state.set(`letter:${index}`, { character: word[index], x: (digits.length + index - remaining) * advance });
+                }
+                [...digits].forEach((character, index) => state.set(`digit:${index}`, { character, x: (index + 1) * advance }));
+            }
+            return state;
+        }
 
-    function seekStep(step) {
-      seek(Math.round(number(step, 0, count, 0)) * (config.holdDuration + config.transitionDuration));
-    }
+        function text(character, parent, attributes = {}) {
+            const node = create('text', { x: glyphWidth / 2, y: baseline, 'text-anchor': 'middle', ...attributes }, parent);
+            node.textContent = character;
+            return node;
+        }
 
-    function restart() {
-      pause();
-      setTime(0);
-      play();
-    }
+        function makePlain(parent) {
+            const outgoing = text('', parent), incoming = text('', parent);
+            return (before, after, progress) => {
+                outgoing.textContent = before;
+                incoming.textContent = after;
+                outgoing.setAttribute('opacity', before === after ? 1 : 1 - progress);
+                incoming.setAttribute('opacity', before === after ? 0 : progress);
+            };
+        }
 
-    function makeText(character, x, baseline, parent = layer) {
-      const text = document.createElementNS(ns, 'text');
-      text.textContent = character;
-      text.setAttribute('x', x);
-      text.setAttribute('y', baseline);
-      parent.append(text);
-      return text;
-    }
+        function makeFlap(parent) {
+            const tile = create('g', { 'data-flap': 'true' }, parent);
+            const half = tileHeight / 2;
+            function face(part) {
+                // Transform the wrapper AFTER clipping its child, so the glyph
+                // and its half-card rotate together about the centre hinge.
+                const wrapper = create('g', {}, tile);
+                const clipped = create('g', { 'clip-path': `url(#flap-${part})` }, wrapper);
+                create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045, class: 'flap-surface' }, clipped);
+                const glyph = text('', clipped, { x: tileWidth / 2, class: 'flap-text' });
+                const shadow = create('rect', { width: tileWidth, height: tileHeight, fill: '#000', opacity: 0 }, clipped);
+                return { wrapper, glyph, shadow };
+            }
+            const top = face('top'), bottom = face('bottom');
+            const fallingTop = face('top'), arrivingBottom = face('bottom');
+            fallingTop.wrapper.dataset.face = 'outgoing-top';
+            arrivingBottom.wrapper.dataset.face = 'incoming-bottom';
+            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, fill: '#07172f', opacity: 0.65 }, tile);
+            for (const x of [0, tileWidth - 1.5]) {
+                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, fill: '#081a31', opacity: 0.7 }, tile);
+            }
+            const gapInset = (glyphWidth - tileWidth) / 2;
+            tile.setAttribute('transform', `translate(${gapInset} 0)`);
+            let previousPair = '';
+            return (before, after, progress) => {
+                const changing = before !== after;
+                const pair = `${before}\0${after}`;
+                if (pair !== previousPair) {
+                    // New top and old bottom are stationary underneath the leaf.
+                    top.glyph.textContent = after;
+                    bottom.glyph.textContent = before;
+                    fallingTop.glyph.textContent = before;
+                    arrivingBottom.glyph.textContent = after;
+                    previousPair = pair;
+                }
+                // Orthographic projection of a leaf rotating around its X axis:
+                // outgoing top 0..90 degrees, then incoming bottom -90..0.
+                const topScale = changing && progress < 0.5 ? Math.cos(progress * Math.PI) : 0;
+                const bottomScale = changing && progress >= 0.5 ? Math.sin((progress - 0.5) * Math.PI) : 0;
+                fallingTop.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${topScale}) translate(0 ${-half})`);
+                arrivingBottom.wrapper.setAttribute('transform', `translate(0 ${half}) scale(1 ${bottomScale}) translate(0 ${-half})`);
+                fallingTop.wrapper.setAttribute('visibility', topScale > 0.00001 ? 'visible' : 'hidden');
+                arrivingBottom.wrapper.setAttribute('visibility', bottomScale > 0.00001 ? 'visible' : 'hidden');
+                fallingTop.shadow.setAttribute('opacity', (1 - topScale) * 0.28);
+                arrivingBottom.shadow.setAttribute('opacity', (1 - bottomScale) * 0.28);
+                top.shadow.setAttribute('opacity', 0.025);
+                bottom.shadow.setAttribute('opacity', 0.07);
+                // Holds (including p=1 when manually sampled) show the new face.
+                if (!changing || progress >= 1) bottom.glyph.textContent = after;
+                else bottom.glyph.textContent = before;
+                tile.dataset.flipping = String(changing && progress > 0 && progress < 1);
+                tile.dataset.empty = String((progress < 0.5 ? before : after).trim() === '');
+            };
+        }
 
-    // Every state has an explicit hold, including the initial and final words.
-    // Easing belongs to the outgoing hold frame, so movement and opacity use
-    // the very same curve over the following transition segment.
-    function animateStates(element, stateFor) {
-      const keyframes = [];
-      for (let step = 0; step <= count; step++) {
-        const time = step * (config.holdDuration + config.transitionDuration);
-        const state = stateFor(count - step);
-        keyframes.push({ ...state, offset: time / duration, easing: 'linear' });
-        keyframes.push({ ...state, offset: (time + config.holdDuration) / duration, easing: config.easing });
-      }
-      const animation = element.animate(keyframes, { duration, fill: 'both' });
-      animation.pause();
-      animation.currentTime = 0;
-      animations.push(animation);
-    }
+        function applyColors() {
+            root.style.setProperty('--flap-color', config.flapColor);
+            root.style.setProperty('--background-color', config.backgroundColor);
+            // The default and unboxed letters remain readable on shared dark backgrounds.
+            const rgb = config.backgroundColor.match(/[\da-f]{2}/gi).map(value => parseInt(value, 16) / 255);
+            const light = rgb.map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+            const luminance = light[0] * 0.2126 + light[1] * 0.7152 + light[2] * 0.0722;
+            root.style.setProperty('--text-color', luminance > 0.179 ? '#000000' : '#f8faff');
+        }
 
-    function build() {
-      cancelAnimationFrame(frame);
-      animations.forEach((animation) => animation.cancel());
-      animations = [];
-      layer.replaceChildren();
-      root.style.setProperty('--font-size', `${config.fontSize}px`);
-      root.style.setProperty('--character-spacing', `${config.characterSpacing}px`);
-      const baseline = config.fontSize * 55 / 48;
-      fallback.setAttribute('y', baseline);
+        function build() {
+            layer.replaceChildren();
+            definitions.replaceChildren();
+            sprites = new Map();
+            root.style.setProperty('--font-size', `${config.fontSize}px`);
+            root.style.setProperty('--character-spacing', `${config.characterSpacing}px`);
+            applyColors();
+            const measure = create('text');
+            measure.textContent = 'M';
+            glyphWidth = measure.getComputedTextLength();
+            measure.remove();
+            advance = glyphWidth + config.characterSpacing;
+            tileWidth = glyphWidth - config.fontSize * 0.035;
+            tileHeight = config.fontSize * 1.42;
+            baseline = tileHeight / 2 + config.fontSize * 0.32;
+            root.dataset.characterAdvance = String(advance);
+            root.dataset.variant = String(variant);
+            duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            ease = easingFor(config.easing) || easingFor('ease-in-out');
 
-      // Measure the linked font after it loads; never assume a fallback's width.
-      const measure = makeText('M', 0, baseline);
-      const advance = measure.getComputedTextLength() + config.characterSpacing;
-      measure.remove();
-      root.dataset.characterAdvance = String(advance);
-      duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
+                const clip = create('clipPath', { id: `flap-${part}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
+                create('rect', { x: 0, y, width: tileWidth, height: tileHeight / 2 }, clip);
+            }
+            models = Array.from({ length: count + 1 }, (_, step) => layout(count - step));
+            const keys = new Set(models.flatMap(model => [...model.keys()]));
+            for (const key of keys) {
+                const group = create('g', { 'data-key': key });
+                const flapped = variant >= 3 || (variant > 0 && key.startsWith('digit:'));
+                sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group) : makePlain(group) });
+            }
+            const canvasHeight = preview ? 180 : 1000;
+            root.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
+            root.setAttribute('height', canvasHeight);
+            document.getElementById('background').setAttribute('height', canvasHeight);
+            // Keep the reference origin in standalone mode; add preview gutters.
+            const inset = preview ? 24 : 0;
+            const scale = Math.min(1, (1000 - inset * 2) / (capacity * advance));
+            const y = preview ? (canvasHeight - tileHeight * scale) / 2 : (config.fontSize * 55 / 48 - baseline) * scale;
+            layer.setAttribute('transform', `translate(${inset} ${y}) scale(${scale})`);
+            root.dataset.fitScale = String(scale);
+            fallback.setAttribute('visibility', 'hidden');
+            layer.setAttribute('visibility', 'visible');
+        }
 
-      // Stable identities by word index preserve repeated r/u/t characters.
-      [...word].forEach((character, index) => {
-        const text = makeText(character, 0, baseline);
-        text.dataset.letterIndex = String(index);
-        animateStates(text, (remaining) => {
-          if (index === 0) return { transform: 'translateX(0px)', opacity: 1 };
-          const visible = index > remaining;
-          const digits = remaining ? String(remaining).length : 0;
-          // Hidden letters wait at their eventual insertion point and fade in
-          // there while all already-visible letters slide to their new cells.
-          const revealCount = index - 1;
-          const insertion = 1 + (revealCount ? String(revealCount).length : 0);
-          const cell = visible ? digits + index - remaining : insertion;
-          return { transform: `translateX(${cell * advance}px)`, opacity: visible ? 1 : 0 };
-        });
-      });
+        function currentTime() {
+            if (!playing) return position;
+            const elapsed = originTime + Math.max(0, clock() - startedAt);
+            return config.loop ? elapsed % duration : Math.min(duration, elapsed);
+        }
 
-      // No visible zero: the final n replaces the last numeral in its own cell.
-      // At 10 -> 9, the removed digit likewise frees the new t's cell; the
-      // existing suffix stays put at these two natural-width boundaries.
-      const numeralCells = new Set();
-      for (let remaining = count; remaining >= 1; remaining--) {
-        [...String(remaining)].forEach((digit, column) => numeralCells.add(`${column}:${digit}`));
-      }
-      // Keep an unchanged digit fully opaque (e.g. the 1 in 12 -> 11 -> 10).
-      for (const cell of numeralCells) {
-        const [column, digit] = cell.split(':');
-        const text = makeText(digit, (Number(column) + 1) * advance, baseline);
-        text.dataset.numeralCell = cell;
-        animateStates(text, (remaining) => ({
-          opacity: remaining > 0 && String(remaining)[Number(column)] === digit ? 1 : 0,
-        }));
-      }
+        function sample(time) {
+            const stepDuration = config.holdDuration + config.transitionDuration;
+            const step = Math.min(count, Math.floor(time / stepDuration));
+            const progress = step === count ? 0 : clamp((time - step * stepDuration - config.holdDuration) / config.transitionDuration, 0, 1);
+            return { step, progress, eased: ease(progress) };
+        }
 
-      fallback.setAttribute('visibility', 'hidden');
-      layer.setAttribute('visibility', 'visible');
-    }
+        function render(time) {
+            const { step, eased } = sample(time);
+            const before = models[step], after = models[Math.min(count, step + 1)];
+            for (const [key, sprite] of sprites) {
+                const from = before.get(key), to = after.get(key);
+                if (!from && !to) { sprite.group.setAttribute('visibility', 'hidden'); continue; }
+                const alpha = from && to ? 1 : from ? 1 - eased : eased;
+                sprite.group.setAttribute('visibility', alpha > 0 ? 'visible' : 'hidden');
+                sprite.group.setAttribute('opacity', alpha);
+                sprite.group.setAttribute('transform', `translate(${mix((from || to).x, (to || from).x, eased)} 0)`);
+                if (!sprite.flapped && (!from || !to)) {
+                    // The outer opacity already handles a new/removed letter.
+                    // Avoid applying the easing twice through a second fade.
+                    const character = (from || to).character;
+                    sprite.draw(character, character, eased);
+                } else sprite.draw(from?.character || '', to?.character || '', eased);
+            }
+            root.dataset.state = stateAt(count - step);
+            root.dataset.displayState = stateAt(count - step, variant === 2 || variant === 4);
+        }
 
-    function configure(next = {}) {
-      const resume = playing;
-      playing = false;
-      config = {
-        transitionDuration: number(next.transitionDuration ?? config.transitionDuration, 1, 5000, config.transitionDuration),
-        holdDuration: number(next.holdDuration ?? config.holdDuration, 0, 10000, config.holdDuration),
-        easing: typeof next.easing === 'string' && CSS.supports('animation-timing-function', next.easing) ? next.easing : config.easing,
-        fontSize: number(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
-        characterSpacing: number(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
-        loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
-      };
-      build();
-      if (motionPreference.matches && !resume) setTime(duration);
-      if (resume) play();
-      else publish();
-    }
+        function snapshot() {
+            const time = currentTime();
+            const { step, progress } = sample(time);
+            return {
+                type: 'i12e:state', variant, config: { ...config }, duration, currentTime: time, playing,
+                step, state: stateAt(count - step), reducedMotion: motionPreference.matches,
+                phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
+            };
+        }
+        function publish() {
+            const state = snapshot();
+            root.dataset.phase = state.phase;
+            root.dataset.playing = String(playing);
+            if (window.parent !== window) window.parent.postMessage(state, '*');
+        }
+        function tick(now) {
+            if (!playing) return;
+            position = currentTime();
+            render(position);
+            if (!config.loop && position >= duration) {
+                playing = false;
+                publish();
+                return;
+            }
+            if (now - lastPublished >= 80) { publish(); lastPublished = now; }
+            frame = requestAnimationFrame(tick);
+        }
+        function play(options = {}) {
+            if (!ready) return;
+            cancelAnimationFrame(frame);
+            position = Number.isFinite(options.time) ? clamp(options.time, 0, duration) : currentTime();
+            if (position >= duration) position = 0;
+            originTime = position;
+            startedAt = Number.isFinite(options.startedAt) ? options.startedAt : clock();
+            playing = true;
+            render(position);
+            frame = requestAnimationFrame(tick);
+            publish();
+        }
+        function pause(time) {
+            position = Number.isFinite(time) ? clamp(time, 0, duration) : currentTime();
+            playing = false;
+            cancelAnimationFrame(frame);
+            render(position);
+            publish();
+        }
+        function seek(time) { pause(numeric(time, 0, duration, currentTime())); }
+        function seekStep(step) { seek(Math.round(numeric(step, 0, count, 0)) * (config.holdDuration + config.transitionDuration)); }
+        function restart(options = {}) { play({ ...options, time: 0 }); }
+        function configure(next = {}, options = {}) {
+            const resume = typeof options.playing === 'boolean' ? options.playing : playing;
+            const time = Number.isFinite(options.time) ? options.time : currentTime();
+            playing = false;
+            cancelAnimationFrame(frame);
+            config = {
+                transitionDuration: numeric(next.transitionDuration ?? config.transitionDuration, 1, 5000, config.transitionDuration),
+                holdDuration: numeric(next.holdDuration ?? config.holdDuration, 0, 10000, config.holdDuration),
+                easing: typeof next.easing === 'string' && easingFor(next.easing) ? next.easing : config.easing,
+                fontSize: numeric(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
+                characterSpacing: numeric(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
+                flapColor: validColor(next.flapColor) ? next.flapColor.toLowerCase() : config.flapColor,
+                backgroundColor: validColor(next.backgroundColor) ? next.backgroundColor.toLowerCase() : config.backgroundColor,
+                loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
+            };
+            build();
+            position = motionPreference.matches && !resume ? duration : clamp(time, 0, duration);
+            if (resume) play({ ...options, time: position });
+            else { render(position); publish(); }
+        }
 
-    async function init() {
-      config = readDefaults();
-      // The font stays hosted by Google; no font files are bundled here.
-      try { await document.fonts.load(`400 ${config.fontSize}px "Roboto Mono"`, word + '0123456789'); }
-      catch { /* Keep a usable monospaced fallback if the font is offline. */ }
-      build();
-      ready = true;
-      window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, getState: snapshot });
-
-      window.addEventListener('message', (event) => {
-        if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
-        const { action, config: next, time, step } = event.data;
-        if (action === 'configure') configure(next);
-        else if (action === 'seek') seek(time);
-        else if (action === 'seekStep') seekStep(step);
-        else if (action === 'play') play();
-        else if (action === 'pause') pause();
-        else if (action === 'restart') restart();
-        else if (action === 'status') publish();
-      });
-
-      motionPreference.addEventListener('change', (event) => {
-        if (event.matches) seek(duration);
-      });
-      if (motionPreference.matches) seek(duration);
-      else play();
-    }
-
-    // Wait for the imported stylesheet to register its font-face before load().
-    if (document.readyState === 'complete') init();
-    else window.addEventListener('load', init, { once: true });
-  })();
-  ]]></script>
+        async function init() {
+            config = readDefaults();
+            try { await document.fonts.load(`400 ${config.fontSize}px "Roboto Mono"`, word + '0123456789'); }
+            catch { /* A network failure retains the monospaced system fallback. */ }
+            build();
+            ready = true;
+            window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, getState: snapshot });
+            window.addEventListener('message', event => {
+                if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
+                const data = event.data;
+                if (data.action === 'configure') configure(data.config, data);
+                else if (data.action === 'seek') seek(data.time);
+                else if (data.action === 'seekStep') seekStep(data.step);
+                else if (data.action === 'play') play(data);
+                else if (data.action === 'pause') pause(data.time);
+                else if (data.action === 'restart') restart(data);
+                else if (data.action === 'status') publish();
+            });
+            motionPreference.addEventListener('change', event => { if (event.matches) seek(duration); });
+            if (motionPreference.matches) seek(duration);
+            else if (params.get('autoplay') === '0') seek(0);
+            else play();
+        }
+        if (document.readyState === 'complete') init();
+        else window.addEventListener('load', init, { once: true });
+    })();
+    ]]></script>
 </svg>

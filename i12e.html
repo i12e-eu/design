@@ -73,15 +73,44 @@
             align-items: start;
         }
 
-        .preview {
+        .previews {
             min-width: 0;
+          display: grid;
+          gap: 22px;
+        }
+
+        .variant-heading {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 16px;
+          margin-bottom: 8px;
+        }
+
+        h2 {
+          font-size: 12px;
+          font-weight: 400;
+          margin: 0;
+        }
+
+        .variant-heading a {
+          font-size: 10px;
+          white-space: nowrap;
         }
 
         .artboard {
-            width: min(100%, calc(100svh - 110px));
-            aspect-ratio: 1;
+          width: 100%;
+          aspect-ratio: 1000 / 180;
             border: 1px solid #c8c8c8;
             background: white;
+        }
+
+        .settings {
+          position: sticky;
+          top: 24px;
+          max-height: calc(100svh - 48px);
+          overflow-y: auto;
+          padding-bottom: 4px;
         }
 
         iframe {
@@ -129,7 +158,7 @@
             color: #737373;
         }
 
-        input[type="number"], select {
+        input[type="number"], input[type="text"], select {
             width: 100%;
             height: 34px;
             border: 1px solid #c8c8c8;
@@ -137,6 +166,23 @@
             background: white;
             padding: 6px 8px;
             color: inherit;
+        }
+
+        .colors {
+          border-top: 1px solid #d8d8d8;
+          padding-top: 18px;
+          margin-top: 22px;
+        }
+
+        .input-row input[type="color"] {
+          flex: 0 0 38px;
+          width: 38px;
+          height: 34px;
+          padding: 3px;
+          border: 1px solid #c8c8c8;
+          border-radius: 0;
+          background: white;
+          cursor: pointer;
         }
 
         select {
@@ -265,6 +311,9 @@
             }
 
             .settings {
+              position: static;
+              max-height: none;
+              overflow: visible;
                 max-width: 400px;
                 width: 100%;
             }
@@ -275,19 +324,70 @@
 <div class="page">
     <header>
         <h1>i12e <span>/ infrastructure wordmark</span></h1>
-        <a href="./i12e.svg" target="_blank" rel="noopener">Open SVG ↗</a>
+      <span class="time">Five synchronized variants</span>
     </header>
 
     <main class="workspace">
-        <section class="preview" aria-label="Wordmark preview">
-            <div class="artboard">
-                <iframe id="wordmark" src="./i12e.svg" title="Animated infrastructure wordmark"></iframe>
-            </div>
-            <p class="caption">1000 × 1000 SVG artboard · scaled to fit</p>
+      <section class="previews" aria-label="Wordmark variants">
+        <article class="variant" aria-labelledby="variant-0-title">
+          <div class="variant-heading">
+            <h2 id="variant-0-title">01 / Default</h2>
+            <a href="./i12e.svg?variant=0" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=0&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — default" data-variant="0"></iframe>
+          </div>
+          <p class="caption">Original countdown and letter reveal.</p>
+        </article>
+        <article class="variant" aria-labelledby="variant-1-title">
+          <div class="variant-heading">
+            <h2 id="variant-1-title">02 / Visible digits</h2>
+            <a href="./i12e.svg?variant=1" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=1&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — visible digit flaps" data-variant="1"></iframe>
+          </div>
+          <p class="caption">Flaps behind the visible countdown digits.</p>
+        </article>
+        <article class="variant" aria-labelledby="variant-2-title">
+          <div class="variant-heading">
+            <h2 id="variant-2-title">03 / Digits + blank tens</h2>
+            <a href="./i12e.svg?variant=2" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=2&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — digit flaps including blank tens" data-variant="2"></iframe>
+          </div>
+          <p class="caption">Digit flaps include the empty tens position.</p>
+        </article>
+        <article class="variant" aria-labelledby="variant-3-title">
+          <div class="variant-heading">
+            <h2 id="variant-3-title">04 / Visible glyphs</h2>
+            <a href="./i12e.svg?variant=3" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=3&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — flaps for all visible glyphs" data-variant="3"></iframe>
+          </div>
+          <p class="caption">Visible letters and digits flip in fixed character positions.</p>
+        </article>
+        <article class="variant" aria-labelledby="variant-4-title">
+          <div class="variant-heading">
+            <h2 id="variant-4-title">05 / Glyphs + blank slots</h2>
+            <a href="./i12e.svg?variant=4" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=4&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — flaps including blank character slots" data-variant="4"></iframe>
+          </div>
+          <p class="caption">Fixed flaps include blank tens and trailing character positions.</p>
+        </article>
         </section>
 
         <aside class="settings" aria-label="Animation controls">
-            <p id="loading" role="status">Loading wordmark…</p>
+          <p id="loading" role="status">Loading previews… 0 / 5</p>
             <fieldset id="controls" disabled aria-label="Preview settings">
                 <div class="control">
                     <label for="transition-duration">Transition duration</label>
@@ -324,6 +424,27 @@
                             class="unit">px</span></div>
                 </div>
 
+              <div class="colors">
+                <div class="control">
+                  <label for="flap-color">Flap color</label>
+                  <div class="input-row">
+                    <input id="flap-color" type="color" value="#004494" data-config="flapColor"/>
+                    <input id="flap-color-hex" type="text" value="#004494" pattern="#[0-9a-fA-F]{6}"
+                           maxlength="7" required spellcheck="false" autocomplete="off"
+                           aria-label="Flap color hexadecimal value" data-color-for="flap-color"/>
+                  </div>
+                </div>
+                <div class="control">
+                  <label for="background-color">Background color</label>
+                  <div class="input-row">
+                    <input id="background-color" type="color" value="#ffffff" data-config="backgroundColor"/>
+                    <input id="background-color-hex" type="text" value="#ffffff" pattern="#[0-9a-fA-F]{6}"
+                           maxlength="7" required spellcheck="false" autocomplete="off"
+                           aria-label="Background color hexadecimal value" data-color-for="background-color"/>
+                  </div>
+                </div>
+              </div>
+
                 <div class="transport">
                     <button id="play-pause" type="button">Pause</button>
                     <button id="restart" type="button">Restart</button>
@@ -341,8 +462,10 @@
                 <output id="current-state">i12e</output>
                 <p id="phase">Waiting for SVG</p>
             </div>
-            <p class="help">Controls apply to this preview session. Edit the CSS variables in i12e.svg to save
-                defaults.</p>
+          <p class="help">Controls apply to all five previews. Timing and typography changes restart their shared
+            timeline;
+            colors update the current frame.
+            Edit the CSS variables in i12e.svg to save defaults.</p>
             <p id="motion-note" class="help" hidden>Reduced motion is enabled. Use Play to preview the animation.</p>
         </aside>
     </main>
@@ -350,19 +473,40 @@
 
 <script>
     (() => {
-        const frame = document.getElementById("wordmark");
+      const frames = [...document.querySelectorAll("iframe[data-variant]")];
         const controls = document.getElementById("controls");
         const configInputs = [...document.querySelectorAll("[data-config]")];
+      const colorHexInputs = [...document.querySelectorAll("[data-color-for]")];
         const playPause = document.getElementById("play-pause");
         const timeline = document.getElementById("timeline");
+      const readyFrames = new Set();
+      const states = new Map();
         let latestState = null;
+      let latestReceivedAt = 0;
+      let initialized = false;
+      let lastConfig = "";
 
         // postMessage also supports the distinct origins of local file:// documents.
         function command(action, values = {}) {
-            frame.contentWindow.postMessage({type: "i12e:command", action, ...values}, "*");
+          const message = {type: "i12e:command", action, ...values};
+          frames.forEach(frame => frame.contentWindow.postMessage(message, "*"));
         }
 
-        function configure() {
+      // Every child receives the same absolute clock origin for synchronized playback.
+      function startedAt() {
+        return performance.timeOrigin + performance.now() + 50;
+      }
+
+      function sharedTime() {
+        if (!latestState) return 0;
+        const elapsed = latestState.playing ? performance.now() - latestReceivedAt : 0;
+        const time = latestState.currentTime + elapsed;
+        return latestState.playing && latestState.config.loop && latestState.duration > 0
+                ? time % latestState.duration : Math.min(latestState.duration, time);
+        }
+
+      function configure(preserveTime = false) {
+        if (!initialized) return;
             const config = {};
             for (const input of configInputs) {
                 if (!input.checkValidity()) {
@@ -375,31 +519,62 @@
                 if (typeof value === "number" && !Number.isFinite(value)) return;
                 config[key] = value;
             }
-            command("configure", {config});
+        command("configure", {
+          config, time: preserveTime === true ? sharedTime() : 0,
+          playing: Boolean(latestState?.playing), startedAt: startedAt()
+        });
         }
 
-        configInputs.forEach(input => input.addEventListener("change", configure));
-        playPause.addEventListener("click", () => command(latestState?.playing ? "pause" : "play"));
-        document.getElementById("restart").addEventListener("click", () => command("restart"));
+      configInputs.forEach(input => {
+        if (input.type === "color") {
+          input.addEventListener("input", () => {
+            document.getElementById(`${input.id}-hex`).value = input.value;
+            configure(true);
+          });
+        } else input.addEventListener("change", configure);
+      });
+
+      colorHexInputs.forEach(input => {
+        input.addEventListener("input", () => {
+          if (!/^#[0-9a-fA-F]{6}$/.test(input.value)) return;
+          document.getElementById(input.dataset.colorFor).value = input.value;
+          configure(true);
+        });
+        input.addEventListener("change", () => {
+          if (!input.checkValidity()) input.reportValidity();
+        });
+      });
+
+      playPause.addEventListener("click", () => {
+        if (latestState?.playing) {
+          // Seeking pauses every preview at the exact same logical time.
+          command("seek", {time: sharedTime()});
+        } else command("play", {startedAt: startedAt()});
+      });
+      document.getElementById("restart").addEventListener("click", () => command("restart", {startedAt: startedAt()}));
         timeline.addEventListener("input", () => command("seek", {time: timeline.valueAsNumber}));
 
-        window.addEventListener("message", event => {
-            if (event.source !== frame.contentWindow || event.data?.type !== "i12e:state") return;
-            const state = event.data;
+      function updateUI(state) {
             latestState = state;
-            controls.disabled = false;
-            document.getElementById("loading").hidden = true;
+        latestReceivedAt = performance.now();
 
-            for (const input of configInputs) {
-                const value = state.config?.[input.dataset.config];
-                if (value === undefined || input === document.activeElement) continue;
-                if (input.type === "checkbox") input.checked = Boolean(value);
-                else {
-                    if (input.tagName === "SELECT" && ![...input.options].some(option => option.value === value)) {
-                        input.add(new Option(value, value));
-                    }
-                    input.value = value;
-                }
+        // Playback updates should never interrupt an in-progress field edit.
+        const signature = JSON.stringify(state.config);
+        if (signature !== lastConfig) {
+          for (const input of configInputs) {
+            const value = state.config?.[input.dataset.config];
+            const hex = input.type === "color" ? document.getElementById(`${input.id}-hex`) : null;
+            if (value === undefined || input === document.activeElement || hex === document.activeElement) continue;
+            if (input.type === "checkbox") input.checked = Boolean(value);
+            else {
+              if (input.tagName === "SELECT" && ![...input.options].some(option => option.value === value)) {
+                input.add(new Option(value, value));
+              }
+              input.value = value;
+              if (hex) hex.value = value;
+            }
+          }
+          lastConfig = signature;
             }
 
             const duration = Math.max(0, Number(state.duration) || 0);
@@ -412,11 +587,37 @@
             document.getElementById("phase").textContent = `${state.playing ? "Playing" : "Paused"} · ${state.phase} · step ${state.step} / 12`;
             document.getElementById("motion-note").hidden = !state.reducedMotion;
             playPause.textContent = state.playing ? "Pause" : "Play";
+      }
+
+      window.addEventListener("message", event => {
+        const index = frames.findIndex(frame => event.source === frame.contentWindow);
+        if (index < 0 || event.data?.type !== "i12e:state") return;
+        states.set(index, event.data);
+        readyFrames.add(index);
+
+        if (!initialized) {
+          document.getElementById("loading").textContent = `Loading previews… ${readyFrames.size} / ${frames.length}`;
+          if (readyFrames.size < frames.length) return;
+          initialized = true;
+          controls.disabled = false;
+          document.getElementById("loading").hidden = true;
+          updateUI(states.get(0));
+          if ([...states.values()].some(state => state.reducedMotion)) {
+            command("seek", {time: latestState.duration});
+          } else command("restart", {startedAt: startedAt()});
+          return;
+        }
+
+        // The first preview is the shared transport's state source.
+        if (index === 0) updateUI(event.data);
         });
 
-        // The SVG also announces readiness after its linked font has loaded.
-        frame.addEventListener("load", () => command("status"));
-        command("status");
+      // Each SVG also announces readiness after its linked font has loaded.
+      frames.forEach(frame => {
+        const status = () => frame.contentWindow.postMessage({type: "i12e:command", action: "status"}, "*");
+        frame.addEventListener("load", status);
+        status();
+      });
     })();
 </script>
 </body>
