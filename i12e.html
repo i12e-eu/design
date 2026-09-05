@@ -76,7 +76,19 @@
         .previews {
             min-width: 0;
           display: grid;
+          gap: 36px;
+        }
+
+        .variant-group {
+          min-width: 0;
+          display: grid;
           gap: 22px;
+        }
+
+        .group-title {
+          font-size: 14px;
+          border-bottom: 1px solid #d8d8d8;
+          padding-bottom: 10px;
         }
 
         .variant-heading {
@@ -87,7 +99,7 @@
           margin-bottom: 8px;
         }
 
-        h2 {
+        h2, h3 {
           font-size: 12px;
           font-weight: 400;
           margin: 0;
@@ -364,85 +376,91 @@
 
     <main class="workspace">
       <section class="previews" aria-label="Logotype variants">
-        <article class="variant" aria-labelledby="variant-0-title">
-          <div class="variant-heading">
-            <h2 id="variant-0-title">01 / Default</h2>
-            <a href="./i12e.svg?variant=0" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=0&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — default" data-variant="0"></iframe>
-          </div>
-          <p class="caption">Original countdown and letter reveal.</p>
-        </article>
-        <article class="variant" aria-labelledby="variant-1-title">
-          <div class="variant-heading">
-            <h2 id="variant-1-title">02 / Visible digits</h2>
-            <a href="./i12e.svg?variant=1" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=1&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — visible digit flaps" data-variant="1"></iframe>
-          </div>
-          <p class="caption">Flaps show a two-digit countdown, including leading zeros.</p>
-        </article>
-        <article class="variant" aria-labelledby="variant-2-title">
-          <div class="variant-heading">
-            <h2 id="variant-2-title">03 / Digits + zero tens</h2>
-            <a href="./i12e.svg?variant=2" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=2&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — digit flaps including leading zeros" data-variant="2"></iframe>
-          </div>
-          <p class="caption">The tens flap shows zero during single-digit counts.</p>
-        </article>
-        <article class="variant" aria-labelledby="variant-5-title">
-          <div class="variant-heading">
-            <h2 id="variant-5-title">04 / Digits → EU flag</h2>
-            <a href="./i12e.svg?variant=5" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=5&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — counter flaps become an EU flag" data-variant="5"></iframe>
-          </div>
-          <p class="caption">The last digit flips directly into a shared EU flag; both cards and their gap remain.</p>
-        </article>
-        <article class="variant" aria-labelledby="variant-6-title">
-          <div class="variant-heading">
-            <h2 id="variant-6-title">05 / EU flag → leading flag</h2>
-            <a href="./i12e.svg?variant=6" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=6&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
-          </div>
-          <p class="caption">The last counter turn reveals a clean leading flag, with no intermediate hold.
-            The i fades out and reappears as the cards move left and close into one seamless face.</p>
-        </article>
-        <article class="variant" aria-labelledby="variant-3-title">
-          <div class="variant-heading">
-            <h2 id="variant-3-title">06 / Visible glyphs</h2>
-            <a href="./i12e.svg?variant=3" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=3&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — flaps for all visible glyphs" data-variant="3"></iframe>
-          </div>
-          <p class="caption">Visible letters and digits flip in fixed character positions.</p>
-        </article>
-        <article class="variant" aria-labelledby="variant-4-title">
-          <div class="variant-heading">
-            <h2 id="variant-4-title">07 / Glyphs + blank slots</h2>
-            <a href="./i12e.svg?variant=4" target="_blank" rel="noopener">Open SVG ↗</a>
-          </div>
-          <div class="artboard">
-            <iframe src="./i12e.svg?variant=4&amp;preview=1&amp;autoplay=0"
-                    title="Infrastructure logotype — flaps including blank character slots" data-variant="4"></iframe>
-          </div>
-          <p class="caption">Fixed flaps include leading zeros and blank trailing character positions.</p>
-        </article>
+        <section class="variant-group" aria-labelledby="final-variants-title">
+          <h2 class="group-title" id="final-variants-title">Final</h2>
+          <article class="variant" aria-labelledby="variant-6-title">
+            <div class="variant-heading">
+              <h3 id="variant-6-title">05 / EU flag → leading flag</h3>
+              <a href="./i12e.svg?variant=6" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=6&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
+            </div>
+            <p class="caption">The last counter turn reveals a clean leading flag, with no intermediate hold.
+              The i fades out and reappears as the cards move left and close into one seamless face.</p>
+          </article>
         </section>
+        <section class="variant-group" aria-labelledby="draft-variants-title">
+          <h2 class="group-title" id="draft-variants-title">Draft</h2>
+          <article class="variant" aria-labelledby="variant-0-title">
+            <div class="variant-heading">
+              <h3 id="variant-0-title">01 / Default</h3>
+              <a href="./i12e.svg?variant=0" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=0&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — default" data-variant="0"></iframe>
+            </div>
+            <p class="caption">Original countdown and letter reveal.</p>
+          </article>
+          <article class="variant" aria-labelledby="variant-1-title">
+            <div class="variant-heading">
+              <h3 id="variant-1-title">02 / Visible digits</h3>
+              <a href="./i12e.svg?variant=1" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=1&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — visible digit flaps" data-variant="1"></iframe>
+            </div>
+            <p class="caption">Flaps show a two-digit countdown, including leading zeros.</p>
+          </article>
+          <article class="variant" aria-labelledby="variant-2-title">
+            <div class="variant-heading">
+              <h3 id="variant-2-title">03 / Digits + zero tens</h3>
+              <a href="./i12e.svg?variant=2" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=2&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — digit flaps including leading zeros" data-variant="2"></iframe>
+            </div>
+            <p class="caption">The tens flap shows zero during single-digit counts.</p>
+          </article>
+          <article class="variant" aria-labelledby="variant-5-title">
+            <div class="variant-heading">
+              <h3 id="variant-5-title">04 / Digits → EU flag</h3>
+              <a href="./i12e.svg?variant=5" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=5&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — counter flaps become an EU flag" data-variant="5"></iframe>
+            </div>
+            <p class="caption">The last digit flips directly into a shared EU flag; both cards and their gap remain.</p>
+          </article>
+          <article class="variant" aria-labelledby="variant-3-title">
+            <div class="variant-heading">
+              <h3 id="variant-3-title">06 / Visible glyphs</h3>
+              <a href="./i12e.svg?variant=3" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=3&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — flaps for all visible glyphs" data-variant="3"></iframe>
+            </div>
+            <p class="caption">Visible letters and digits flip in fixed character positions.</p>
+          </article>
+          <article class="variant" aria-labelledby="variant-4-title">
+            <div class="variant-heading">
+              <h3 id="variant-4-title">07 / Glyphs + blank slots</h3>
+              <a href="./i12e.svg?variant=4" target="_blank" rel="noopener">Open SVG ↗</a>
+            </div>
+            <div class="artboard">
+              <iframe src="./i12e.svg?variant=4&amp;preview=1&amp;autoplay=0"
+                      title="Infrastructure logotype — flaps including blank character slots" data-variant="4"></iframe>
+            </div>
+            <p class="caption">Fixed flaps include leading zeros and blank trailing character positions.</p>
+          </article>
+        </section>
+      </section>
 
         <aside class="settings" aria-label="Animation controls">
           <p id="loading" role="status">Loading previews… 0 / 7</p>
