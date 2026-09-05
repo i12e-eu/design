@@ -1,15 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none"
      role="img" aria-labelledby="title description">
     <title id="title">infrastructure</title>
-    <desc id="description">A wordmark expanding from i12e to infrastructure. Six selectable styles compare a plain
-        countdown with mechanical split-flap digits, characters, blank places, and a final EU flag.
+    <desc id="description">A wordmark expanding from i12e to infrastructure. Seven selectable styles compare a plain
+        countdown with mechanical split-flap digits, characters, blank places, and an EU flag that can swap with the
+        leading i.
     </desc>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&amp;display=swap');
 
         /* Saved global controls. The HTML only displays and controls this SVG.
         variant=0: default; 1: visible digits; 2: both digit places;
-        3: visible cells; 4: all 15 cells, including blanks; 5: persistent digit flaps becoming an EU flag.
+        3: visible cells; 4: all 15 cells, including blanks; 5: persistent digit flaps becoming an EU flag;
+        6: the EU flag swaps with the leading i and loses its mechanical details.
         Use ?variant=2 to open a standalone option; &amp;preview=1 crops the canvas.
         Embed as an iframe/object or open directly to enable scripting and the
         linked font. An img/CSS image displays the static text fallback. */
@@ -22,9 +24,10 @@
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
-        --flap-width: 1.5; /* Multiplier of the original card width; glyphs are not stretched. */
+        --flap-width: 0.85em; /* Card width relative to font size; plain text keeps its own spacing. */
         --flap-height: 1.42; /* Height in em. */
-        --flap-gap: 0.035; /* Gap in em, plus character spacing. */
+        --eu-star-scale: 1; /* Uniform scale of the complete star circle, clipped to the cards. */
+        --flap-gap: 0.035; /* Edge-to-edge gap between cards in em. */
         --flap-color: #003399; /* EU flag blue. Stars use the fixed EU yellow #ffcc00. */
         --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
         --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
@@ -69,12 +72,13 @@
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
         const numeric = (value, min, max, fallback) => Number.isFinite(Number(value))
             ? clamp(Number(value), min, max) : fallback;
-        const variant = Math.round(numeric(params.get('variant') || 0, 0, 5, 0));
-        const flagVariant = variant === 5;
+        const variant = Math.round(numeric(params.get('variant') || 0, 0, 6, 0));
+        const flagVariant = variant === 5 || variant === 6;
+        const swapVariant = variant === 6;
         const flagFace = '@eu-flag';
         // Permanent counter cards add two places even after every letter is revealed.
         const capacity = word.length + (flagVariant ? 2 : 1);
-        const lastModelStep = count;
+        const lastModelStep = count + Number(swapVariant);
         const preview = params.get('preview') === '1';
         const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
         const clock = () => performance.timeOrigin + performance.now();
@@ -86,7 +90,7 @@
             return /^#[\da-f]{6}$/.test(hex) ? hex : null;
         }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
-        let config, ease, duration, advance, glyphWidth, tileWidth, tileHeight, baseline;
+        let config, ease, duration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline, swapLift;
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
         let lastPublished = -Infinity, ready = false;
@@ -106,9 +110,10 @@
                 holdDuration: milliseconds(value('--hold-duration')),
                 easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
                 characterSpacing: parseFloat(value('--character-spacing')),
-                flapWidth: parseFloat(value('--flap-width')),
+                flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
                 flapHeight: parseFloat(value('--flap-height')),
                 flapGap: parseFloat(value('--flap-gap')),
+                starScale: numeric(value('--eu-star-scale') || 1, 0.25, 4, 1),
                 flapColor: normalizeColor(value('--flap-color')) || '#003399',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
                 detailOpacity: numeric(value('--flap-detail-opacity') || 1, 0, 1, 1),
@@ -151,21 +156,28 @@
             return word[0] + digits + word.slice(remaining + 1);
         }
 
-        function layout(remaining) {
+        function layout(remaining, swapped = false) {
             const state = new Map();
             if (variant === 3 || variant === 4) {
                 const text = stateAt(remaining, variant === 4);
                 const cells = variant === 4 ? text.padEnd(capacity, ' ') : text;
-                [...cells].forEach((character, index) => state.set(`cell:${index}`, { character, x: index * advance }));
+                [...cells].forEach((character, index) => state.set(`cell:${index}`, { character, x: index * flapAdvance }));
             } else {
                 const digits = flagVariant ? (remaining ? String(remaining).padStart(2, ' ') : '  ')
                     : remaining ? (variant === 2 ? String(remaining).padStart(2, ' ') : String(remaining)) : '';
-                state.set('letter:0', { character: word[0], x: 0 });
+                const digitWidth = variant === 0 ? glyphWidth : tileWidth;
+                const digitAdvance = variant === 0 ? characterAdvance : flapAdvance;
+                const counterWidth = digits.length ? digitWidth + (digits.length - 1) * digitAdvance : 0;
+                // Only the counter reserves card-sized cells. Tracking separates
+                // plain letters and the text/counter boundaries; the card gap is independent.
+                const suffixX = characterAdvance + counterWidth + (digits.length ? config.characterSpacing : 0);
+                state.set('letter:0', { character: word[0], x: swapped ? counterWidth + config.characterSpacing : 0 });
                 for (let index = remaining + 1; index < word.length; index++) {
-                    state.set(`letter:${index}`, { character: word[index], x: (digits.length + index - remaining) * advance });
+                    state.set(`letter:${index}`, { character: word[index], x: suffixX + (index - remaining - 1) * characterAdvance });
                 }
                 [...digits].forEach((character, index) => state.set(`digit:${index}`, {
-                    character: flagVariant && remaining === 0 ? flagFace : character, x: (index + 1) * advance,
+                    character: flagVariant && remaining === 0 ? flagFace : character,
+                    x: (swapped ? 0 : characterAdvance) + index * digitAdvance,
                 }));
             }
             return state;
@@ -175,10 +187,10 @@
             // One shared circle spans both cards. Each half-face clips its own
             // translated copy, so neither the stars nor a background can bridge
             // the existing gap. Fit the EU's 3:2 reference within custom cards.
-            const pairWidth = advance + tileWidth;
+            const pairWidth = flapAdvance + tileWidth;
             const referenceHeight = Math.min(tileHeight, pairWidth / 1.5);
-            const ringRadius = referenceHeight / 3;
-            const starRadius = referenceHeight / 18;
+            const ringRadius = referenceHeight / 3 * config.starScale;
+            const starRadius = referenceHeight / 18 * config.starScale;
             const innerRadius = starRadius * Math.sin(Math.PI / 10) / Math.sin(3 * Math.PI / 10);
             const cx = pairWidth / 2, cy = tileHeight / 2;
             const stars = create('g', {
@@ -199,8 +211,7 @@
         }
 
         function text(character, parent, attributes = {}) {
-            const cellWidth = variant === 0 ? glyphWidth : tileWidth;
-            const node = create('text', { x: cellWidth / 2, y: baseline, 'text-anchor': 'middle', ...attributes }, parent);
+            const node = create('text', { x: glyphWidth / 2, y: baseline, 'text-anchor': 'middle', ...attributes }, parent);
             node.textContent = character;
             return node;
         }
@@ -217,6 +228,7 @@
 
         function makeFlap(parent, column) {
             const tile = create('g', { 'data-flap': 'true' }, parent);
+            if (swapVariant) tile.setAttribute('clip-path', 'url(#flap-solid)');
             const half = tileHeight / 2;
             function face(part) {
                 // Transform the wrapper AFTER clipping its child, so the glyph
@@ -229,7 +241,7 @@
                 // Artwork belongs to the rotating face, just like the digits.
                 // Draw stars above the shade to retain their specified yellow.
                 const stars = flagVariant && Number.isInteger(column)
-                    ? create('use', { href: '#eu-flag-stars', transform: `translate(${-column * advance} 0)`, display: 'none' }, clipped)
+                    ? create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)`, display: 'none' }, clipped)
                     : null;
                 return { wrapper, glyph, shadow, stars };
             }
@@ -246,8 +258,22 @@
             for (const x of [0, tileWidth - 1.5]) {
                 create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, tile);
             }
+            // A clean face replaces the entire mechanism, including its shadows
+            // and hardware over the stars. Recolouring the seam alone leaves a
+            // blue cut through oversized stars. Each card still clips separately.
+            const solid = swapVariant ? create('g', {
+                'data-solid-flag': 'true', 'clip-path': 'url(#flap-solid)', display: 'none',
+            }, tile) : null;
+            if (solid) {
+                create('rect', { width: tileWidth, height: tileHeight, class: 'flap-surface' }, solid);
+                create('use', { href: '#eu-flag-stars', transform: `translate(${-column * flapAdvance} 0)` }, solid);
+            }
             let previousPair = '';
-            return (before, after, progress) => {
+            return (before, after, progress, solidProgress = 0) => {
+                if (solid) {
+                    solid.setAttribute('display', solidProgress > 0 ? 'inline' : 'none');
+                    solid.setAttribute('opacity', solidProgress);
+                }
                 const changing = before !== after;
                 const pair = `${before}\0${after}`;
                 if (pair !== previousPair) {
@@ -303,28 +329,35 @@
             measure.textContent = 'M';
             glyphWidth = measure.getComputedTextLength();
             measure.remove();
-            tileWidth = (glyphWidth - config.fontSize * 0.035) * config.flapWidth;
+            tileWidth = config.fontSize * config.flapWidth;
             tileHeight = config.fontSize * (variant === 0 ? 1.42 : config.flapHeight);
-            // Wider cards reserve wider cells, so neighbouring flaps never overlap.
-            // Keep the plain reference unchanged and centre mixed text within cards' cells.
-            advance = (variant === 0 ? glyphWidth : tileWidth + config.fontSize * config.flapGap)
-                + config.characterSpacing;
+            // Text and cards use independent pitches. Changing a card's width
+            // shifts the following text block without spreading its letters apart.
+            characterAdvance = glyphWidth + config.characterSpacing;
+            flapAdvance = tileWidth + config.fontSize * config.flapGap;
             baseline = tileHeight / 2 + config.fontSize * 0.32;
-            root.dataset.characterAdvance = String(advance);
+            root.dataset.characterAdvance = String(characterAdvance);
+            root.dataset.flapAdvance = String(flapAdvance);
             root.dataset.flapWidth = String(tileWidth);
             root.dataset.flapHeight = String(tileHeight);
             root.dataset.variant = String(variant);
-            // The final countdown turn reveals both the last letter and the flag.
-            // Every variant reaches its completed state together, then holds.
-            duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            // Comparison rows hold their finished states while the swap runs,
+            // then all loop together. Original standalone timings stay the same.
+            const cycles = count + Number(preview || swapVariant);
+            duration = cycles * (config.holdDuration + config.transitionDuration) + config.holdDuration;
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
                 const clip = create('clipPath', { id: `flap-${part}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
                 create('rect', { x: 0, y, width: tileWidth, height: tileHeight / 2 }, clip);
             }
+            if (swapVariant) {
+                const clip = create('clipPath', { id: 'flap-solid', clipPathUnits: 'userSpaceOnUse' }, definitions);
+                create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045 }, clip);
+            }
             if (flagVariant) makeFlagArtwork();
             models = Array.from({ length: count + 1 }, (_, step) => layout(count - step));
+            if (swapVariant) models.push(layout(0, true));
             const keys = new Set(models.flatMap(model => [...model.keys()]));
             for (const key of keys) {
                 const group = create('g', { 'data-key': key });
@@ -332,17 +365,24 @@
                 const flapped = variant === 3 || variant === 4 || (variant > 0 && digit);
                 sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group, digit ? Number(key.split(':')[1]) : null) : makePlain(group) });
             }
+            // Keep the moving i readable as its short arc passes the flag.
+            if (swapVariant) layer.append(sprites.get('letter:0').group);
             const canvasHeight = preview ? 180 : 1000;
             root.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
             root.setAttribute('height', canvasHeight);
             document.getElementById('background').setAttribute('height', canvasHeight);
             // Keep the reference origin in standalone mode; add preview gutters.
             const inset = preview ? 24 : 0;
-            const scale = Math.min(1, (1000 - inset * 2) / (capacity * advance), (canvasHeight - inset * 2) / tileHeight);
+            // Fit the widest actual state, keeping scale stable across the animation.
+            const contentWidth = Math.max(...models.flatMap(model => [...model].map(([key, cell]) =>
+                cell.x + (sprites.get(key).flapped ? tileWidth : glyphWidth))));
+            const scale = Math.min(1, (1000 - inset * 2) / contentWidth, (canvasHeight - inset * 2) / tileHeight);
             const y = preview ? (canvasHeight - tileHeight * scale) / 2
                 : Math.max(0, config.fontSize * 55 / 48 - baseline) * scale;
+            swapLift = Math.min(tileHeight * 0.9, Math.max(0, (canvasHeight - y) / scale - tileHeight));
             layer.setAttribute('transform', `translate(${inset} ${y}) scale(${scale})`);
             root.dataset.fitScale = String(scale);
+            root.dataset.contentWidth = String(contentWidth);
             fallback.setAttribute('visibility', 'hidden');
             layer.setAttribute('visibility', 'visible');
         }
@@ -362,6 +402,7 @@
 
         function render(time) {
             const { step, eased } = sample(time);
+            const swapProgress = swapVariant ? (step > count ? 1 : step === count ? eased : 0) : 0;
             const before = models[step], after = models[Math.min(lastModelStep, step + 1)];
             for (const [key, sprite] of sprites) {
                 const from = before.get(key), to = after.get(key);
@@ -376,18 +417,22 @@
                 const alpha = from && to ? 1 : from ? 1 - eased : eased;
                 sprite.group.setAttribute('display', alpha > 0 ? 'inline' : 'none');
                 sprite.group.setAttribute('opacity', alpha);
-                sprite.group.setAttribute('transform', `translate(${mix((from || to).x, (to || from).x, eased)} 0)`);
+                const y = swapVariant && key === 'letter:0' && swapProgress > 0 && swapProgress < 1
+                    ? Math.sin(Math.PI * swapProgress) * swapLift : 0;
+                sprite.group.setAttribute('transform', `translate(${mix((from || to).x, (to || from).x, eased)} ${y})`);
                 if (!sprite.flapped && (!from || !to)) {
                     // The outer opacity already handles a new/removed letter.
                     // Avoid applying the easing twice through a second fade.
                     const character = (from || to).character;
                     sprite.draw(character, character, eased);
-                } else sprite.draw(from?.character || '', to?.character || '', eased);
+                } else sprite.draw(from?.character || '', to?.character || '', eased, swapProgress);
             }
             const remaining = count - Math.min(count, step);
             root.dataset.state = stateAt(remaining);
-            root.dataset.displayState = flagVariant && remaining === 0
-                ? word[0] + '  ' + word.slice(1) : stateAt(remaining, variant === 2 || variant === 4 || flagVariant);
+            root.dataset.displayState = swapVariant && step > count ? '  ' + word
+                : flagVariant && remaining === 0 ? word[0] + '  ' + word.slice(1)
+                : stateAt(remaining, variant === 2 || variant === 4 || flagVariant);
+            if (swapVariant) root.dataset.swapProgress = String(swapProgress);
         }
 
         function snapshot() {
@@ -395,9 +440,10 @@
             const { step, progress } = sample(time);
             return {
                 type: 'i12e:state', variant, config: { ...config }, duration, currentTime: time, playing,
-                step: Math.min(count, step), totalSteps: lastModelStep,
+                step, totalSteps: lastModelStep,
                 state: stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
-                ...(flagVariant ? { flagPhase: step === count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
+                ...(flagVariant ? { flagPhase: step >= count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
+                ...(swapVariant ? { swapPhase: step > count ? 'complete' : step === count && progress > 0 ? 'swapping' : 'waiting' } : {}),
                 phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
             };
         }
@@ -452,9 +498,10 @@
                 easing: typeof next.easing === 'string' && easingFor(next.easing) ? next.easing : config.easing,
                 fontSize: numeric(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
                 characterSpacing: numeric(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
-                flapWidth: numeric(next.flapWidth ?? config.flapWidth, 1, 3, config.flapWidth),
+                flapWidth: numeric(next.flapWidth ?? config.flapWidth, 0.6, 2, config.flapWidth),
                 flapHeight: numeric(next.flapHeight ?? config.flapHeight, 1, 2.5, config.flapHeight),
                 flapGap: numeric(next.flapGap ?? config.flapGap, 0, 0.5, config.flapGap),
+                starScale: numeric(next.starScale ?? config.starScale, 0.25, 4, config.starScale),
                 flapColor: normalizeColor(next.flapColor) || config.flapColor,
                 detailColor: normalizeColor(next.detailColor) || config.detailColor,
                 detailOpacity: numeric(next.detailOpacity ?? config.detailOpacity, 0, 1, config.detailOpacity),

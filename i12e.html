@@ -334,7 +334,7 @@
 <div class="page">
     <header>
         <h1>i12e <span>/ infrastructure wordmark</span></h1>
-      <span class="time">Six synchronized variants</span>
+      <span class="time">Seven synchronized variants</span>
     </header>
 
     <main class="workspace">
@@ -383,9 +383,20 @@
           </div>
           <p class="caption">The last digit flips directly into a shared EU flag; both cards and their gap remain.</p>
         </article>
+        <article class="variant" aria-labelledby="variant-6-title">
+          <div class="variant-heading">
+            <h2 id="variant-6-title">05 / EU flag → leading flag</h2>
+            <a href="./i12e.svg?variant=6" target="_blank" rel="noopener">Open SVG ↗</a>
+          </div>
+          <div class="artboard">
+            <iframe src="./i12e.svg?variant=6&amp;preview=1&amp;autoplay=0"
+                    title="Infrastructure wordmark — EU flag swaps with the leading i" data-variant="6"></iframe>
+          </div>
+          <p class="caption">The flag and i swap places as the flap details dissolve into clean flag faces.</p>
+        </article>
         <article class="variant" aria-labelledby="variant-3-title">
           <div class="variant-heading">
-            <h2 id="variant-3-title">05 / Visible glyphs</h2>
+            <h2 id="variant-3-title">06 / Visible glyphs</h2>
             <a href="./i12e.svg?variant=3" target="_blank" rel="noopener">Open SVG ↗</a>
           </div>
           <div class="artboard">
@@ -396,7 +407,7 @@
         </article>
         <article class="variant" aria-labelledby="variant-4-title">
           <div class="variant-heading">
-            <h2 id="variant-4-title">06 / Glyphs + blank slots</h2>
+            <h2 id="variant-4-title">07 / Glyphs + blank slots</h2>
             <a href="./i12e.svg?variant=4" target="_blank" rel="noopener">Open SVG ↗</a>
           </div>
           <div class="artboard">
@@ -408,7 +419,7 @@
         </section>
 
         <aside class="settings" aria-label="Animation controls">
-          <p id="loading" role="status">Loading previews… 0 / 6</p>
+          <p id="loading" role="status">Loading previews… 0 / 7</p>
             <fieldset id="controls" disabled aria-label="Preview settings">
                 <div class="control">
                     <label for="transition-duration">Transition duration</label>
@@ -443,14 +454,15 @@
                     <div class="input-row"><input id="character-spacing" type="number" min="0" max="8" step="0.1"
                                                   value="0.2" data-config="characterSpacing"/><span
                             class="unit">px</span></div>
+                  <p class="caption">Spacing between unboxed letters and around the counter.</p>
                 </div>
 
               <div class="proportions">
                 <div class="control">
                   <label for="flap-width">Flap width</label>
                   <div class="input-row">
-                    <input id="flap-width" type="number" min="1" max="3" step="0.05" value="1.5"
-                           data-config="flapWidth" data-preserve-time="true"/><span class="unit">×</span>
+                    <input id="flap-width" type="number" min="0.6" max="2" step="0.01" value="0.85"
+                           data-config="flapWidth" data-preserve-time="true"/><span class="unit">em</span>
                   </div>
                 </div>
                 <div class="control">
@@ -467,8 +479,8 @@
                            data-config="flapGap" data-preserve-time="true"/><span class="unit">em</span>
                   </div>
                 </div>
-                <p class="help">Shared across flap variants. Width scales the cards; height and gap scale with
-                  font size. The glyphs keep their proportions.</p>
+                <p class="help">Width and height set the card size; gap sets the space between cards. All three
+                  use em units relative to font size. Letters keep their size and proportions.</p>
               </div>
 
               <div class="colors">
@@ -503,6 +515,16 @@
                   </div>
                 </div>
                 <div class="control">
+                  <label for="eu-star-scale">EU star scale</label>
+                  <div class="input-row">
+                    <input id="eu-star-scale" type="range" min="25" max="400" step="1" value="100"
+                           data-config="starScale" data-scale="100" data-preserve-time="true"/>
+                    <output id="eu-star-scale-value" class="opacity-readout" for="eu-star-scale">100%</output>
+                  </div>
+                  <p class="caption">Scales the whole star circle proportionately. Oversized stars crop at the flap
+                    edges.</p>
+                </div>
+                <div class="control">
                   <label for="background-color">Background color</label>
                   <div class="input-row">
                     <input id="background-color" type="color" value="#ffffff" data-config="backgroundColor"/>
@@ -531,7 +553,7 @@
                 <output id="current-state">i12e</output>
                 <p id="phase">Waiting for SVG</p>
             </div>
-          <p class="help">Controls apply to all six previews. Timing and typography changes restart their shared
+          <p class="help">Controls apply to all seven previews. Timing and typography changes restart their shared
             timeline;
             appearance controls update the current frame.
             Edit the CSS variables in i12e.svg to save defaults.</p>
@@ -543,6 +565,7 @@
 <script>
     (() => {
       const frames = [...document.querySelectorAll("iframe[data-variant]")];
+      const transportIndex = frames.findIndex(frame => frame.dataset.variant === "6");
         const controls = document.getElementById("controls");
         const configInputs = [...document.querySelectorAll("[data-config]")];
       const colorHexInputs = [...document.querySelectorAll("[data-color-for]")];
@@ -603,13 +626,16 @@
         return null;
       }
 
-      function updateDetailOpacity() {
-        const input = document.getElementById("flap-detail-opacity");
-        const label = `${input.value}%`;
-        document.getElementById("flap-detail-opacity-value").textContent = label;
-        input.setAttribute("aria-valuetext", label);
+      function updateRangeReadouts() {
+        for (const id of ["flap-detail-opacity", "eu-star-scale"]) {
+          const input = document.getElementById(id);
+          const label = `${Math.round(Number(input.value))}%`;
+          document.getElementById(`${id}-value`).textContent = label;
+          input.setAttribute("aria-valuetext", label);
+        }
       }
-      updateDetailOpacity();
+
+      updateRangeReadouts();
 
       configInputs.forEach(input => {
         if (input.type === "color") {
@@ -619,7 +645,7 @@
           });
         } else if (input.type === "range") {
           input.addEventListener("input", () => {
-            updateDetailOpacity();
+            updateRangeReadouts();
             configure(true);
           });
         } else input.addEventListener("change", () => configure(input.dataset.preserveTime === "true"));
@@ -669,7 +695,7 @@
           }
           lastConfig = signature;
             }
-            updateDetailOpacity();
+        updateRangeReadouts();
 
             const duration = Math.max(0, Number(state.duration) || 0);
             const currentTime = Math.min(duration, Math.max(0, Number(state.currentTime) || 0));
@@ -678,7 +704,8 @@
             timeline.setAttribute("aria-valuetext", `${(currentTime / 1000).toFixed(1)} seconds, ${state.state}`);
             document.getElementById("time").textContent = `${(currentTime / 1000).toFixed(1)} / ${(duration / 1000).toFixed(1)} s`;
             document.getElementById("current-state").textContent = state.state;
-            document.getElementById("phase").textContent = `${state.playing ? "Playing" : "Paused"} · ${state.phase} · step ${state.step} / 12`;
+        const phase = state.swapPhase === "swapping" ? "swapping" : state.phase;
+        document.getElementById("phase").textContent = `${state.playing ? "Playing" : "Paused"} · ${phase} · step ${state.step} / ${state.totalSteps}`;
             document.getElementById("motion-note").hidden = !state.reducedMotion;
             playPause.textContent = state.playing ? "Pause" : "Play";
       }
@@ -695,15 +722,15 @@
           initialized = true;
           controls.disabled = false;
           document.getElementById("loading").hidden = true;
-          updateUI(states.get(0));
+          updateUI(states.get(transportIndex));
           if ([...states.values()].some(state => state.reducedMotion)) {
             command("seek", {time: latestState.duration});
           } else command("restart", {startedAt: startedAt()});
           return;
         }
 
-        // The first preview is the shared transport's state source.
-        if (index === 0) updateUI(event.data);
+        // The variant with the final swap drives the full shared timeline.
+        if (index === transportIndex) updateUI(event.data);
         });
 
       // Each SVG also announces readiness after its linked font has loaded.
