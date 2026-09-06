@@ -1,0 +1,161 @@
+/* i12e colour specification. Fixed palette → light/dark semantic roles.
+   EU blue: ECL EU v5.2.1. Other scales: i12e. See colours.html. */
+:root {
+    /* Blue */
+    --palette-blue-50: #F3F6FC;
+    --palette-blue-100: #E7EDFA;
+    --palette-blue-200: #CFDAF5;
+    --palette-blue-300: #9FB5EA;
+    --palette-blue-400: #6E91E0;
+    --palette-blue-500: #3E6CD5;
+    --palette-blue-600: #0E47CB;
+    --palette-blue-700: #0D40B7;
+    --palette-blue-800: #0B39A2;
+    --palette-blue-900: #0A328E;
+    --palette-blue-950: #030E2E;
+    /* Neutral */
+    --palette-neutral-0: #FFFFFF;
+    --palette-neutral-50: #F7F7F7;
+    --palette-neutral-100: #F0F0F0;
+    --palette-neutral-200: #D8D8D8;
+    --palette-neutral-300: #BDBDBD;
+    --palette-neutral-400: #999999;
+    --palette-neutral-500: #808080;
+    --palette-neutral-600: #666666;
+    --palette-neutral-700: #505050;
+    --palette-neutral-800: #3D3D3D;
+    --palette-neutral-900: #242424;
+    --palette-neutral-950: #191919;
+    --palette-neutral-1000: #000000;
+    /* Green */
+    --palette-green-50: #F4F8F5;
+    --palette-green-100: #E9F2EC;
+    --palette-green-200: #D2E4D8;
+    --palette-green-300: #A5CAB1;
+    --palette-green-400: #79AF8B;
+    --palette-green-500: #4C9564;
+    --palette-green-600: #1F7A3D;
+    --palette-green-700: #196231;
+    --palette-green-800: #134925;
+    --palette-green-900: #0C3118;
+    --palette-green-950: #06180C;
+    /* Orange */
+    --palette-orange-50: #FBF6F2;
+    --palette-orange-100: #F8EEE6;
+    --palette-orange-200: #F0DDCC;
+    --palette-orange-300: #E2BA99;
+    --palette-orange-400: #D39866;
+    --palette-orange-500: #C57533;
+    --palette-orange-600: #B65300;
+    --palette-orange-700: #924200;
+    --palette-orange-800: #6D3200;
+    --palette-orange-900: #492100;
+    --palette-orange-950: #241100;
+    /* Red */
+    --palette-red-50: #FCF4F5;
+    --palette-red-100: #FAEAEB;
+    --palette-red-200: #F4D4D7;
+    --palette-red-300: #E9AAAE;
+    --palette-red-400: #DF7F86;
+    --palette-red-500: #D4555D;
+    --palette-red-600: #C92A35;
+    --palette-red-700: #A1222A;
+    --palette-red-800: #791920;
+    --palette-red-900: #501115;
+    --palette-red-950: #28080B;
+    --brand-primary: var(--palette-blue-600);
+    --emblem-blue: #003399;
+    --emblem-yellow: #FFCC00;
+}
+
+:root, [data-theme="light"] {
+    color-scheme: light;
+    --color-background: var(--palette-neutral-50);
+    --color-surface: var(--palette-neutral-0);
+    --color-text-primary: var(--palette-neutral-950);
+    --color-text-secondary: var(--palette-neutral-600);
+    --color-link: var(--palette-blue-600);
+    --color-link-hover: var(--palette-blue-700);
+    --color-link-active: var(--palette-blue-800);
+    --color-border: var(--palette-neutral-200);
+    --color-border-control: var(--palette-neutral-500);
+    --color-button-primary: var(--palette-blue-600);
+    --color-button-primary-hover: var(--palette-blue-700);
+    --color-button-primary-active: var(--palette-blue-800);
+    --color-button-text: var(--palette-neutral-0);
+    --color-button-border: var(--palette-blue-600);
+    --color-focus: var(--palette-blue-600);
+    --color-text-success: var(--palette-green-800);
+    --color-background-success: var(--palette-green-100);
+    --color-border-success: var(--palette-green-600);
+    --color-text-warning: var(--palette-orange-800);
+    --color-background-warning: var(--palette-orange-100);
+    --color-border-warning: var(--palette-orange-600);
+    --color-text-error: var(--palette-red-800);
+    --color-background-error: var(--palette-red-100);
+    --color-border-error: var(--palette-red-600);
+    --color-text-info: var(--palette-blue-800);
+    --color-background-info: var(--palette-blue-100);
+    --color-border-info: var(--palette-blue-600);
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+    --color-background: var(--palette-neutral-950);
+    --color-surface: var(--palette-neutral-900);
+    --color-text-primary: var(--palette-neutral-50);
+    --color-text-secondary: var(--palette-neutral-300);
+    --color-link: var(--palette-blue-300);
+    --color-link-hover: var(--palette-blue-200);
+    --color-link-active: var(--palette-blue-400);
+    --color-border: var(--palette-neutral-800);
+    --color-border-control: var(--palette-neutral-500);
+    --color-button-primary: var(--palette-blue-600);
+    --color-button-primary-hover: var(--palette-blue-700);
+    --color-button-primary-active: var(--palette-blue-800);
+    --color-button-text: var(--palette-neutral-0);
+    --color-button-border: var(--palette-blue-400);
+    --color-focus: var(--palette-blue-300);
+    --color-text-success: var(--palette-green-300);
+    --color-background-success: var(--palette-green-950);
+    --color-border-success: var(--palette-green-500);
+    --color-text-warning: var(--palette-orange-300);
+    --color-background-warning: var(--palette-orange-950);
+    --color-border-warning: var(--palette-orange-500);
+    --color-text-error: var(--palette-red-300);
+    --color-background-error: var(--palette-red-950);
+    --color-border-error: var(--palette-red-500);
+    --color-text-info: var(--palette-blue-300);
+    --color-background-info: var(--palette-blue-950);
+    --color-border-info: var(--palette-blue-500);
+}
+
+/* Shared appearance selector. Theme changes are temporary. */
+.theme-control {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font: 0.875rem/1.6 "Roboto Mono", monospace;
+}
+
+.theme-control select {
+    width: auto;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 8px 30px 8px 10px;
+    font: inherit;
+    border: 1px solid var(--color-border-control);
+    border-radius: 0;
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+}
+
+.theme-control select:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+}
+
+[hidden] {
+    display: none !important;
+}

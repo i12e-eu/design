@@ -1,20 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content="The i12e design index. Explore the logotype, typography, and brand decisions."/>
+    <meta name="description"
+          content="The i12e design index. Explore the logotype, typography, colours, and brand decisions."/>
     <title>i12e — Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
+    <link rel="stylesheet" href="./colours.css"/>
     <style>
         :root {
-            color-scheme: light;
             font-family: "Roboto Mono", monospace;
-            color: #191919;
-            background: #f7f7f7;
+            color: var(--color-text-primary);
+            background: var(--color-background);
         }
 
         * {
@@ -38,7 +39,7 @@
         }
 
         h1 span, .variant {
-            color: #666;
+            color: var(--color-text-secondary);
         }
 
         .designs {
@@ -50,8 +51,8 @@
         .design-link {
             display: block;
             padding: 20px 0;
-            border-top: 1px solid #d8d8d8;
-            border-bottom: 1px solid #d8d8d8;
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
             color: inherit;
             text-decoration: none;
         }
@@ -72,14 +73,14 @@
 
         .variant {
             margin: 6px 0 0;
-            font-size: 0.75rem;
+            font-size: 0.875rem;
             line-height: 1.6;
         }
 
         .preview {
             height: 172px;
             overflow: hidden;
-            background: #fff;
+            background: var(--color-surface);
         }
 
         iframe {
@@ -97,7 +98,7 @@
         }
 
         .design-link:focus-visible {
-            outline: 2px solid #191919;
+            outline: 2px solid var(--color-focus);
             outline-offset: 6px;
         }
 
@@ -139,7 +140,62 @@
             margin-top: 8px;
             font-family: "Roboto Mono", monospace;
             font-size: 0.875rem;
-            color: #666;
+            color: var(--color-text-secondary);
+        }
+
+        .index-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 48px;
+        }
+
+        .index-header h1 {
+            margin: 0;
+        }
+
+        .logo-preview {
+            background: #fff;
+        }
+
+        .colour-preview {
+            height: auto;
+            padding: 24px;
+        }
+
+        .colour-strip {
+            display: grid;
+            grid-template-columns: 3fr repeat(4, 1fr);
+            min-height: 100px;
+        }
+
+        .colour-strip span:first-child {
+            background: var(--brand-primary);
+        }
+
+        .colour-strip span:nth-child(2) {
+            background: var(--palette-blue-300);
+        }
+
+        .colour-strip span:nth-child(3) {
+            background: var(--palette-neutral-950);
+        }
+
+        .colour-strip span:nth-child(4) {
+            background: var(--palette-neutral-300);
+        }
+
+        .colour-strip span:nth-child(5) {
+            background: var(--palette-neutral-50);
+        }
+
+        .colour-caption {
+            margin: 12px 0 0;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
         }
 
         @media (max-width: 600px) {
@@ -167,7 +223,13 @@
 </head>
 <body>
 <main>
-    <h1>i12e <span>/ design</span></h1>
+    <header class="index-header"><h1>i12e <span>/ design</span></h1>
+        <div class="theme-control" hidden><label for="page-appearance">Appearance</label><select id="page-appearance"
+                                                                                                 autocomplete="off">
+            <option value="light" selected>Light</option>
+            <option value="dark">Dark</option>
+        </select></div>
+    </header>
     <ul class="designs" aria-label="Design elements">
         <li>
             <a class="design-link" href="./logotype.html" aria-labelledby="logotype-title logotype-variant">
@@ -178,7 +240,7 @@
                     </div>
                     <span aria-hidden="true">↗</span>
                 </div>
-                <div class="preview">
+                <div class="preview logo-preview">
                     <!-- Reuse the chosen variant with its default looping animation. -->
                     <iframe src="./logotype.svg?variant=6&amp;preview=1"
                             title="Primary i12e logotype — variant 05, EU flag to leading flag"
@@ -205,7 +267,30 @@
                 </div>
             </a>
         </li>
+        <li>
+            <a class="design-link" href="./colours.html" aria-labelledby="colours-title colours-variant">
+                <div class="details">
+                    <div><h2 id="colours-title">Colours</h2>
+                        <p class="variant" id="colours-variant">EU web blue · Palettes, light &amp; dark roles, and
+                            exports</p></div>
+                    <span aria-hidden="true">↗</span></div>
+                <div class="preview colour-preview" aria-hidden="true">
+                    <div class="colour-strip"><span></span><span></span><span></span><span></span><span></span></div>
+                    <p class="colour-caption">#0E47CB / A colour for every role.</p></div>
+            </a>
+        </li>
     </ul>
 </main>
+<script>
+  (() => {
+    const appearance = document.getElementById("page-appearance");
+    document.documentElement.dataset.theme = "light";
+    appearance.value = "light";
+    appearance.addEventListener("change", () => {
+      document.documentElement.dataset.theme = appearance.value === "dark" ? "dark" : "light";
+    });
+    appearance.closest(".theme-control").hidden = false;
+  })();
+</script>
 </body>
 </html>

@@ -1,0 +1,1480 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description"
+          content="The i12e colour specification: EU web blue, full palettes, light and dark roles, contrast checks, and theme exports."/>
+    <title>i12e — Colours</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
+          rel="stylesheet"/>
+    <link rel="stylesheet" href="./colours.css"/>
+    <style>
+        :root {
+            --font-prose: "Roboto", Arial, sans-serif;
+            --font-mono: "Roboto Mono", ui-monospace, monospace;
+            font: 100%/1.6 var(--font-prose);
+            color: var(--color-text-primary);
+            background: var(--color-background);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 28px 24px 48px;
+        }
+
+        a, a:visited {
+            color: var(--color-link);
+            text-decoration: underline;
+            text-underline-offset: 0.2em;
+        }
+
+        a:hover {
+            color: var(--color-link-hover);
+            text-decoration-thickness: 2px;
+        }
+
+        a:active {
+            color: var(--color-link-active);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--color-focus);
+            outline-offset: 4px;
+        }
+
+        button, input, select, textarea {
+            font: inherit;
+        }
+
+        button, input, select, textarea {
+            border: 1px solid var(--color-border-control);
+            border-radius: 0;
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+        }
+
+        button, select, summary {
+            cursor: pointer;
+        }
+
+        button, select, input:not([type="color"]) {
+            min-height: 44px;
+            padding: 8px 12px;
+        }
+
+        button:hover {
+            background: var(--color-background);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            min-width: 0;
+        }
+
+        input[type="color"] {
+            height: 44px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        input[aria-invalid="true"] {
+            border: 2px solid var(--color-border-error);
+        }
+
+        textarea {
+            padding: 16px;
+            font: 0.875rem/1.6 var(--font-mono);
+            resize: vertical;
+        }
+
+        h1, h2, h3, p {
+            margin-top: 0;
+        }
+
+        h1, h2, h3 {
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 3vw, 3rem);
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-bottom: 1em;
+            max-width: 75ch;
+        }
+
+        code, .mono {
+            font-family: var(--font-mono);
+            overflow-wrap: anywhere;
+        }
+
+        code {
+            font-size: 0.875em;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .page {
+            max-width: 1600px;
+            margin: auto;
+        }
+
+        .page-header, .header-links, .section-heading, .button-row, .export-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+        }
+
+        .page-header {
+            justify-content: space-between;
+            margin-bottom: 28px;
+            font: 0.875rem/1.6 var(--font-mono);
+        }
+
+        .brand {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .brand span, .secondary, .help, .eyebrow {
+            color: var(--color-text-secondary);
+        }
+
+        .theme-control label {
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .header-links a {
+            white-space: nowrap;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: 0;
+            left: 24px;
+            transform: translateY(-150%);
+            padding: 12px;
+            background: var(--color-surface);
+            z-index: 10;
+        }
+
+        .skip-link:focus {
+            transform: none;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 24px;
+            margin: 20px 0 24px;
+            font-size: 0.875rem;
+        }
+
+        .eyebrow {
+            font: 0.875rem/1.6 var(--font-mono);
+            margin-bottom: 6px;
+        }
+
+        .anchors {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .brand-anchor {
+            display: grid;
+            grid-template-columns: 120px minmax(0, 1fr);
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+        }
+
+        .anchor-swatch {
+            background: var(--brand-primary);
+        }
+
+        .anchor-copy {
+            padding: 20px;
+        }
+
+        .anchor-copy h2 {
+            font-size: 1.25rem;
+        }
+
+        .anchor-copy p {
+            margin-bottom: 8px;
+        }
+
+        .flag-reference {
+            border: 1px solid var(--color-border);
+            padding: 20px;
+            background: var(--color-surface);
+        }
+
+        .flag-reference h2 {
+            font-size: 1rem;
+        }
+
+        .flag-values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            font: 0.875rem/1.6 var(--font-mono);
+        }
+
+        .dot {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            margin-right: 8px;
+            vertical-align: -0.1em;
+            border: 1px solid var(--color-border-control);
+        }
+
+        .section {
+            padding-top: 32px;
+            margin-top: 32px;
+            border-top: 1px solid var(--color-border);
+            scroll-margin-top: 20px;
+        }
+
+        .section-heading {
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .editor {
+            grid-column: 2;
+            grid-row: 1;
+            position: sticky;
+            top: 20px;
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            font-size: 0.875rem;
+        }
+
+        .editor.too-tall {
+            position: static;
+        }
+
+        .editor h3 {
+            font-size: 1rem;
+        }
+
+        .editor .control + .control {
+            margin-top: 20px;
+        }
+
+        .help {
+            font-size: 0.875rem;
+            margin: 8px 0 0;
+        }
+
+        .error-message {
+            color: var(--color-text-error);
+            margin: 8px 0 0;
+        }
+
+        .colour-inputs {
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 8px;
+        }
+
+        .colour-inputs input[type="text"] {
+            font-family: var(--font-mono);
+        }
+
+        .sample-column {
+            grid-column: 1;
+            grid-row: 1;
+            min-width: 0;
+        }
+
+        .sample-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px 20px;
+            margin-bottom: 12px;
+            font-size: 0.875rem;
+        }
+
+        .sample-meta p {
+            margin: 0;
+        }
+
+        .sample {
+            background: var(--color-background);
+            color: var(--color-text-primary);
+            padding: 24px;
+            border: 1px solid var(--color-border);
+        }
+
+        .sample-card {
+            background: var(--color-surface);
+            padding: clamp(16px, 3vw, 32px);
+        }
+
+        .sample h3 {
+            font-size: clamp(1.5rem, 2.5vw, 1.75rem);
+        }
+
+        .sample .secondary {
+            color: var(--color-text-secondary);
+        }
+
+        .sample button, .sample input {
+            border-color: var(--color-border-control);
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+        }
+
+        .sample button:hover {
+            background: var(--color-background);
+        }
+
+        .sample .primary-button {
+            background: var(--color-button-primary);
+            color: var(--color-button-text);
+            border-color: var(--color-button-border);
+        }
+
+        .sample .primary-button:hover {
+            background: var(--color-button-primary-hover);
+        }
+
+        .sample .primary-button:active {
+            background: var(--color-button-primary-active);
+        }
+
+        .sample :focus-visible {
+            outline: 2px solid var(--color-focus);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px var(--color-surface);
+        }
+
+        .sample .sample-field {
+            max-width: 30rem;
+            margin: 24px 0;
+        }
+
+        .sample hr {
+            border: 0;
+            border-top: 1px solid var(--color-border);
+            margin: 24px 0;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .notice {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border: 1px solid;
+            font-size: 0.875rem;
+        }
+
+        .notice p {
+            margin: 0;
+        }
+
+        .notice-icon {
+            font-weight: 700;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        .notice.success {
+            color: var(--color-text-success);
+            background: var(--color-background-success);
+            border-color: var(--color-border-success);
+        }
+
+        .notice.warning {
+            color: var(--color-text-warning);
+            background: var(--color-background-warning);
+            border-color: var(--color-border-warning);
+        }
+
+        .notice.error {
+            color: var(--color-text-error);
+            background: var(--color-background-error);
+            border-color: var(--color-border-error);
+        }
+
+        .notice.info {
+            color: var(--color-text-info);
+            background: var(--color-background-info);
+            border-color: var(--color-border-info);
+        }
+
+        .checks {
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            border-top: 0;
+            background: var(--color-surface);
+            font-size: 0.875rem;
+        }
+
+        .checks p {
+            margin-bottom: 8px;
+        }
+
+        .checks summary {
+            padding: 8px 0;
+        }
+
+        .selected-checks {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+
+        .check-fail {
+            color: var(--color-text-error);
+            font-weight: 600;
+        }
+
+        .check-pass {
+            color: var(--color-text-success);
+        }
+
+        .table-scroll {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        caption {
+            text-align: left;
+            margin: 0 0 12px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: top;
+        }
+
+        th {
+            font-weight: 600;
+        }
+
+        td code {
+            font-size: 0.875rem;
+        }
+
+        .token {
+            display: block;
+            font: 0.875rem/1.6 var(--font-mono);
+            color: var(--color-text-secondary);
+        }
+
+        .family {
+            margin-top: 28px;
+        }
+
+        .family-header {
+            margin-bottom: 16px;
+        }
+
+        .family-header p {
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        .swatches {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+            gap: 12px;
+        }
+
+        .swatch {
+            min-width: 0;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+        }
+
+        .swatch-colour {
+            height: 80px;
+        }
+
+        .swatch-content {
+            padding: 10px;
+        }
+
+        .swatch-name {
+            font: 0.875rem/1.4 var(--font-mono);
+            margin: 0 0 8px;
+        }
+
+        .swatch button {
+            width: 100%;
+            display: block;
+            font: 0.875rem/1.4 var(--font-mono);
+            min-height: 44px;
+            padding: 6px 2px;
+        }
+
+        .swatch button + button {
+            margin-top: 6px;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        .comparison-controls {
+            display: grid;
+            gap: 20px;
+        }
+
+        .comparison-inputs {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .comparison-sample {
+            padding: 28px;
+            overflow-wrap: anywhere;
+            border: 1px solid var(--color-border-control);
+        }
+
+        .comparison-sample p:last-child {
+            margin-bottom: 0;
+        }
+
+        .comparison-result {
+            margin-top: 16px;
+            font-size: 0.875rem;
+        }
+
+        .export-controls {
+            margin: 20px 0;
+            align-items: end;
+        }
+
+        .export-controls > div {
+            flex: 1 1 200px;
+        }
+
+        #export-output {
+            display: block;
+            height: 24rem;
+            white-space: pre;
+            overflow: auto;
+        }
+
+        .export-caption {
+            margin-top: 12px;
+            font-size: 0.875rem;
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .usage-grid h3 {
+            font-size: 1rem;
+        }
+
+        .usage-grid p, .sources {
+            font-size: 0.875rem;
+        }
+
+        .sources li {
+            margin-bottom: 10px;
+        }
+
+        .page-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-border);
+            font: 0.875rem/1.6 var(--font-mono);
+        }
+
+        .copy-status {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: calc(100% - 32px);
+            padding: 10px 16px;
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border-control);
+            font-size: 0.875rem;
+            z-index: 20;
+        }
+
+        .copy-status:empty {
+            display: none;
+        }
+
+        dialog {
+            width: min(640px, calc(100% - 32px));
+            max-height: calc(100% - 32px);
+            overflow: auto;
+            padding: 24px;
+            border: 1px solid var(--color-border-control);
+            color: var(--color-text-primary);
+            background: var(--color-surface);
+        }
+
+        dialog::backdrop {
+            background: rgb(0 0 0 / 50%);
+        }
+
+        dialog textarea {
+            height: 12rem;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 1000px) {
+            .workspace {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .editor, .sample-column {
+                grid-column: 1;
+                grid-row: auto;
+            }
+
+            .editor {
+                position: static;
+            }
+
+            .anchors {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 12px 32px;
+            }
+
+            .page-header {
+                align-items: start;
+            }
+
+            .header-links {
+                gap: 8px 16px;
+            }
+
+            .brand-anchor {
+                grid-template-columns: 64px minmax(0, 1fr);
+            }
+
+            .anchor-copy, .editor, .checks {
+                padding: 16px;
+            }
+
+            .sample {
+                padding: 12px;
+            }
+
+            .status-grid, .comparison, .usage-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .sample .button-row > button {
+                width: 100%;
+            }
+
+            .swatches {
+                gap: 8px;
+            }
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            a, button {
+                transition: background-color 100ms, color 100ms;
+            }
+        }
+    </style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to colours</a>
+<div class="page">
+    <header class="page-header">
+        <p class="brand">i12e <span>/ colours</span></p>
+        <div class="header-links">
+            <a href="./index.html">← Design index</a><a href="./typography.html">Typography ↗</a>
+            <div class="theme-control" hidden><label for="appearance">Appearance</label><select id="appearance"
+                                                                                                autocomplete="off">
+                <option value="light" selected>Light</option>
+                <option value="dark">Dark</option>
+            </select></div>
+        </div>
+    </header>
+    <main id="main">
+        <p class="eyebrow">Brand specification / Digital / v1</p>
+        <h1>Colours for i12e</h1>
+        <p>European blue for actions. Neutrals for the words. Purposeful colour for feedback.</p>
+        <nav class="section-nav" aria-label="Colour sections"><a href="#playground">Playground</a><a href="#palette">Palette</a><a
+                href="#roles">Colour roles</a><a href="#comparison">Compare colours</a><a href="#exports">Copy &amp;
+            export</a><a href="#sources">Sources</a></nav>
+        <div class="anchors">
+            <section class="brand-anchor" aria-labelledby="primary-title">
+                <div class="anchor-swatch" aria-hidden="true"></div>
+                <div class="anchor-copy"><p class="eyebrow">Primary / Blue 600</p>
+                    <h2 id="primary-title">EU website blue</h2>
+                    <p class="mono">#0E47CB · RGB 14, 71, 203</p>
+                    <button type="button" data-copy-token="--brand-primary" data-copy-format="hex">Copy HEX</button>
+                    <button type="button" data-copy-token="--brand-primary" data-copy-format="rgb">Copy RGB</button>
+                </div>
+            </section>
+            <section class="flag-reference" aria-labelledby="flag-title"><p class="eyebrow">Emblem reference</p>
+                <h2 id="flag-title">Reserved for the EU flag</h2>
+                <p class="help">The emblem uses a different blue. Its colours stay fixed in the logotype.</p>
+                <div class="flag-values"><span><span class="dot" style="background:var(--emblem-blue)"
+                                                     aria-hidden="true"></span>#003399</span><span><span class="dot"
+                                                                                                         style="background:var(--emblem-yellow)"
+                                                                                                         aria-hidden="true"></span>#FFCC00</span>
+                </div>
+                <p class="help"><a href="#emblem-sources">Read the official distinction ↓</a></p></section>
+        </div>
+        <noscript><p>The approved styles are available in <a href="./colours.css">colours.css</a>. Enable JavaScript for
+            the full swatches, theme controls, contrast checks, and exports.</p></noscript>
+        <section id="playground" aria-labelledby="playground-title">
+            <div class="section-heading"><h2 id="playground-title">Colour in context</h2>
+                <p class="eyebrow">Temporary experiments · Approved values stay fixed</p></div>
+            <div class="workspace">
+                <aside class="editor" aria-labelledby="editor-title" hidden>
+                    <h3 id="editor-title">Preview controls</h3>
+                    <p>Choose a role, then try a colour. Changes affect the sample below and can be exported
+                        separately.</p>
+                    <div class="control"><label for="edit-role">Colour role</label><select id="edit-role"
+                                                                                           autocomplete="off"></select>
+                    </div>
+                    <div class="control"><label for="edit-hex">Experiment HEX</label>
+                        <div class="colour-inputs"><input type="color" id="edit-picker"
+                                                          aria-label="Choose experimental colour"
+                                                          value="#0e47cb"/><input id="edit-hex" type="text"
+                                                                                  value="#0E47CB" spellcheck="false"
+                                                                                  autocomplete="off"
+                                                                                  aria-describedby="edit-approved edit-error"/>
+                        </div>
+                        <p id="edit-error" class="error-message" hidden>Enter a valid HEX colour, such as #0E47CB or
+                            #FFF. The last valid colour is still applied.</p>
+                        <p id="edit-approved" class="help"></p></div>
+                    <div class="control">
+                        <button id="reset-experiments" type="button">Reset all experiments</button>
+                        <p class="help">Clears both appearances and the comparison, then returns to light. Reload also
+                            restores defaults.</p></div>
+                </aside>
+                <div class="sample-column">
+                    <div class="sample-meta"><p id="sample-state">Light · Approved defaults</p>
+                        <p class="secondary">Interface specimen</p></div>
+                    <div class="sample" id="colour-sample">
+                        <div class="sample-card">
+                            <p class="eyebrow">i12e / infrastructure</p>
+                            <h3>A clear view of what matters</h3>
+                            <p>Good infrastructure starts with clear choices. Use colour to show what people can do,
+                                what needs attention, and what has changed.</p>
+                            <p class="secondary">Supporting text adds context without competing with the main
+                                message.</p>
+                            <p><a href="#roles">Explore the colour roles</a></p>
+                            <div class="button-row">
+                                <button type="button" class="primary-button"
+                                        data-demo-message="Primary action selected. This is a preview; nothing was saved.">
+                                    Primary action
+                                </button>
+                                <button type="button"
+                                        data-demo-message="Secondary action selected. This is a preview; nothing was changed.">
+                                    Secondary action
+                                </button>
+                            </div>
+                            <div class="sample-field"><label for="sample-name">Project name</label><input type="text"
+                                                                                                          id="sample-name"
+                                                                                                          value="European infrastructure"
+                                                                                                          autocomplete="off"/>
+                                <p class="help">A labelled field with an identifiable boundary.</p></div>
+                            <p id="demo-feedback" class="secondary" role="status"></p>
+                            <hr/>
+                            <div class="status-grid">
+                                <div class="notice success"><span class="notice-icon" aria-hidden="true">✓</span>
+                                    <p><strong>Success</strong><br/>Your changes are ready.</p></div>
+                                <div class="notice warning"><span class="notice-icon" aria-hidden="true">!</span>
+                                    <p><strong>Warning</strong><br/>Review this setting before continuing.</p></div>
+                                <div class="notice error"><span class="notice-icon" aria-hidden="true">×</span>
+                                    <p><strong>Error</strong><br/>A required value is missing.</p></div>
+                                <div class="notice info"><span class="notice-icon" aria-hidden="true">i</span>
+                                    <p><strong>Information</strong><br/>This is a demonstration of the palette.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="checks" id="live-checks" hidden><p id="check-summary" role="status"></p>
+                        <p id="selected-check-title"></p>
+                        <ul class="selected-checks" id="selected-checks"></ul>
+                        <details>
+                            <summary>View all text and boundary checks</summary>
+                            <div class="table-scroll" role="region" aria-label="Sample contrast checks" tabindex="0">
+                                <table>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">Combination</th>
+                                        <th scope="col">Contrast</th>
+                                        <th scope="col">Target</th>
+                                        <th scope="col">Result</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="checks-body"></tbody>
+                                </table>
+                            </div>
+                        </details>
+                        <p class="help">Checks cover the explicit colour pairs in this sample. They do not certify
+                            whole-page accessibility. Decorative dividers have no contrast target.</p></div>
+                </div>
+            </div>
+        </section>
+        <section class="section" id="palette" aria-labelledby="palette-title">
+            <p class="eyebrow">01 / Fixed values</p>
+            <h2 id="palette-title">The palette</h2>
+            <p>A scale is an inventory, not a promise that every pairing is readable. Use the roles below for approved
+                combinations. Select a HEX value or RGB button to copy it.</p>
+            <div id="palette-families"></div>
+            <div class="usage-grid">
+                <div><h3>Blue signals action</h3>
+                    <p>Use the primary blue for actions and selected states. Light blue surfaces and lighter dark-mode
+                        links come from the same range.</p></div>
+                <div><h3>Neutrals support reading</h3>
+                    <p>Use white and grey surfaces, charcoal body text, and readable secondary text. Decorative lines
+                        should remain quiet; input boundaries need stronger contrast.</p></div>
+                <div><h3>Status colour has meaning</h3>
+                    <p>Green means success, orange warning, red error, and blue information. Always include a label or
+                        symbol. Yellow is reserved for the flag.</p></div>
+            </div>
+            <p class="help">Blue values follow ECL EU v5.2.1; i12e numbers them 50–950 instead of ECL’s 5–180. The
+                neutral and status scales are i12e choices. Status scales mix the shade-600 seed with white or black in
+                encoded sRGB, rounded to the nearest channel value. Print and chart palettes are outside this
+                specification.</p>
+        </section>
+        <section class="section" id="roles" aria-labelledby="roles-title">
+            <p class="eyebrow">02 / Approved assignments</p>
+            <h2 id="roles-title">Give each colour a job</h2>
+            <p>Both appearances use the same palette. The roles choose shades for their surroundings. Primary buttons
+                keep the brand blue in both modes; dark links and button outlines use lighter shades.</p>
+            <div class="table-scroll" role="region" aria-label="Approved colour roles in both appearances" tabindex="0">
+                <table>
+                    <caption>Approved defaults · These values do not change with playground edits.</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Role / CSS variable</th>
+                        <th scope="col">Light</th>
+                        <th scope="col">Dark</th>
+                    </tr>
+                    </thead>
+                    <tbody id="roles-body"></tbody>
+                </table>
+            </div>
+            <p class="help">Normal text requires at least 4.5:1; essential boundaries require 3:1. Main text has
+                stronger contrast. Links stay underlined, including visited links. Focus uses a 2px outline with a 2px
+                surface-coloured gap.</p>
+        </section>
+        <section class="section" id="comparison" aria-labelledby="comparison-title">
+            <p class="eyebrow">03 / Independent check</p>
+            <h2 id="comparison-title">Compare two colours</h2>
+            <p>Choose palette values or enter custom HEX colours. This comparison does not change the playground or
+                exported themes.</p>
+            <div class="comparison">
+                <div class="comparison-controls">
+                    <div><label for="compare-foreground">Foreground palette colour</label>
+                        <div class="comparison-inputs"><select id="compare-foreground" autocomplete="off"></select>
+                            <div><label for="foreground-hex">Foreground HEX</label><input id="foreground-hex"
+                                                                                          class="mono" type="text"
+                                                                                          value="#0E47CB"
+                                                                                          spellcheck="false"
+                                                                                          autocomplete="off"
+                                                                                          aria-describedby="foreground-error"/>
+                                <p id="foreground-error" class="error-message" hidden>Enter a valid HEX colour. The
+                                    previous comparison is unchanged.</p></div>
+                        </div>
+                    </div>
+                    <div><label for="compare-background">Background palette colour</label>
+                        <div class="comparison-inputs"><select id="compare-background" autocomplete="off"></select>
+                            <div><label for="background-hex">Background HEX</label><input id="background-hex"
+                                                                                          class="mono" type="text"
+                                                                                          value="#FFFFFF"
+                                                                                          spellcheck="false"
+                                                                                          autocomplete="off"
+                                                                                          aria-describedby="background-error"/>
+                                <p id="background-error" class="error-message" hidden>Enter a valid HEX colour. The
+                                    previous comparison is unchanged.</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="comparison-sample" id="comparison-sample" style="color:#0E47CB;background:#FFFFFF"><h3>
+                        Colour changes what we see.</h3>
+                        <p>Read this paragraph to judge the pairing at a normal text size. The numerical result measures
+                            contrast, not personal preference.</p>
+                        <p class="mono">Aa Bb Cc · 0123456789</p></div>
+                    <div id="comparison-result" class="comparison-result" role="status"></div>
+                </div>
+            </div>
+        </section>
+        <section class="section" id="exports" aria-labelledby="exports-title">
+            <p class="eyebrow">04 / Use the specification</p>
+            <h2 id="exports-title">Copy &amp; export</h2>
+            <p>Copy a complete theme, including every fixed palette value and both appearances. Experiments are exported
+                only when you explicitly select them.</p>
+            <div class="export-controls">
+                <div><label for="export-kind">Values</label><select id="export-kind" autocomplete="off">
+                    <option value="approved" selected>Approved defaults</option>
+                    <option value="experiment">Current experiment · Both appearances</option>
+                </select></div>
+                <div><label for="export-format">Format</label><select id="export-format" autocomplete="off">
+                    <option value="css" selected>CSS custom properties</option>
+                    <option value="json">JSON</option>
+                    <option value="tailwind">Tailwind CSS v4 theme</option>
+                </select></div>
+                <button type="button" id="copy-export">Copy complete output</button>
+            </div>
+            <label for="export-output" id="export-label">Approved defaults · CSS</label><textarea id="export-output"
+                                                                                                  readonly
+                                                                                                  spellcheck="false"
+                                                                                                  wrap="off"
+                                                                                                  aria-describedby="export-help"></textarea>
+            <p id="export-help" class="export-caption secondary"></p>
+        </section>
+        <section class="section" id="sources" aria-labelledby="sources-title">
+            <p class="eyebrow">05 / Provenance</p>
+            <h2 id="sources-title">Sources &amp; decisions</h2>
+            <p id="emblem-sources">Official EU interface and emblem guidance cover different uses. The interface blue is
+                #0E47CB. The emblem retains #003399 and #FFCC00. These documented differences do not imply a website is
+                disregarding the emblem specification.</p>
+            <ul class="sources">
+                <li><a href="https://op.europa.eu/en/web/webguide/links">EU Publications Office: links and main
+                    buttons</a> — the #0E47CB interface reference.
+                </li>
+                <li>
+                    <a href="https://github.com/ec-europa/europa-component-library/blob/v5.2.1/src/themes/eu/maps/color.scss">Europa
+                        Component Library, EU theme v5.2.1</a> — the fixed blue scale. ECL primary-100 is i12e blue-600.
+                </li>
+                <li>
+                    <a href="https://style-guide.europa.eu/o/opportal-service/isg?resource=en/annex-a1-graphics-guide-european-emblem.html">Interinstitutional
+                        Style Guide: the European emblem</a> — the flag’s blue and yellow.
+                </li>
+                <li><a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">W3C: text contrast</a>,
+                    <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">non-text contrast</a>,
+                    and <a href="https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html">use of colour</a> —
+                    contrast thresholds and meaning beyond colour.
+                </li>
+                <li><a href="https://tailwindcss.com/docs/theme">Tailwind CSS theme variables</a> and <a
+                        href="https://tailwindcss.com/docs/dark-mode#using-a-data-attribute">manual dark mode</a> —
+                    export format checked against <a
+                            href="https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.3.3">v4.3.3</a>.
+                </li>
+            </ul>
+            <p class="help">Reference decisions verified 6 September 2026. Start light; theme switches and experiments
+                last only until reload. The shared stylesheet is the source of the displayed values.</p>
+        </section>
+    </main>
+    <footer class="page-footer"><a href="./index.html">← Design index</a> · <a href="./typography.html">Typography</a> ·
+        <a href="./colours.css">Shared colour stylesheet</a></footer>
+</div>
+<p id="copy-status" class="copy-status" role="status"></p>
+<dialog id="copy-dialog" aria-labelledby="copy-dialog-title"><h2 id="copy-dialog-title">Copy this value</h2>
+    <p>Clipboard access is unavailable. Select and copy the text below using your keyboard or device’s copy command.</p>
+    <label for="copy-fallback">Text to copy</label><textarea id="copy-fallback" readonly spellcheck="false"></textarea>
+    <form method="dialog">
+        <button>Close</button>
+    </form>
+</dialog>
+<div id="theme-light" data-theme="light" hidden></div>
+<div id="theme-dark" data-theme="dark" hidden></div>
+<script>
+  (() => {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+    const families = {
+      blue: {title: "Blue", description: "EU interface blue · Exact ECL values, i12e shade numbers.", shades},
+      neutral: {
+        title: "Neutral",
+        description: "White, grey, and charcoal · The reading foundation.",
+        shades: [0, ...shades, 1000],
+      },
+      green: {title: "Green", description: "Success · i12e seed at shade 600.", shades},
+      orange: {title: "Orange", description: "Warning · i12e seed at shade 600.", shades},
+      red: {title: "Red", description: "Error · i12e seed at shade 600.", shades},
+    };
+    const roleLabels = {
+      "background": "Page background",
+      "surface": "Surface",
+      "text-primary": "Main text",
+      "text-secondary": "Secondary text",
+      "link": "Link",
+      "link-hover": "Link · Hover",
+      "link-active": "Link · Active",
+      "border": "Decorative divider",
+      "border-control": "Control boundary",
+      "button-primary": "Primary button",
+      "button-primary-hover": "Primary button · Hover",
+      "button-primary-active": "Primary button · Active",
+      "button-text": "Primary button label",
+      "button-border": "Primary button boundary",
+      "focus": "Focus outline",
+      "text-success": "Success · Text",
+      "background-success": "Success · Background",
+      "border-success": "Success · Border",
+      "text-warning": "Warning · Text",
+      "background-warning": "Warning · Background",
+      "border-warning": "Warning · Border",
+      "text-error": "Error · Text",
+      "background-error": "Error · Background",
+      "border-error": "Error · Border",
+      "text-info": "Information · Text",
+      "background-info": "Information · Background",
+      "border-info": "Information · Border",
+    };
+    const statuses = {success: "Success", warning: "Warning", error: "Error", info: "Information"};
+    const roleKeys = Object.keys(roleLabels);
+    const sample = $("colour-sample");
+    const themeSelect = $("appearance");
+    const overrides = {light: {}, dark: {}};
+    let theme = "light";
+    let copyTimer;
+
+    function normalizeHex(value) {
+      const text = value.trim();
+      if (/^#[\da-f]{3}$/i.test(text)) return "#" + [...text.slice(1)].map(c => c + c).join("").toUpperCase();
+      return /^#[\da-f]{6}$/i.test(text) ? text.toUpperCase() : null;
+    }
+
+    function rgbChannels(hex) {
+      return hex.slice(1).match(/../g).map(channel => parseInt(channel, 16));
+    }
+
+    function rgbString(hex) {
+      return `rgb(${rgbChannels(hex).join(", ")})`;
+    }
+
+    function luminance(hex) {
+      const channels = rgbChannels(hex).map(c => c / 255).map(c => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    }
+
+    function contrast(a, b) {
+      const first = luminance(a), second = luminance(b);
+      return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+    }
+
+    function ratioText(value) {
+      return value.toFixed(2) + ":1";
+    }
+
+    function readColour(style, name) {
+      const value = normalizeHex(style.getPropertyValue(name));
+      if (!value) throw new Error("Missing or invalid colour in colours.css: " + name);
+      return value;
+    }
+
+    const rootStyle = getComputedStyle(document.documentElement);
+    const palette = Object.fromEntries(Object.entries(families).map(([name, family]) => [name,
+      Object.fromEntries(family.shades.map(shade => [shade, readColour(rootStyle, `--palette-${name}-${shade}`)]))]));
+    const brand = {primary: readColour(rootStyle, "--brand-primary")};
+    const emblem = {blue: readColour(rootStyle, "--emblem-blue"), yellow: readColour(rootStyle, "--emblem-yellow")};
+    const defaults = Object.fromEntries(["light", "dark"].map(mode => {
+      const style = getComputedStyle($("theme-" + mode));
+      return [mode, Object.fromEntries(roleKeys.map(role => [role, readColour(style, "--color-" + role)]))];
+    }));
+    const paletteEntries = Object.entries(palette).flatMap(([family, scale]) => Object.entries(scale).map(([shade, hex]) => ({
+      name: `${family}-${shade}`,
+      hex,
+    })));
+    const fixedEntries = [...paletteEntries, {name: "emblem-blue", hex: emblem.blue}, {
+      name: "emblem-yellow",
+      hex: emblem.yellow,
+    }];
+    const valuesFor = mode => ({...defaults[mode], ...overrides[mode]});
+
+    function option(value, label) {
+      const element = document.createElement("option");
+      element.value = value;
+      element.textContent = label;
+      return element;
+    }
+
+    function buildReference() {
+      const container = $("palette-families");
+      for (const [name, family] of Object.entries(families)) {
+        const section = document.createElement("section");
+        section.className = "family";
+        section.setAttribute("aria-labelledby", `family-${name}`);
+        section.innerHTML = `<div class="family-header"><h3 id="family-${name}">${family.title}</h3><p class="secondary">${family.description}</p></div><div class="swatches"></div>`;
+        const grid = section.querySelector(".swatches");
+        for (const [shade, hex] of Object.entries(palette[name])) {
+          const card = document.createElement("div");
+          card.className = "swatch";
+          card.innerHTML = `<div class="swatch-colour" style="background:${hex}" aria-hidden="true"></div><div class="swatch-content"><p class="swatch-name">${name}<br/>${shade}</p><button type="button" data-copy-token="--palette-${name}-${shade}" data-copy-format="hex" aria-label="Copy ${name} ${shade} HEX ${hex}">${hex}</button><button type="button" data-copy-token="--palette-${name}-${shade}" data-copy-format="rgb" aria-label="Copy ${name} ${shade} ${rgbString(hex)}">RGB</button></div>`;
+          grid.append(card);
+        }
+        container.append(section);
+      }
+      for (const [role, label] of Object.entries(roleLabels)) {
+        $("edit-role").append(option(role, label));
+        const row = document.createElement("tr");
+        const nameFor = hex => paletteEntries.find(entry => entry.hex === hex)?.name || "custom";
+        row.innerHTML = `<th scope="row">${label}<span class="token">--color-${role}</span></th>` + ["light", "dark"].map(mode => `<td><span class="dot" style="background:${defaults[mode][role]}" aria-hidden="true"></span><code>${defaults[mode][role]}</code><span class="token">${nameFor(defaults[mode][role])}</span></td>`).join("");
+        $("roles-body").append(row);
+      }
+      $("edit-role").value = "link";
+      for (const side of ["foreground", "background"]) {
+        const select = $("compare-" + side);
+        select.append(option("custom", "Custom HEX"));
+        for (const [family, definition] of Object.entries(families)) {
+          const group = document.createElement("optgroup");
+          group.label = definition.title;
+          paletteEntries.filter(entry => entry.name.startsWith(family + "-")).forEach(entry => group.append(option(entry.name, `${entry.name} · ${entry.hex}`)));
+          select.append(group);
+        }
+        const group = document.createElement("optgroup");
+        group.label = "Flag reference only";
+        fixedEntries.filter(entry => entry.name.startsWith("emblem-")).forEach(entry => group.append(option(entry.name, `${entry.name} · ${entry.hex}`)));
+        select.append(group);
+      }
+    }
+
+    function getChecks(values) {
+      const checks = [];
+      const add = (label, foreground, background, target) => checks.push({
+        label,
+        foreground,
+        background,
+        target,
+        ratio: contrast(values[foreground], values[background]),
+      });
+      for (const background of ["surface", "background"]) {
+        const location = background === "surface" ? "surface" : "page";
+        for (const foreground of ["text-primary", "text-secondary", "link", "link-hover", "link-active"]) add(`${roleLabels[foreground]} / ${location}`, foreground, background, 4.5);
+        add(`Control boundary / ${location}`, "border-control", background, 3);
+        add(`Focus outline / ${location}`, "focus", background, 3);
+        add(`Primary button boundary / ${location}`, "button-border", background, 3);
+      }
+      for (const state of ["button-primary", "button-primary-hover", "button-primary-active"]) add(`Button label / ${roleLabels[state]}`, "button-text", state, 4.5);
+      for (const [status, label] of Object.entries(statuses)) {
+        add(`${label} text / message`, "text-" + status, "background-" + status, 4.5);
+        for (const background of ["background-" + status, "surface", "background"]) add(`${label} border / ${background === "background-" + status ? "message" : background === "surface" ? "surface" : "page"}`, "border-" + status, background, 3);
+      }
+      return checks;
+    }
+
+    function renderChecks() {
+      const checks = getChecks(valuesFor(theme));
+      const failing = checks.filter(check => check.ratio < check.target);
+      const summary = $("check-summary");
+      summary.textContent = failing.length ? `${failing.length} of ${checks.length} combinations are below target. Adjust the experiment before using it.` : `All ${checks.length} sample combinations meet their contrast targets.`;
+      summary.className = failing.length ? "check-fail" : "check-pass";
+      const role = $("edit-role").value;
+      $("selected-check-title").textContent = `Selected role: ${roleLabels[role]}`;
+      const list = $("selected-checks");
+      list.replaceChildren();
+      const selected = checks.filter(check => check.foreground === role || check.background === role);
+      for (const check of selected) {
+        const li = document.createElement("li");
+        li.textContent = `${check.label}: ${ratioText(check.ratio)} · ${check.ratio >= check.target ? "Pass" : "Below target"} (${check.target}:1 required)`;
+        if (check.ratio < check.target) li.className = "check-fail";
+        list.append(li);
+      }
+      if (!selected.length) {
+        const li = document.createElement("li");
+        li.textContent = "Decorative dividers have no minimum contrast. Use the control boundary role where a line is needed to identify an input or button.";
+        list.append(li);
+      }
+      $("checks-body").innerHTML = checks.map(check => `<tr><th scope="row">${check.label}</th><td class="mono">${ratioText(check.ratio)}</td><td>${check.target}:1</td><td class="${check.ratio >= check.target ? "check-pass" : "check-fail"}">${check.ratio >= check.target ? "Pass" : "Below target"}</td></tr>`).join("");
+    }
+
+    function clearInvalid(input, message) {
+      input.removeAttribute("aria-invalid");
+      input.setCustomValidity("");
+      message.hidden = true;
+    }
+
+    function markInvalid(input, message) {
+      input.setAttribute("aria-invalid", "true");
+      input.setCustomValidity("Enter a three- or six-digit HEX colour beginning with #.");
+      message.hidden = false;
+    }
+
+    function syncEditor() {
+      const role = $("edit-role").value;
+      const value = valuesFor(theme)[role];
+      $("edit-hex").value = value;
+      $("edit-picker").value = value.toLowerCase();
+      $("edit-approved").textContent = `Approved ${theme}: ${defaults[theme][role]} · ${rgbString(defaults[theme][role])}`;
+      clearInvalid($("edit-hex"), $("edit-error"));
+    }
+
+    function updateSample() {
+      const values = valuesFor(theme);
+      // Override resolved roles on the sample only. The page UI and reference keep approved colours.
+      for (const role of roleKeys) sample.style.setProperty("--color-" + role, values[role]);
+      const count = Object.keys(overrides[theme]).length;
+      $("sample-state").textContent = `${theme === "light" ? "Light" : "Dark"} · ${count ? `Experiment · ${count} changed ${count === 1 ? "role" : "roles"}` : "Approved defaults"}`;
+      renderChecks();
+      updateExport();
+    }
+
+    function setRoleColour(hex) {
+      const role = $("edit-role").value;
+      if (hex === defaults[theme][role]) delete overrides[theme][role];
+      else overrides[theme][role] = hex;
+      updateSample();
+    }
+
+    function setTheme(mode) {
+      theme = mode === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = theme;
+      themeSelect.value = theme;
+      syncEditor();
+      updateSample();
+      updateSticky();
+    }
+
+    const comparison = {foreground: brand.primary, background: palette.neutral[0]};
+
+    function updateComparison() {
+      const preview = $("comparison-sample");
+      preview.style.color = comparison.foreground;
+      preview.style.backgroundColor = comparison.background;
+      const value = contrast(comparison.foreground, comparison.background);
+      $("comparison-result").textContent = `${ratioText(value)} · Normal text AA: ${value >= 4.5 ? "Pass" : "Fail"} · Large text / essential graphics: ${value >= 3 ? "Pass" : "Fail"} · Text AAA: ${value >= 7 ? "Pass" : "Fail"}. Results use the unrounded ratio.`;
+    }
+
+    function resetComparison() {
+      comparison.foreground = brand.primary;
+      comparison.background = palette.neutral[0];
+      $("compare-foreground").value = "blue-600";
+      $("compare-background").value = "neutral-0";
+      for (const side of ["foreground", "background"]) {
+        $(side + "-hex").value = comparison[side];
+        clearInvalid($(side + "-hex"), $(side + "-error"));
+      }
+      updateComparison();
+    }
+
+    function exportData(kind) {
+      return {
+        schemaVersion: 1, kind, brand: {...brand}, emblem: {...emblem}, palette,
+        themes: Object.fromEntries(["light", "dark"].map(mode => [mode, kind === "experiment" ? valuesFor(mode) : {...defaults[mode]}])),
+      };
+    }
+
+    function cssExport(data) {
+      const lines = [`/* i12e — ${data.kind === "approved" ? "Approved defaults" : "Temporary experiment"}. Both appearances. */`, ":root {"];
+      for (const [family, scale] of Object.entries(data.palette)) for (const [shade, hex] of Object.entries(scale)) lines.push(`  --palette-${family}-${shade}: ${hex};`);
+      lines.push(`  --brand-primary: ${data.brand.primary};`, `  --emblem-blue: ${data.emblem.blue};`, `  --emblem-yellow: ${data.emblem.yellow};`, "}", "");
+      for (const mode of ["light", "dark"]) {
+        lines.push(mode === "light" ? ":root, [data-theme=\"light\"] {" : "[data-theme=\"dark\"] {", `  color-scheme: ${mode};`);
+        for (const [role, hex] of Object.entries(data.themes[mode])) lines.push(`  --color-${role}: ${hex};`);
+        lines.push("}", "");
+      }
+      return lines.join("\n");
+    }
+
+    function tailwindExport(data) {
+      const lines = ["@import \"tailwindcss\";", "", `/* i12e — ${data.kind === "approved" ? "Approved defaults" : "Temporary experiment"}. Tailwind CSS v4, verified with 4.3.3. */`, "@custom-variant dark (&:where([data-theme=\"dark\"], [data-theme=\"dark\"] *));", "", "@theme static {"];
+      for (const [family, scale] of Object.entries(data.palette)) for (const [shade, hex] of Object.entries(scale)) lines.push(`  --color-i12e-${family}-${shade}: ${hex};`);
+      lines.push(`  --color-i12e-brand: ${data.brand.primary};`, `  --color-i12e-emblem-blue: ${data.emblem.blue};`, `  --color-i12e-emblem-yellow: ${data.emblem.yellow};`, "}", "");
+      for (const mode of ["light", "dark"]) {
+        lines.push(mode === "light" ? ":root, [data-theme=\"light\"] {" : "[data-theme=\"dark\"] {", `  color-scheme: ${mode};`);
+        for (const [role, hex] of Object.entries(data.themes[mode])) lines.push(`  --i12e-${role}: ${hex};`);
+        lines.push("}", "");
+      }
+      lines.push("@theme inline {");
+      for (const role of roleKeys) lines.push(`  --color-i12e-${role}: var(--i12e-${role});`);
+      lines.push("}", "", "/* Examples: bg-i12e-background text-i12e-text-primary border-i12e-border-control", "   bg-i12e-button-primary hover:bg-i12e-button-primary-hover text-i12e-button-text", "   Set data-theme=\"dark\" on <html> to switch semantic colours. No theme reset needed. */", "");
+      return lines.join("\n");
+    }
+
+    function updateExport() {
+      const kind = $("export-kind").value;
+      const format = $("export-format").value;
+      const data = exportData(kind);
+      const text = format === "json" ? JSON.stringify(data, null, 2) : format === "tailwind" ? tailwindExport(data) : cssExport(data);
+      $("export-output").value = text;
+      const title = kind === "approved" ? "Approved defaults" : "Temporary experiment";
+      $("export-label").textContent = `${title} · ${format === "tailwind" ? "Tailwind CSS v4 theme" : format.toUpperCase()} · Light and dark`;
+      const count = Object.keys(overrides.light).length + Object.keys(overrides.dark).length;
+      const notes = {
+        css: "Use as a plain stylesheet. Theme roles use --color-* properties; set data-theme=\"dark\" to switch.",
+        json: "Schema version 1. Palette and theme values are resolved HEX strings. Theme keys map to --color-* properties.",
+        tailwind: "Add to your Tailwind CSS entry file; this output requires Tailwind processing. Utilities use the i12e- prefix and preserve Tailwind’s default palette.",
+      };
+      $("export-help").textContent = notes[format] + (kind === "experiment" ? ` Includes ${count} changed ${count === 1 ? "role" : "roles"} across both appearances. ` : " ") + "Copying does not save changes to the specification.";
+    }
+
+    async function copyText(value, label) {
+      clearTimeout(copyTimer);
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+        await navigator.clipboard.writeText(value);
+        $("copy-status").textContent = `Copied ${label}.`;
+        copyTimer = setTimeout(() => {
+          $("copy-status").textContent = "";
+        }, 4500);
+      } catch {
+        $("copy-status").textContent = "";
+        $("copy-fallback").value = value;
+        $("copy-dialog").showModal();
+        $("copy-fallback").focus();
+        $("copy-fallback").select();
+      }
+    }
+
+    function updateSticky() {
+      const panel = document.querySelector(".editor");
+      panel.classList.toggle("too-tall", panel.getBoundingClientRect().height > window.innerHeight - 40);
+    }
+
+    buildReference();
+    themeSelect.addEventListener("change", () => setTheme(themeSelect.value));
+    $("edit-role").addEventListener("change", () => {
+      syncEditor();
+      renderChecks();
+    });
+    $("edit-picker").addEventListener("input", event => {
+      const hex = normalizeHex(event.target.value);
+      if (!hex) return;
+      $("edit-hex").value = hex;
+      clearInvalid($("edit-hex"), $("edit-error"));
+      setRoleColour(hex);
+    });
+    $("edit-hex").addEventListener("input", event => {
+      const hex = normalizeHex(event.target.value);
+      if (!hex) {
+        markInvalid(event.target, $("edit-error"));
+        return;
+      }
+      clearInvalid(event.target, $("edit-error"));
+      $("edit-picker").value = hex.toLowerCase();
+      setRoleColour(hex);
+    });
+    $("edit-hex").addEventListener("blur", event => {
+      const hex = normalizeHex(event.target.value);
+      if (hex) event.target.value = hex;
+    });
+    for (const side of ["foreground", "background"]) {
+      $("compare-" + side).addEventListener("change", event => {
+        if (event.target.value === "custom") {
+          $(side + "-hex").focus();
+          return;
+        }
+        const entry = fixedEntries.find(item => item.name === event.target.value);
+        if (!entry) return;
+        comparison[side] = entry.hex;
+        $(side + "-hex").value = entry.hex;
+        clearInvalid($(side + "-hex"), $(side + "-error"));
+        updateComparison();
+      });
+      $(side + "-hex").addEventListener("input", event => {
+        const hex = normalizeHex(event.target.value);
+        if (!hex) {
+          markInvalid(event.target, $(side + "-error"));
+          return;
+        }
+        clearInvalid(event.target, $(side + "-error"));
+        comparison[side] = hex;
+        $("compare-" + side).value = fixedEntries.find(entry => entry.hex === hex)?.name || "custom";
+        updateComparison();
+      });
+      $(side + "-hex").addEventListener("blur", event => {
+        const hex = normalizeHex(event.target.value);
+        if (hex) event.target.value = hex;
+      });
+    }
+    $("reset-experiments").addEventListener("click", () => {
+      for (const mode of ["light", "dark"]) for (const role of Object.keys(overrides[mode])) delete overrides[mode][role];
+      $("edit-role").value = "link";
+      $("export-kind").value = "approved";
+      $("export-format").value = "css";
+      $("sample-name").value = "European infrastructure";
+      $("demo-feedback").textContent = "";
+      resetComparison();
+      setTheme("light");
+    });
+    $("export-kind").addEventListener("change", updateExport);
+    $("export-format").addEventListener("change", updateExport);
+    $("copy-export").addEventListener("click", () => copyText($("export-output").value, $("export-label").textContent));
+    document.addEventListener("click", event => {
+      const button = event.target.closest("[data-copy-token]");
+      if (!button) return;
+      const hex = readColour(getComputedStyle(document.documentElement), button.dataset.copyToken);
+      copyText(button.dataset.copyFormat === "rgb" ? rgbString(hex) : hex, `${button.dataset.copyToken.replace(/^--(?:palette-)?/, "")} ${button.dataset.copyFormat.toUpperCase()}`);
+    });
+    document.querySelectorAll("[data-demo-message]").forEach(button => button.addEventListener("click", () => {
+      $("demo-feedback").textContent = button.dataset.demoMessage;
+    }));
+    // Explicit start state: never read storage or the operating-system appearance.
+    $("export-kind").value = "approved";
+    $("export-format").value = "css";
+    resetComparison();
+    setTheme("light");
+    document.querySelector(".theme-control").hidden = false;
+    document.querySelector(".editor").hidden = false;
+    $("live-checks").hidden = false;
+    window.addEventListener("resize", updateSticky);
+    if ("ResizeObserver" in window) new ResizeObserver(updateSticky).observe(document.querySelector(".editor"));
+    updateSticky();
+  })();
+</script>
+</body>
+</html>

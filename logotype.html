@@ -345,6 +345,11 @@
             margin: 6px 0 0;
             color: #737373;
             font-size: 10px;
+            line-height: 1.6;
+            height: 1.6em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .help {
@@ -958,13 +963,16 @@
             timeline.setAttribute("aria-valuetext", `${(currentTime / 1000).toFixed(1)} seconds, ${state.state}`);
             document.getElementById("time").textContent = `${(currentTime / 1000).toFixed(1)} / ${(duration / 1000).toFixed(1)} s`;
             document.getElementById("current-state").textContent = state.state;
-          const phase = state.animationPhase === "expanded-hold" ? "Expanded logotype hold"
-            : state.animationPhase === "collapsed-hold" ? "Collapsed logotype hold"
-              : state.animationPhase === "collapse-text" || state.loopPhase === "text" ? "Collapse · text"
-                : state.animationPhase === "collapse-flaps" || state.loopPhase === "flaps" ? "Collapse · flag fold"
+          const phase = state.animationPhase === "expanded-hold" ? "Expanded hold"
+            : state.animationPhase === "collapsed-hold" ? "Collapsed hold"
+              : state.animationPhase === "collapse-text" || state.loopPhase === "text" ? "Collapse: text"
+                : state.animationPhase === "collapse-flaps" || state.loopPhase === "flaps" ? "Collapse: flag"
                   : state.animationPhase === "complete" || state.phase === "complete" ? "Complete"
-                    : state.phase === "hold" ? "Between-step hold" : "Expansion step";
-            document.getElementById("phase").textContent = `${state.playing ? "Playing" : "Paused"} · ${phase} · step ${state.step} / ${state.totalSteps}`;
+                    : state.phase === "hold" ? "Step hold" : "Expansion";
+          const status = `${state.playing ? "Playing" : "Paused"} · ${phase} · ${state.step}/${state.totalSteps}`;
+          const phaseReadout = document.getElementById("phase");
+          phaseReadout.textContent = status;
+          phaseReadout.title = status;
             document.getElementById("motion-note").hidden = !state.reducedMotion;
             playPause.textContent = state.playing ? "Pause" : "Play";
         }
