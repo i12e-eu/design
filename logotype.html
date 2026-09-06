@@ -418,9 +418,9 @@
                         <iframe src="./logotype.svg?variant=6&amp;preview=1&amp;autoplay=0"
                                 title="Logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
                     </div>
-                    <p class="caption">The last counter turn reveals a clean leading flag, with no intermediate hold.
+                    <p class="caption">The final expansion step reveals a clean leading flag, with no intermediate hold.
                         The i fades out and reappears as the cards move left and close into one seamless face.
-                        With Loop enabled, the letters slide and fade into the flag before it folds back into 12.</p>
+                        During collapse, the letters slide and fade into the flag before it folds back into 12.</p>
                     <fieldset class="flag-interaction" id="flag-interaction" disabled>
                         <legend>Flag interaction</legend>
                         <div class="flag-controls">
@@ -455,7 +455,8 @@
                                 flag
                             </button>
                         </div>
-                        <p class="help" id="flag-interaction-help">Available at the end of the countdown. Separate from
+                        <p class="help" id="flag-interaction-help">Available while the expanded logotype is paused.
+                            Separate from
                             Loop
                             animation.</p>
                     </fieldset>
@@ -472,7 +473,7 @@
                         <iframe src="./logotype.svg?variant=0&amp;preview=1&amp;autoplay=0"
                                 title="Logotype — default" data-variant="0"></iframe>
                     </div>
-                    <p class="caption">Original countdown and letter reveal.</p>
+                    <p class="caption">Original countdown and logotype expansion.</p>
                 </article>
                 <article class="variant" aria-labelledby="variant-1-title">
                     <div class="variant-heading">
@@ -538,26 +539,50 @@
             <fieldset id="controls" disabled aria-label="Preview settings">
                 <div class="settings-scroll" role="region" aria-label="Appearance and timing settings" tabindex="0">
                     <div class="control">
-                        <label for="transition-duration">Transition duration</label>
+                        <label for="transition-duration">Expansion step duration</label>
                         <div class="input-row"><input id="transition-duration" type="number" min="1" max="5000" step="1"
-                                                      value="250" data-config="transitionDuration"/><span
+                                                      value="250" data-config="transitionDuration"
+                                                      aria-describedby="transition-duration-note"/><span
                                 class="unit">ms</span></div>
+                        <p id="transition-duration-note" class="caption">Duration of each character-addition
+                            animation.</p>
                     </div>
                     <div class="control">
-                        <label for="hold-duration">Hold duration</label>
+                        <label for="hold-duration">Between-step hold</label>
                         <div class="input-row"><input id="hold-duration" type="number" min="0" max="10000" step="1"
-                                                      value="250" data-config="holdDuration"/><span
+                                                      value="250" data-config="holdDuration"
+                                                      aria-describedby="hold-duration-note"/><span
                                 class="unit">ms</span>
                         </div>
+                        <p id="hold-duration-note" class="caption">Pause between expansion steps.</p>
                     </div>
                     <div class="control">
-                        <label for="loop-duration">Loop duration</label>
+                        <label for="expanded-hold-duration">Expanded logotype hold</label>
+                        <div class="input-row"><input id="expanded-hold-duration" type="number" min="0" max="10000"
+                                                      step="1"
+                                                      value="500" data-config="expandedHoldDuration"
+                                                      aria-describedby="expanded-hold-duration-note"/><span
+                                class="unit">ms</span></div>
+                        <p id="expanded-hold-duration-note" class="caption">Pause on “infrastructure” before
+                            collapse.</p>
+                    </div>
+                    <div class="control">
+                        <label for="loop-duration">Collapse duration</label>
                         <div class="input-row"><input id="loop-duration" type="number" min="1" max="10000" step="1"
                                                       value="1000" data-config="loopDuration"
                                                       aria-describedby="loop-duration-note"/><span
                                 class="unit">ms</span></div>
-                        <p id="loop-duration-note" class="caption">Full return to i12e: half for the text, half for the
-                            flag fold.</p>
+                        <p id="loop-duration-note" class="caption">Duration of the complete return to “i12e”.</p>
+                    </div>
+                    <div class="control">
+                        <label for="collapsed-hold-duration">Collapsed logotype hold</label>
+                        <div class="input-row"><input id="collapsed-hold-duration" type="number" min="0" max="10000"
+                                                      step="1"
+                                                      value="1000" data-config="collapsedHoldDuration"
+                                                      aria-describedby="collapsed-hold-duration-note"/><span
+                                class="unit">ms</span></div>
+                        <p id="collapsed-hold-duration-note" class="caption">Pause on “i12e” after collapse; skipped on
+                            initial load and restart.</p>
                     </div>
                     <div class="control">
                         <label for="easing">Easing</label>
@@ -777,8 +802,13 @@
             if (!latestState) return 0;
             const elapsed = latestState.playing ? performance.now() - latestReceivedAt : 0;
             const time = latestState.currentTime + elapsed;
-            return latestState.playing && latestState.config.loop && latestState.duration > 0
-                ? time % latestState.duration : Math.min(latestState.duration, time);
+          const duration = latestState.duration;
+          if (latestState.playing && latestState.config.loop && duration > 0 && time >= duration) {
+            const loopStartTime = Math.min(duration, Math.max(0, Number(latestState.loopStartTime) || 0));
+            const repeatDuration = duration - loopStartTime;
+            return repeatDuration > 0 ? loopStartTime + (time - duration) % repeatDuration : duration;
+          }
+          return Math.min(duration, time);
         }
 
         function configure({reportInvalid = true} = {}) {
@@ -803,6 +833,9 @@
                     holdDuration: latestState.config.holdDuration,
                     transitionDuration: latestState.config.transitionDuration,
                   loopDuration: latestState.config.loopDuration,
+                  expandedHoldDuration: latestState.config.expandedHoldDuration,
+                  collapsedHoldDuration: latestState.config.collapsedHoldDuration,
+                  loopStartTime: latestState.loopStartTime ?? 0,
                     duration: latestState.duration
                 },
                 playing: Boolean(latestState?.playing), startedAt: startedAt(0)
@@ -925,9 +958,12 @@
             timeline.setAttribute("aria-valuetext", `${(currentTime / 1000).toFixed(1)} seconds, ${state.state}`);
             document.getElementById("time").textContent = `${(currentTime / 1000).toFixed(1)} / ${(duration / 1000).toFixed(1)} s`;
             document.getElementById("current-state").textContent = state.state;
-          const phase = state.loopPhase === "text" ? "returning text"
-            : state.loopPhase === "flaps" ? "restoring flaps"
-              : state.swapPhase === "swapping" ? "swapping" : state.phase;
+          const phase = state.animationPhase === "expanded-hold" ? "Expanded logotype hold"
+            : state.animationPhase === "collapsed-hold" ? "Collapsed logotype hold"
+              : state.animationPhase === "collapse-text" || state.loopPhase === "text" ? "Collapse · text"
+                : state.animationPhase === "collapse-flaps" || state.loopPhase === "flaps" ? "Collapse · flag fold"
+                  : state.animationPhase === "complete" || state.phase === "complete" ? "Complete"
+                    : state.phase === "hold" ? "Between-step hold" : "Expansion step";
             document.getElementById("phase").textContent = `${state.playing ? "Playing" : "Paused"} · ${phase} · step ${state.step} / ${state.totalSteps}`;
             document.getElementById("motion-note").hidden = !state.reducedMotion;
             playPause.textContent = state.playing ? "Pause" : "Play";

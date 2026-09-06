@@ -23,7 +23,9 @@
         height: 100%;
         --transition-duration: 250ms;
         --hold-duration: 250ms;
-        --loop-duration: 1000ms; /* Full return: text absorption, then the fold back to 12. */
+        --expanded-hold-duration: 500ms;
+        --loop-duration: 1000ms; /* Full collapse: text absorption, then the fold back to 12. */
+        --collapsed-hold-duration: 1000ms;
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
@@ -120,7 +122,8 @@
             )).toString(16).padStart(2, '0')).join('');
         }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
-        let config, ease, duration, forwardDuration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
+        let config, ease, duration, expansionEnd, collapseStart, collapseEnd, loopStartTime, hasCollapse;
+        let characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
         let flagArtwork, joinedFlag, loopFlagCover, drawFlagFold, solidClips = [];
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
@@ -141,7 +144,9 @@
             return {
                 transitionDuration: milliseconds(value('--transition-duration')),
                 holdDuration: milliseconds(value('--hold-duration')),
+                expandedHoldDuration: numeric(milliseconds(value('--expanded-hold-duration')), 0, 10000, 500),
                 loopDuration: milliseconds(value('--loop-duration')),
+                collapsedHoldDuration: numeric(milliseconds(value('--collapsed-hold-duration')), 0, 10000, 1000),
                 easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
                 characterSpacing: parseFloat(value('--character-spacing')),
                 flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
@@ -529,10 +534,16 @@
             root.dataset.flapWidth = String(tileWidth);
             root.dataset.flapHeight = String(tileHeight);
             root.dataset.variant = String(variant);
-            // Only looping adds the return to 12. Other comparison previews hold
-            // their completed design through that return so every cycle stays aligned.
-            forwardDuration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
-            duration = forwardDuration + (config.loop && (swapVariant || preview) ? config.loopDuration : 0);
+            // Comparison previews share the collapse timeline and then hold their
+            // initial state. Standalone alternatives do not acquire a collapse.
+            hasCollapse = config.loop && (swapVariant || preview);
+            expansionEnd = count * (config.holdDuration + config.transitionDuration);
+            collapseStart = expansionEnd + config.expandedHoldDuration;
+            collapseEnd = collapseStart + (hasCollapse ? config.loopDuration : 0);
+            duration = collapseEnd + (hasCollapse ? config.collapsedHoldDuration : 0);
+            // The collapsed hold replaces the initial step hold on automatic repeats.
+            // Loading and Restart still begin at zero with the original startup timing.
+            loopStartTime = hasCollapse ? config.holdDuration : 0;
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
@@ -591,7 +602,9 @@
         function currentTime() {
             if (!playing) return position;
             const elapsed = originTime + Math.max(0, clock() - startedAt);
-            return config.loop ? elapsed % duration : Math.min(duration, elapsed);
+            return config.loop && elapsed >= duration
+                ? loopStartTime + (elapsed - duration) % (duration - loopStartTime)
+                : Math.min(duration, elapsed);
         }
 
         function sample(time) {
@@ -602,9 +615,8 @@
         }
 
         function sampleReturn(time) {
-            if (!swapVariant || !config.loop || time < forwardDuration) return null;
-            if (time >= duration) return { phase: 'complete', progress: 1 };
-            const elapsed = time - forwardDuration;
+            if (!swapVariant || !hasCollapse || time < collapseStart || time >= collapseEnd) return null;
+            const elapsed = time - collapseStart;
             const segmentDuration = config.loopDuration / 2;
             return elapsed < segmentDuration
                 ? { phase: 'text', progress: elapsed / segmentDuration }
@@ -614,14 +626,23 @@
         function render(time) {
             if (swapVariant) loopFlagCover.setAttribute('display', 'none');
             // The exact boundary shares the initial render, including hidden faces.
-            if (config.loop && time >= duration) return renderCountdown(0);
+            if (config.loop && time >= duration) {
+                renderCountdown(0);
+                root.dataset.loopPhase = 'complete';
+                return;
+            }
+            if (hasCollapse && time >= collapseEnd) {
+                renderCountdown(0);
+                root.dataset.loopPhase = 'hold';
+                return;
+            }
             const returning = sampleReturn(time);
             if (returning) renderReturn(returning);
             else renderCountdown(time);
         }
 
         function renderReturn({ phase, progress }) {
-            renderCountdown(count * (config.holdDuration + config.transitionDuration));
+            renderCountdown(expansionEnd);
             const final = models[count], initial = models[0];
             const eased = ease(progress);
             const compactEX = initial.get(`letter:${word.length - 1}`).x - (flapAdvance - tileWidth);
@@ -750,9 +771,9 @@
         }
 
         function flagTriggerAvailable() {
+            const time = currentTime();
             return swapVariant && ready && !playing
-                && currentTime() >= count * (config.holdDuration + config.transitionDuration)
-                && !sampleReturn(currentTime())
+                && time >= expansionEnd && (!hasCollapse || time < collapseStart)
                 && flagRun.phase !== 'outbound' && flagRun.phase !== 'returning';
         }
 
@@ -826,14 +847,18 @@
             const time = currentTime();
             const returning = sampleReturn(time);
             const atLoopBoundary = config.loop && time >= duration;
-            const sampled = sample(atLoopBoundary ? 0 : time);
-            const step = returning && returning.phase !== 'complete' ? count + (returning.phase === 'text' ? 1 : 2) : sampled.step;
+            const collapsedHold = hasCollapse && time >= collapseEnd && time < duration;
+            const sampled = sample(atLoopBoundary || collapsedHold ? 0 : time);
+            const step = returning ? count + (returning.phase === 'text' ? 1 : 2) : sampled.step;
             const progress = returning ? returning.progress : sampled.progress;
+            const animationPhase = time >= duration ? 'complete' : collapsedHold ? 'collapsed-hold'
+                : returning ? `collapse-${returning.phase}` : time >= expansionEnd ? 'expanded-hold' : 'expansion';
             return {
-                type: 'i12e:state', variant, config: { ...config }, duration, currentTime: time, playing,
+                type: 'i12e:state', variant, config: { ...config }, duration, loopStartTime,
+                currentTime: time, playing, animationPhase,
                 step, totalSteps: count + (swapVariant && config.loop ? 2 : 0),
                 state: returning && returning.phase === 'flaps' ? 'i12e' : stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
-                ...(swapVariant ? { loopPhase: returning?.phase || 'none' } : {}),
+                ...(swapVariant ? { loopPhase: atLoopBoundary ? 'complete' : collapsedHold ? 'hold' : returning?.phase || 'none' } : {}),
                 ...(flagVariant ? { flagPhase: step >= count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
                 ...(swapVariant ? { swapPhase: step === count ? 'complete' : step === count - 1 && progress > 0 ? 'swapping' : 'waiting' } : {}),
                 ...(swapVariant ? { flagInteraction: {
@@ -847,6 +872,7 @@
         function publish() {
             const state = snapshot();
             root.dataset.phase = state.phase;
+            root.dataset.animationPhase = state.animationPhase;
             root.dataset.playing = String(playing);
             if (window.parent !== window) window.parent.postMessage(state, '*');
         }
@@ -886,20 +912,40 @@
         function seek(time) { pause(numeric(time, 0, duration, currentTime())); }
         function seekStep(step) {
             const target = Math.round(numeric(step, 0, count + (swapVariant && config.loop ? 2 : 0), 0));
-            seek(target > count ? forwardDuration + (target - count - 1) * config.loopDuration / 2
+            seek(target > count ? collapseStart + (target - count - 1) * config.loopDuration / 2
                 : target * (config.holdDuration + config.transitionDuration));
         }
         function restart(options = {}) { play({ ...options, time: 0 }); }
         function remapTime(time, previousTiming) {
-            const oldTime = clamp(time, 0, previousTiming.duration);
-            const oldForward = count * (previousTiming.holdDuration + previousTiming.transitionDuration) + previousTiming.holdDuration;
-            if (oldTime >= oldForward) {
-                // Enabling Loop at the completed logo starts the return. Disabling
-                // it during the return restores that completed logo. Timing edits
-                // preserve each return transition's progress without adding holds.
-                if (duration === forwardDuration || previousTiming.duration === oldForward) return forwardDuration;
-                return Math.min(duration, forwardDuration + (oldTime - oldForward)
-                    / (previousTiming.duration - oldForward) * config.loopDuration);
+            const oldExpansionEnd = count * (previousTiming.holdDuration + previousTiming.transitionDuration);
+            // Older timing messages used the between-step hold for the completed
+            // logotype and wrapped directly after collapse with no collapsed hold.
+            const oldExpandedHold = numeric(previousTiming.expandedHoldDuration, 0, 10000, previousTiming.holdDuration);
+            const oldCollapseStart = oldExpansionEnd + oldExpandedHold;
+            const oldHasCollapse = previousTiming.duration > oldCollapseStart;
+            const oldCollapsedHold = oldHasCollapse
+                ? numeric(previousTiming.collapsedHoldDuration, 0, previousTiming.duration - oldCollapseStart, 0) : 0;
+            const oldCollapseEnd = previousTiming.duration - oldCollapsedHold;
+            const oldLoopStart = numeric(previousTiming.loopStartTime, 0, previousTiming.holdDuration, 0);
+            const oldTime = oldHasCollapse && time > previousTiming.duration
+                ? oldLoopStart + (time - previousTiming.duration) % (previousTiming.duration - oldLoopStart)
+                : clamp(time, 0, previousTiming.duration);
+
+            if (oldTime >= previousTiming.duration) {
+                // Enabling Loop at a completed expansion starts collapse. A paused
+                // loop endpoint remains its exact initial-state render after edits.
+                return hasCollapse && !oldHasCollapse ? collapseStart : duration;
+            }
+            if (oldTime >= oldCollapseStart) {
+                if (!hasCollapse || !oldHasCollapse) return collapseStart;
+                if (oldCollapsedHold > 0 && oldTime >= oldCollapseEnd) {
+                    return collapseEnd + (oldTime - oldCollapseEnd) / oldCollapsedHold * config.collapsedHoldDuration;
+                }
+                return collapseStart + (oldTime - oldCollapseStart)
+                    / (oldCollapseEnd - oldCollapseStart) * config.loopDuration;
+            }
+            if (oldTime >= oldExpansionEnd) {
+                return expansionEnd + (oldTime - oldExpansionEnd) / oldExpandedHold * config.expandedHoldDuration;
             }
             if (previousTiming.holdDuration === config.holdDuration
                 && previousTiming.transitionDuration === config.transitionDuration) return clamp(oldTime, 0, duration);
@@ -927,13 +973,16 @@
                 && [supplied.holdDuration, supplied.transitionDuration, supplied.duration].every(Number.isFinite)
                 && supplied.holdDuration >= 0 && supplied.transitionDuration > 0 && supplied.duration > 0
                 ? supplied : { holdDuration: config.holdDuration, transitionDuration: config.transitionDuration,
-                    loopDuration: config.loopDuration, duration };
+                    expandedHoldDuration: config.expandedHoldDuration, loopDuration: config.loopDuration,
+                    collapsedHoldDuration: config.collapsedHoldDuration, loopStartTime, duration };
             playing = false;
             cancelAnimationFrame(frame);
             config = {
                 transitionDuration: numeric(next.transitionDuration ?? config.transitionDuration, 1, 5000, config.transitionDuration),
                 holdDuration: numeric(next.holdDuration ?? config.holdDuration, 0, 10000, config.holdDuration),
+                expandedHoldDuration: numeric(next.expandedHoldDuration ?? config.expandedHoldDuration, 0, 10000, config.expandedHoldDuration),
                 loopDuration: numeric(next.loopDuration ?? config.loopDuration, 1, 10000, config.loopDuration),
+                collapsedHoldDuration: numeric(next.collapsedHoldDuration ?? config.collapsedHoldDuration, 0, 10000, config.collapsedHoldDuration),
                 easing: typeof next.easing === 'string' && easingFor(next.easing) ? next.easing : config.easing,
                 fontSize: numeric(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
                 characterSpacing: numeric(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
@@ -957,10 +1006,12 @@
             };
             build();
             position = remapTime(time, previousTiming);
-            // Editing a completed animation must never invoke play()'s replay behaviour.
-            if (resume && position < duration) play({ ...options, time: position });
-            else {
-                if (position < count * (config.holdDuration + config.transitionDuration) || sampleReturn(position)) resetFlagInteraction();
+            // Removing an active collapsed hold continues at the next expansion.
+            // Editing a paused endpoint must never invoke play()'s replay behaviour.
+            if (resume && (position < duration || config.loop)) {
+                play({ ...options, time: position >= duration ? loopStartTime : position });
+            } else {
+                if (position < expansionEnd || (hasCollapse && position >= collapseStart)) resetFlagInteraction();
                 else {
                     if (flagSpan) flagRun.startedAt = flagTime - flagProgress * flagSegmentDuration();
                     advanceFlagInteraction(flagTime);
