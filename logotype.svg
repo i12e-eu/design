@@ -23,9 +23,9 @@
         height: 100%;
         --transition-duration: 250ms;
         --hold-duration: 250ms;
-        --expanded-hold-duration: 500ms;
-        --loop-duration: 1000ms; /* Full collapse: text absorption, then the fold back to 12. */
-        --collapsed-hold-duration: 1000ms;
+        --expanded-hold-duration: 2500ms;
+        --loop-duration: 1500ms; /* Full collapse: text absorption, then the fold back to 12. */
+        --collapsed-hold-duration: 2500ms;
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
@@ -144,9 +144,9 @@
             return {
                 transitionDuration: milliseconds(value('--transition-duration')),
                 holdDuration: milliseconds(value('--hold-duration')),
-                expandedHoldDuration: numeric(milliseconds(value('--expanded-hold-duration')), 0, 10000, 500),
+                expandedHoldDuration: numeric(milliseconds(value('--expanded-hold-duration')), 0, 10000, 2500),
                 loopDuration: milliseconds(value('--loop-duration')),
-                collapsedHoldDuration: numeric(milliseconds(value('--collapsed-hold-duration')), 0, 10000, 1000),
+                collapsedHoldDuration: numeric(milliseconds(value('--collapsed-hold-duration')), 0, 10000, 2500),
                 easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
                 characterSpacing: parseFloat(value('--character-spacing')),
                 flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
