@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>i12e.eu / logo type</title>
+    <title>i12e.eu / logotype</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
@@ -19,11 +19,6 @@
 
         * {
             box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 24px;
         }
 
         a, a:visited {
@@ -45,6 +40,8 @@
         }
 
         .page {
+            width: calc(100% - 48px);
+            padding-bottom: 24px;
             max-width: 1320px;
             margin: 0 auto;
         }
@@ -413,8 +410,9 @@
         }
 
         @media (max-width: 60em) {
-            body {
-                padding: 18px;
+            .page {
+                width: calc(100% - 36px);
+                padding-bottom: 18px;
             }
 
             .workspace {
@@ -497,13 +495,12 @@
     </style>
 </head>
 <body>
-<div class="page">
     <header class="page-header">
-        <h1 class="brand">i12e.eu <span>/ logo type</span></h1>
+        <h1 class="brand">i12e.eu <span>/ logotype</span></h1>
         <div class="page-tools">
             <nav class="page-nav" aria-label="Design references">
                 <a href="./index.html">Design Index</a>
-                <a href="./logotype.html" aria-current="page">Logo Type</a>
+                <a href="./logotype.html" aria-current="page">Logotype</a>
                 <a href="./typography.html">Typography</a>
                 <a href="./colours.html">Colours</a>
             </nav>
@@ -516,6 +513,7 @@
             </div>
         </div>
     </header>
+<div class="page">
     <p class="appearance-note" id="appearance-note">Appearance updates the logo canvas and text. Custom colour choices
         stay in place for this visit.</p>
 

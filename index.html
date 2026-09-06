@@ -23,12 +23,9 @@
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            padding: 48px 24px;
-        }
-
         main {
+            width: calc(100% - 48px);
+            padding-bottom: 48px;
             max-width: 960px;
             margin: 0 auto;
         }
@@ -179,8 +176,9 @@
         }
 
         @media (max-width: 600px) {
-            body {
-                padding: 28px 18px;
+            main {
+                width: calc(100% - 36px);
+                padding-bottom: 28px;
             }
 
             .typography-preview {
@@ -198,13 +196,12 @@
     </style>
 </head>
 <body>
-<main>
     <header class="page-header">
         <h1 class="brand">i12e.eu <span>/ design</span></h1>
         <div class="page-tools">
             <nav class="page-nav" aria-label="Design references">
                 <a href="./index.html" aria-current="page">Design Index</a>
-                <a href="./logotype.html">Logo Type</a>
+                <a href="./logotype.html">Logotype</a>
                 <a href="./typography.html">Typography</a>
                 <a href="./colours.html">Colours</a>
             </nav>
@@ -217,12 +214,13 @@
             </div>
         </div>
     </header>
+<main>
     <ul class="designs" aria-label="Design elements">
         <li>
             <a class="design-link" href="./logotype.html" aria-labelledby="logotype-title logotype-variant">
                 <div class="details">
                     <div>
-                        <h2 class="type-card-title" id="logotype-title">Logo Type</h2>
+                        <h2 class="type-card-title" id="logotype-title">Logotype</h2>
                         <p class="variant" id="logotype-variant">Logo specification covering the primary design, draft
                             variants, animation, and flag interactions.</p>
                     </div>
@@ -231,7 +229,7 @@
                 <div class="preview logo-preview">
                     <!-- Reuse the chosen variant with its default looping animation. -->
                     <iframe src="./assets/images/logotype.svg?variant=6&amp;preview=1"
-                            title="Primary i12e.eu logo type — variant 05, EU Flag to Leading Flag"
+                            title="Primary i12e.eu logotype — variant 05, EU Flag to Leading Flag"
                             tabindex="-1" aria-hidden="true"></iframe>
                 </div>
             </a>

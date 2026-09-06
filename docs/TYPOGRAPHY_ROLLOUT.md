@@ -7,7 +7,7 @@ historical rollout have been removed; do not recreate them for this static site.
 ## Design-reference follow-up, 6 September 2026
 
 All four page titles now use `i12e.eu /` plus the lowercase page name. Navigation
-always includes Design Index, Logo Type, Typography, and Colours, with the active
+always includes Design Index, Logotype, Typography, and Colours, with the active
 link marked `aria-current="page"`. This supersedes the omitted-current-page rule
 below. Logo groups use the shared H2 scale; variant titles use 18px Roboto Mono,
 and Flag Interaction uses 16px Roboto Mono. Typography specimens now progress

@@ -23,11 +23,6 @@
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            padding: 28px 24px 48px;
-        }
-
         a, a:visited {
             color: var(--color-link);
             text-decoration: underline;
@@ -91,6 +86,8 @@
         }
 
         .page {
+            width: calc(100% - 48px);
+            padding-bottom: 48px;
             max-width: 1600px;
             margin: auto;
         }
@@ -603,8 +600,9 @@
         }
 
         @media (max-width: 640px) {
-            body {
-                padding: 20px 12px 32px;
+            .page {
+                width: calc(100% - 24px);
+                padding-bottom: 32px;
             }
 
             .brand-anchor {
@@ -641,13 +639,12 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to colours</a>
-<div class="page">
     <header class="page-header">
         <p class="brand">i12e.eu <span>/ colours</span></p>
         <div class="page-tools">
             <nav class="page-nav" aria-label="Design references">
                 <a href="./index.html">Design Index</a>
-                <a href="./logotype.html">Logo Type</a>
+                <a href="./logotype.html">Logotype</a>
                 <a href="./typography.html">Typography</a>
                 <a href="./colours.html" aria-current="page">Colours</a>
             </nav>
@@ -660,6 +657,7 @@
             </div>
         </div>
     </header>
+<div class="page">
     <main id="main">
         <p class="eyebrow">Brand specification / Digital / v1</p>
         <h1>i12e.eu / colours</h1>

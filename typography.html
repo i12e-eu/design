@@ -23,11 +23,6 @@
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            padding: 28px 24px 48px;
-        }
-
         a, a:visited {
             color: var(--color-link);
             text-decoration: underline;
@@ -64,6 +59,8 @@
         }
 
         .page {
+            width: calc(100% - 48px);
+            padding-bottom: 48px;
             max-width: 1600px;
             margin: 0 auto;
         }
@@ -391,8 +388,9 @@
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 20px 12px 32px;
+            .page {
+                width: calc(100% - 24px);
+                padding-bottom: 32px;
             }
 
             .controls, .defaults {
@@ -414,13 +412,12 @@
 </head>
 <body>
 <a class="skip-link" href="#typography-specimens">Skip to specimens</a>
-<div class="page">
     <header class="page-header">
         <p class="brand">i12e.eu <span>/ typography</span></p>
         <div class="page-tools">
             <nav class="page-nav" aria-label="Design references">
                 <a href="./index.html">Design Index</a>
-                <a href="./logotype.html">Logo Type</a>
+                <a href="./logotype.html">Logotype</a>
                 <a href="./typography.html" aria-current="page">Typography</a>
                 <a href="./colours.html">Colours</a>
             </nav>
@@ -433,6 +430,7 @@
             </div>
         </div>
     </header>
+<div class="page">
 
     <div class="workspace">
         <aside class="controls" aria-labelledby="controls-title" hidden>
@@ -818,7 +816,7 @@
                 <h3>Header navigation</h3>
                 <p>Every page uses the same header pattern: a 16px-equivalent Roboto Mono brand identifier,
                     plain Roboto navigation links following the 16–18px body scale, and a separate Appearance
-                    control. All four links stay visible in the same order: Design Index, Logo Type, Typography, and
+                    control. All four links stay visible in the same order: Design Index, Logotype, Typography, and
                     Colours. The current page is identified with aria-current. Navigation follows the
                     page width; embedded specimens follow their own available width.</p>
                 <h3>Shared implementation &amp; artwork</h3>
