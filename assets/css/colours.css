@@ -136,7 +136,6 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    font: 0.875rem/1.6 "Roboto Mono", monospace;
 }
 
 .theme-control select {
@@ -144,16 +143,17 @@
     max-width: 100%;
     min-height: 44px;
     padding: 8px 30px 8px 10px;
-    font: inherit;
     border: 1px solid var(--color-border-control);
     border-radius: 0;
     color: var(--color-text-primary);
     background: var(--color-surface);
 }
 
-.theme-control select:focus-visible {
+/* A surface-coloured separator keeps the outline distinct from filled controls. */
+:focus-visible {
     outline: 2px solid var(--color-focus);
-    outline-offset: 3px;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-surface);
 }
 
 [hidden] {

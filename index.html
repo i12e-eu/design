@@ -1,19 +1,20 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-type-scope="viewport" data-theme="light">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description"
-          content="The i12e design index. Explore the logotype, typography, colours, and brand decisions."/>
-    <title>i12e — Design</title>
+          content="The i12e.eu design index. Explore the logo, typography, and colour specifications."/>
+    <title>i12e.eu / design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&amp;family=Roboto+Mono:wght@400&amp;display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
-    <link rel="stylesheet" href="./colours.css"/>
+    <link rel="stylesheet" href="./assets/css/colours.css"/>
+    <link rel="stylesheet" href="./assets/css/typography.css"/>
+    <script src="./assets/js/typography.js" defer></script>
     <style>
         :root {
-            font-family: "Roboto Mono", monospace;
             color: var(--color-text-primary);
             background: var(--color-background);
         }
@@ -32,17 +33,12 @@
             margin: 0 auto;
         }
 
-        h1 {
-            margin: 0 0 48px;
-            font-size: 1rem;
-            font-weight: 400;
-        }
-
-        h1 span, .variant {
+        .brand span, .variant {
             color: var(--color-text-secondary);
         }
 
         .designs {
+            max-width: none;
             list-style: none;
             margin: 0;
             padding: 0;
@@ -52,9 +48,14 @@
             display: block;
             padding: 20px 0;
             border-top: 1px solid var(--color-border);
-            border-bottom: 1px solid var(--color-border);
             color: inherit;
             text-decoration: none;
+        }
+
+        .design-link h2, .design-link:visited h2 {
+            color: var(--color-link);
+            text-decoration: underline;
+            text-underline-offset: 0.2em;
         }
 
         .details {
@@ -65,16 +66,13 @@
             margin-bottom: 20px;
         }
 
-        h2 {
+        .design-link h2 {
             margin: 0;
-            font-size: 0.875rem;
-            font-weight: 400;
         }
 
         .variant {
             margin: 6px 0 0;
-            font-size: 0.875rem;
-            line-height: 1.6;
+            font: var(--type-ui-meta);
         }
 
         .preview {
@@ -93,13 +91,12 @@
         }
 
         .design-link:hover h2 {
-            text-decoration: underline;
-            text-underline-offset: 4px;
+            color: var(--color-link-hover);
+            text-decoration-thickness: 2px;
         }
 
-        .design-link:focus-visible {
-            outline: 2px solid var(--color-focus);
-            outline-offset: 6px;
+        .design-link:active h2 {
+            color: var(--color-link-active);
         }
 
         .designs > li + li {
@@ -119,9 +116,9 @@
 
         .typography-glyph {
             flex-shrink: 0;
-            font-family: "Roboto", Arial, sans-serif;
+            font-family: var(--font-prose);
             font-size: clamp(3rem, 8vw, 4.5rem);
-            font-weight: 600;
+            font-weight: var(--weight-heading);
             line-height: 1;
         }
 
@@ -131,33 +128,17 @@
 
         .typography-copy p {
             margin: 0;
-            font-family: "Roboto", Arial, sans-serif;
-            font-size: 1rem;
-            line-height: 1.6;
         }
 
         .typography-copy .typography-mono {
             margin-top: 8px;
-            font-family: "Roboto Mono", monospace;
-            font-size: 0.875rem;
             color: var(--color-text-secondary);
-        }
-
-        .index-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 48px;
-        }
-
-        .index-header h1 {
-            margin: 0;
+            font: var(--type-ui-meta);
+            font-family: var(--font-mono);
         }
 
         .logo-preview {
-            background: #fff;
+            background: var(--color-surface);
         }
 
         .colour-preview {
@@ -193,18 +174,13 @@
 
         .colour-caption {
             margin: 12px 0 0;
-            font-size: 0.875rem;
-            line-height: 1.6;
             overflow-wrap: anywhere;
+            font: var(--type-ui-meta);
         }
 
         @media (max-width: 600px) {
             body {
                 padding: 28px 18px;
-            }
-
-            h1 {
-                margin-bottom: 36px;
             }
 
             .typography-preview {
@@ -223,27 +199,39 @@
 </head>
 <body>
 <main>
-    <header class="index-header"><h1>i12e <span>/ design</span></h1>
-        <div class="theme-control" hidden><label for="page-appearance">Appearance</label><select id="page-appearance"
-                                                                                                 autocomplete="off">
-            <option value="light" selected>Light</option>
-            <option value="dark">Dark</option>
-        </select></div>
+    <header class="page-header">
+        <h1 class="brand">i12e.eu <span>/ design</span></h1>
+        <div class="page-tools">
+            <nav class="page-nav" aria-label="Design references">
+                <a href="./index.html" aria-current="page">Design Index</a>
+                <a href="./logotype.html">Logo Type</a>
+                <a href="./typography.html">Typography</a>
+                <a href="./colours.html">Colours</a>
+            </nav>
+            <div class="theme-control" hidden>
+                <label for="page-appearance">Appearance</label>
+                <select id="page-appearance" autocomplete="off">
+                    <option value="light" selected>Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
     </header>
     <ul class="designs" aria-label="Design elements">
         <li>
             <a class="design-link" href="./logotype.html" aria-labelledby="logotype-title logotype-variant">
                 <div class="details">
                     <div>
-                        <h2 id="logotype-title">Logotype</h2>
-                        <p class="variant" id="logotype-variant">05 / EU flag → leading flag · Primary</p>
+                        <h2 class="type-card-title" id="logotype-title">Logo Type</h2>
+                        <p class="variant" id="logotype-variant">Logo specification covering the primary design, draft
+                            variants, animation, and flag interactions.</p>
                     </div>
                     <span aria-hidden="true">↗</span>
                 </div>
                 <div class="preview logo-preview">
                     <!-- Reuse the chosen variant with its default looping animation. -->
-                    <iframe src="./logotype.svg?variant=6&amp;preview=1"
-                            title="Primary i12e logotype — variant 05, EU flag to leading flag"
+                    <iframe src="./assets/images/logotype.svg?variant=6&amp;preview=1"
+                            title="Primary i12e.eu logo type — variant 05, EU Flag to Leading Flag"
                             tabindex="-1" aria-hidden="true"></iframe>
                 </div>
             </a>
@@ -252,9 +240,9 @@
             <a class="design-link" href="./typography.html" aria-labelledby="typography-title typography-variant">
                 <div class="details">
                     <div>
-                        <h2 id="typography-title">Typography</h2>
-                        <p class="variant" id="typography-variant">Roboto + Roboto Mono · Scale, specimens &amp;
-                            controls</p>
+                        <h2 class="type-card-title" id="typography-title">Typography</h2>
+                        <p class="variant" id="typography-variant">Typography specification covering typefaces, the
+                            heading scale, and text styles.</p>
                     </div>
                     <span aria-hidden="true">↗</span>
                 </div>
@@ -262,7 +250,7 @@
                     <span class="typography-glyph">Aa</span>
                     <div class="typography-copy">
                         <p>Roboto for the words.</p>
-                        <p class="typography-mono">Roboto Mono for the details.</p>
+                        <p class="typography-mono">Roboto Mono for the accents.</p>
                     </div>
                 </div>
             </a>
@@ -270,9 +258,9 @@
         <li>
             <a class="design-link" href="./colours.html" aria-labelledby="colours-title colours-variant">
                 <div class="details">
-                    <div><h2 id="colours-title">Colours</h2>
-                        <p class="variant" id="colours-variant">EU web blue · Palettes, light &amp; dark roles, and
-                            exports</p></div>
+                    <div><h2 class="type-card-title" id="colours-title">Colours</h2>
+                        <p class="variant" id="colours-variant">Colour specification covering the palette, light and
+                            dark roles, and usage.</p></div>
                     <span aria-hidden="true">↗</span></div>
                 <div class="preview colour-preview" aria-hidden="true">
                     <div class="colour-strip"><span></span><span></span><span></span><span></span><span></span></div>
@@ -292,5 +280,6 @@
     appearance.closest(".theme-control").hidden = false;
   })();
 </script>
+<script src="./assets/js/logo-appearance.js"></script>
 </body>
 </html>

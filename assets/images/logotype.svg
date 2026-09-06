@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none"
      role="img" aria-labelledby="title description">
-    <title id="title">infrastructure</title>
+    <title id="title">i12e.eu / logo type</title>
     <desc id="description">A logotype expanding from i12e to infrastructure. Seven selectable styles compare a plain
         countdown with mechanical split-flap digits, characters, blank places, and an EU flag that can swap with the
         leading i.
@@ -42,7 +42,7 @@
         --background-color: #ffffff;
         --flap-text-color: #f8faff;
         --text-color: #000000;
-        --loop: 0;
+        --loop: 1;
         --flag-country: NL;
         --flag-return-mode: auto; /* auto = timed return; manual = trigger to return. */
         --flag-hold-duration: 5000ms;
@@ -498,6 +498,25 @@
                 tile.dataset.empty = String(content === flagFace || content.trim() === '');
                 tile.dataset.flag = String(content === flagFace);
             };
+        }
+
+        const automaticColors = {backgroundColor: true, textColor: true};
+        let appearanceColors = null;
+        function applyAutomaticColors() {
+            if (!appearanceColors) return;
+            for (const key of Object.keys(automaticColors)) {
+                if (automaticColors[key]) config[key] = appearanceColors[key];
+            }
+        }
+        function applyAppearance(data) {
+            if (!['light', 'dark'].includes(data.theme)) return;
+            const backgroundColor = normalizeColor(data.colors?.backgroundColor);
+            const textColor = normalizeColor(data.colors?.textColor);
+            if (!backgroundColor || !textColor) return;
+            appearanceColors = {backgroundColor, textColor};
+            applyAutomaticColors();
+            applyColors();
+            publish();
         }
 
         function applyColors() {
@@ -959,6 +978,12 @@
         }
 
         function configure(next = {}, options = {}) {
+            // The reference sends its whole form, plus explicit edit intent.
+            // Existing direct callers supplying a colour still make an override.
+            const editedColors = Array.isArray(options.editedColors) ? options.editedColors : Object.keys(next);
+            for (const key of editedColors) {
+                if (key in automaticColors && normalizeColor(next[key])) automaticColors[key] = false;
+            }
             const flagTime = clock();
             advanceFlagInteraction(flagTime);
             const flagSpan = flagSegmentDuration();
@@ -1004,6 +1029,7 @@
                 flagReturnMode: ['auto', 'manual'].includes(next.flagReturnMode) ? next.flagReturnMode : config.flagReturnMode,
                 flagHoldDuration: numeric(next.flagHoldDuration ?? config.flagHoldDuration, 0, 10000, config.flagHoldDuration),
             };
+            applyAutomaticColors();
             build();
             position = remapTime(time, previousTiming);
             // Removing an active collapsed hold continues at the next expansion.
@@ -1033,6 +1059,7 @@
                 if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
                 const data = event.data;
                 if (data.action === 'configure') configure(data.config, data);
+                else if (data.action === 'appearance') applyAppearance(data);
                 else if (data.action === 'seek') seek(data.time);
                 else if (data.action === 'seekStep') seekStep(data.step);
                 else if (data.action === 'play') play(data);

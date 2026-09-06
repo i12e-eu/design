@@ -1,0 +1,278 @@
+/* i12e typography. Sizes are rem equivalents at the browser's default size.
+   Numeric endpoints live here; typography.js supplies only width progress.
+   logotype.svg is independent brand artwork and does not load this stylesheet. */
+:root {
+    --font-prose: "Roboto", Arial, sans-serif;
+    --font-mono: "Roboto Mono", ui-monospace, monospace;
+    --type-width-min: 390;
+    --type-width-max: 1200;
+    --type-h1-min: 2;
+    --type-h1-max: 3;
+    --type-h2-min: 1.75;
+    --type-h2-max: 2.25;
+    --type-h3-min: 1.5;
+    --type-h3-max: 1.75;
+    --type-h4-min: 1.25;
+    --type-h4-max: 1.5;
+    --type-h5-min: 1.125;
+    --type-h5-max: 1.25;
+    --type-h6-min: 1;
+    --type-h6-max: 1.125;
+    --type-body-min: 1;
+    --type-body-max: 1.125;
+    --type-small-size: 0.875;
+    --weight-regular: 400;
+    --weight-heading: 600;
+    --weight-strong: 700;
+    --type-ui-title: var(--weight-heading) 1.125rem/1.2 var(--font-prose);
+    --type-ui-panel: var(--weight-heading) 1rem/1.2 var(--font-prose);
+    --type-ui-control: var(--weight-regular) 1rem/1.6 var(--font-prose);
+    --type-ui-label: var(--weight-heading) 0.875rem/1.6 var(--font-prose);
+    --type-ui-meta: var(--weight-regular) 0.875rem/1.6 var(--font-prose);
+    --type-brand: var(--weight-regular) 1rem/1.6 var(--font-mono);
+    font-family: var(--font-prose);
+    /* Fluid text belongs on body, never on html: rem keeps its browser basis. */
+    font-size: 100%;
+}
+
+/* Resolve derived tokens on EVERY independent scope. Inheriting a parent's
+   already-computed custom property would freeze a nested specimen's scale. */
+:root, [data-type-scope] {
+    --type-progress: 0;
+    --type-scale: 1;
+    --body-leading: 1.6;
+    --heading-leading: 1.2;
+    --paragraph-space: 1em;
+    --measure: 65ch;
+    --type-h1: calc((var(--type-h1-min) + (var(--type-h1-max) - var(--type-h1-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-h2: calc((var(--type-h2-min) + (var(--type-h2-max) - var(--type-h2-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-h3: calc((var(--type-h3-min) + (var(--type-h3-max) - var(--type-h3-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-h4: calc((var(--type-h4-min) + (var(--type-h4-max) - var(--type-h4-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-h5: calc((var(--type-h5-min) + (var(--type-h5-max) - var(--type-h5-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-h6: calc((var(--type-h6-min) + (var(--type-h6-max) - var(--type-h6-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-body: calc((var(--type-body-min) + (var(--type-body-max) - var(--type-body-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
+    --type-small: calc(var(--type-small-size) * var(--type-scale) * 1rem);
+}
+
+:where(body, [data-type-scope="container"]) {
+    font-family: var(--font-prose);
+    font-size: var(--type-body);
+    font-weight: var(--weight-regular);
+    line-height: var(--body-leading);
+    overflow-wrap: anywhere;
+}
+
+:where(h1, h2, h3, h4, h5, h6) {
+    max-width: var(--measure);
+    margin: 0 0 0.65em;
+    font-family: var(--font-prose);
+    font-weight: var(--weight-heading);
+    line-height: var(--heading-leading);
+}
+
+:where(h1) {
+    font-size: var(--type-h1);
+}
+
+:where(h2) {
+    font-size: var(--type-h2);
+}
+
+:where(h3) {
+    font-size: var(--type-h3);
+}
+
+:where(h4) {
+    font-size: var(--type-h4);
+}
+
+:where(h5) {
+    font-size: var(--type-h5);
+}
+
+:where(h6) {
+    font-size: var(--type-h6);
+}
+
+:where(p) {
+    max-width: var(--measure);
+    margin: 0 0 var(--paragraph-space);
+}
+
+:where(strong, b) {
+    font-weight: var(--weight-strong);
+}
+
+:where(em, i, cite) {
+    font-style: italic;
+}
+
+:where(small, figcaption, caption) {
+    font-size: var(--type-small);
+}
+
+:where(ul, ol) {
+    max-width: var(--measure);
+    margin: 0 0 1em;
+    padding-inline-start: 1.5em;
+}
+
+:where(li) {
+    margin-bottom: 0.4em;
+}
+
+:where(li > ul, li > ol) {
+    margin: 0.4em 0 0;
+}
+
+:where(figure) {
+    max-width: var(--measure);
+    margin: 1.5em 0;
+}
+
+:where(blockquote) {
+    margin: 0 0 0.75em;
+    padding-inline-start: 1em;
+}
+
+:where(dl) {
+    max-width: var(--measure);
+    margin: 0;
+}
+
+:where(dt, th) {
+    font-weight: var(--weight-heading);
+}
+
+:where(dd) {
+    margin: 0.25em 0 1em;
+}
+
+:where(code, pre, kbd) {
+    font-family: var(--font-mono);
+    font-size: max(var(--type-small), 0.9em);
+    font-weight: var(--weight-regular);
+}
+
+:where(pre) {
+    margin: 0 0 1em;
+    padding: 1em;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    tab-size: 2;
+}
+
+:where(pre code) {
+    font-size: 1em;
+}
+
+:where(sup, sub) {
+    font-size: 0.75em;
+    line-height: 0;
+}
+
+:where(hr) {
+    height: 0;
+    margin: 2em 0;
+}
+
+:where(a) {
+    text-underline-offset: 0.2em;
+}
+
+/* Compact interface roles preserve heading semantics without document sizes. */
+.type-card-title {
+    font: var(--type-ui-title);
+}
+
+.type-panel-title {
+    font: var(--type-ui-panel);
+}
+
+.type-control-title {
+    font: var(--type-ui-panel);
+    font-family: var(--font-mono);
+    font-weight: var(--weight-regular);
+}
+
+.type-label, :where(label, legend) {
+    font: var(--type-ui-label);
+}
+
+.type-meta {
+    font: var(--type-ui-meta);
+}
+
+.brand {
+    font: var(--type-brand);
+}
+
+:where(button, input, select, textarea, output) {
+    font: var(--type-ui-control);
+}
+
+.theme-control {
+    font: var(--type-ui-meta);
+}
+
+.theme-control select {
+    font: var(--type-ui-control);
+    cursor: pointer;
+}
+
+.mono, .type-technical {
+    font-family: var(--font-mono);
+    font-weight: var(--weight-regular);
+}
+
+.specimen-label {
+    font-family: var(--font-mono);
+    font-size: var(--type-small);
+    font-weight: var(--weight-regular);
+}
+
+/* All page headers use the logotype reference's navigation pattern. */
+.page-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+    font-family: var(--font-prose);
+    font-size: var(--type-body);
+    font-weight: var(--weight-regular);
+    line-height: var(--body-leading);
+}
+
+.page-header .brand {
+    margin: 0;
+}
+
+.page-tools, .page-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.page-nav a, .page-nav a:visited {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    transition: none;
+}
+
+.page-nav a:hover {
+    color: var(--color-link-hover);
+    text-decoration-thickness: 2px;
+}
+
+.page-nav a:active {
+    color: var(--color-link-active);
+}
+
+.page-header .theme-control label {
+    margin: 0;
+}

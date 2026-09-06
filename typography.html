@@ -1,23 +1,22 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-type-scope="viewport" data-theme="light">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description"
-          content="Typography for i12e: Roboto and Roboto Mono, a responsive type scale, and interactive specimens."/>
-    <title>i12e — Typography</title>
+          content="i12e.eu / typography: Roboto and Roboto Mono, a responsive type scale, and interactive specimens."/>
+    <title>i12e.eu / typography</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
-    <link rel="stylesheet" href="./colours.css"/>
+    <link rel="stylesheet" href="./assets/css/colours.css"/>
+    <link rel="stylesheet" href="./assets/css/typography.css"/>
+    <script src="./assets/js/typography.js" defer></script>
     <style>
         :root {
-            --font-prose: "Roboto", Arial, sans-serif;
-            --font-mono: "Roboto Mono", ui-monospace, monospace;
-            font-family: var(--font-prose);
-            color: var(--color-text-primary, #191919);
-            background: var(--color-background, #f7f7f7);
+            color: var(--color-text-primary);
+            background: var(--color-background);
         }
 
         * {
@@ -30,31 +29,20 @@
         }
 
         a, a:visited {
-            color: var(--color-link, #191919);
+            color: var(--color-link);
             text-decoration: underline;
             text-underline-offset: 0.2em;
         }
-
         a:hover {
             color: var(--color-link-hover);
             text-decoration-thickness: 2px;
         }
-
         a:active {
             color: var(--color-link-active);
         }
 
-        :focus-visible {
-            outline: 2px solid var(--color-focus, #191919);
-            outline-offset: 4px;
-        }
-
-        button, input, select {
-            font: inherit;
-        }
-
         button, input, select, summary {
-            accent-color: var(--color-link, #191919);
+            accent-color: var(--color-link);
         }
 
         button, select, summary {
@@ -66,7 +54,7 @@
             top: 0;
             left: 24px;
             padding: 12px;
-            background: var(--color-surface, #fff);
+            background: var(--color-surface);
             transform: translateY(-150%);
             z-index: 2;
         }
@@ -80,42 +68,13 @@
             margin: 0 auto;
         }
 
-        .page-header {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 28px;
-            font-family: var(--font-mono);
-            font-size: 0.875rem;
-            line-height: 1.6;
-        }
-
-        .brand {
-            margin: 0;
-            font-size: 1rem;
-        }
-
         .brand span, .secondary {
-            color: var(--color-text-secondary, #666);
-        }
-
-        .header-links {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px 24px;
-        }
-
-        .theme-control label {
-            margin: 0;
-            font-weight: 400;
+            color: var(--color-text-secondary);
         }
 
         .workspace {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 260px;
+            grid-template-columns: minmax(0, 1fr) 18.75rem;
             gap: 28px;
             align-items: start;
         }
@@ -126,16 +85,9 @@
             position: sticky;
             top: 20px;
             padding: 20px;
-            border: 1px solid var(--color-border, #d8d8d8);
-            background: var(--color-surface, #fff);
-            font-size: 0.875rem;
-            line-height: 1.6;
-        }
-
-        .controls h2 {
-            margin: 0 0 4px;
-            font-size: 1rem;
-            font-weight: 600;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            font: var(--type-ui-meta);
         }
 
         .controls.too-tall {
@@ -164,19 +116,13 @@
             margin-bottom: 8px;
         }
 
-        .control-heading label {
-            font-weight: 600;
-        }
-
         output {
             font-family: var(--font-mono);
-            font-size: 0.875rem;
         }
 
         .control > label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
         }
 
         select {
@@ -184,10 +130,10 @@
             width: 100%;
             min-height: 44px;
             padding: 8px;
-            border: 1px solid var(--color-border-control, #808080);
+            border: 1px solid var(--color-border-control);
             border-radius: 0;
             color: inherit;
-            background: var(--color-surface, #fff);
+            background: var(--color-surface);
         }
 
         input[type="range"] {
@@ -199,14 +145,13 @@
 
         .controls .help {
             margin: 8px 0 0;
-            color: var(--color-text-secondary, #666);
+            color: var(--color-text-secondary);
         }
 
         .check-label {
             display: flex;
             align-items: start;
             gap: 10px;
-            font-weight: 600;
         }
 
         .check-label input {
@@ -218,15 +163,14 @@
 
         button {
             min-height: 44px;
-            padding: 10px 14px;
-            border: 1px solid var(--color-border-control, #808080);
+            padding: 8px 12px;
+            border: 1px solid var(--color-border-control);
             border-radius: 0;
-            color: var(--color-text-primary, #191919);
-            background: var(--color-surface, #fff);
+            color: var(--color-text-primary);
+            background: var(--color-surface);
         }
-
         button:hover {
-            background: var(--color-background, #f7f7f7);
+            background: var(--color-background);
         }
 
         .preview-column {
@@ -241,8 +185,7 @@
             flex-wrap: wrap;
             gap: 8px 20px;
             margin-bottom: 12px;
-            font-size: 0.875rem;
-            line-height: 1.6;
+            font: var(--type-ui-meta);
         }
 
         .preview-status p {
@@ -257,190 +200,66 @@
             width: var(--preview-width, 100%);
             max-width: 100%;
             container-type: inline-size;
-            border: 1px solid var(--color-border, #d8d8d8);
-            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
         }
 
-        /* Source defaults. JavaScript interpolates these rem values from actual
-           frame width, keeping browser font preferences and preview scale intact.
-           Colour roles come from the shared colours.css specification. */
+        /* Preview layout is local; typography.css owns the type decisions. */
         .specimen {
-            --type-h1: 2rem;
-            --type-h2: 1.75rem;
-            --type-h3: 1.5rem;
-            --type-h4: 1.25rem;
-            --type-h5: 1.125rem;
-            --type-h6: 1rem;
-            --type-body: 1rem;
-            --type-small: 0.875rem;
-            --body-leading: 1.6;
-            --heading-leading: 1.2;
-            --paragraph-space: 1em;
-            --measure: 65ch;
             padding: clamp(1rem, 3cqi, 2.5rem);
-            font-size: var(--type-body);
-            font-weight: 400;
-            line-height: var(--body-leading);
             overflow-wrap: anywhere;
-        }
-
-        .specimen h1, .specimen h2, .specimen h3,
-        .specimen h4, .specimen h5, .specimen h6 {
-            max-width: var(--measure);
-            margin: 0 0 0.65em;
-            font-weight: 600;
-            line-height: var(--heading-leading);
-        }
-
-        .specimen h1 {
-            font-size: var(--type-h1);
-        }
-
-        .specimen h2 {
-            font-size: var(--type-h2);
-        }
-
-        .specimen h3 {
-            font-size: var(--type-h3);
-        }
-
-        .specimen h4 {
-            font-size: var(--type-h4);
-        }
-
-        .specimen h5 {
-            font-size: var(--type-h5);
-        }
-
-        .specimen h6 {
-            font-size: var(--type-h6);
-        }
-
-        .specimen p {
-            max-width: var(--measure);
-            margin: 0 0 var(--paragraph-space);
-        }
-
-        .specimen strong, .specimen b {
-            font-weight: 700;
-        }
-
-        .specimen em, .specimen i, .specimen cite {
-            font-style: italic;
         }
 
         .specimen-section {
             margin-top: 2.5em;
             padding-top: 2em;
-            border-top: 1px solid var(--color-border, #d8d8d8);
+            border-top: 1px solid var(--color-border);
         }
 
-        .heading-sample + .heading-sample {
+        .heading-sample + .heading-sample, .paragraph-sample {
             margin-top: 1.75em;
         }
 
         .specimen .specimen-label {
             max-width: none;
             margin: 0 0 var(--paragraph-space);
-            font-family: var(--font-mono);
-            font-size: var(--type-small);
-            color: var(--color-text-secondary, #666);
+            color: var(--color-text-secondary);
         }
 
         .specimen .specimen-label span {
             display: inline-block;
         }
 
-        .specimen small, .specimen figcaption, .specimen caption {
-            font-size: var(--type-small);
-        }
-
         .specimen figcaption, .specimen caption {
-            color: var(--color-text-secondary, #666);
-        }
-
-        .specimen ul, .specimen ol {
-            max-width: var(--measure);
-            margin: 0 0 1em;
-            padding-inline-start: 1.5em;
-        }
-
-        .specimen li {
-            margin-bottom: 0.4em;
-        }
-
-        .specimen li > ul, .specimen li > ol {
-            margin: 0.4em 0 0;
-        }
-
-        .specimen figure {
-            max-width: var(--measure);
-            margin: 1.5em 0;
+            color: var(--color-text-secondary);
         }
 
         .specimen blockquote {
-            margin: 0 0 0.75em;
-            padding-inline-start: 1em;
-            border-inline-start: 2px solid var(--color-text-primary, #191919);
+            border-inline-start: 2px solid var(--color-text-primary);
         }
 
         .specimen blockquote p:last-child {
             margin-bottom: 0;
         }
 
-        .specimen dl {
-            max-width: var(--measure);
-            margin: 0;
-        }
-
-        .specimen dt {
-            font-weight: 600;
-        }
-
-        .specimen dd {
-            margin: 0.25em 0 1em;
-        }
-
-        .specimen code, .specimen pre, .specimen kbd {
-            font-family: var(--font-mono);
-            font-size: 0.9em;
-            font-weight: 400;
-        }
-
         .specimen :not(pre) > code {
             padding: 0.1em 0.2em;
-            background: var(--color-background, #f7f7f7);
+            background: var(--color-background);
         }
 
         .specimen pre {
-            margin: 0 0 1em;
-            padding: 1em;
-            border: 1px solid var(--color-border, #d8d8d8);
-            background: var(--color-background, #f7f7f7);
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-            tab-size: 2;
-        }
-
-        .specimen pre code {
-            font-size: 1em;
+            border: 1px solid var(--color-border);
+            background: var(--color-background);
         }
 
         .specimen kbd {
             padding: 0.1em 0.3em;
-            border: 1px solid var(--color-border-control, #808080);
-        }
-
-        .specimen sup, .specimen sub {
-            font-size: 0.75em;
-            line-height: 0;
+            border: 1px solid var(--color-border-control);
         }
 
         .specimen hr {
-            height: 0;
-            margin: 2em 0;
             border: 0;
-            border-top: 1px solid var(--color-border, #d8d8d8);
+            border-top: 1px solid var(--color-border);
         }
 
         .table-scroll {
@@ -459,20 +278,14 @@
             margin-bottom: 0.75em;
         }
 
-        th {
-            font-weight: 600;
-        }
-
         th, td {
             padding: 0.75em 0.6em;
-            border-bottom: 1px solid var(--color-border, #d8d8d8);
+            border-bottom: 1px solid var(--color-border);
             vertical-align: top;
         }
-
         th:first-child, td:first-child {
             padding-inline-start: 0;
         }
-
         th:last-child, td:last-child {
             padding-inline-end: 0;
         }
@@ -483,7 +296,7 @@
         }
 
         .role-samples .warning {
-            color: var(--color-text-warning, #191919);
+            color: var(--color-text-warning);
         }
 
         /* Apply inherited spacing to every specimen, including code and labels.
@@ -505,32 +318,22 @@
         .defaults {
             margin-top: 28px;
             padding: 24px;
-            border: 1px solid var(--color-border, #d8d8d8);
-            background: var(--color-surface, #fff);
-            font-size: 0.875rem;
-            line-height: 1.6;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
             overflow-wrap: anywhere;
         }
 
-        .defaults h2 {
-            margin: 0 0 8px;
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
         .defaults h3 {
-            margin: 24px 0 8px;
-            font-size: 1rem;
-            font-weight: 600;
+            margin-top: 1.5em;
         }
 
         .defaults p {
-            max-width: 75ch;
+            max-width: var(--measure);
             margin: 0 0 1em;
         }
 
         .defaults ul {
-            max-width: 75ch;
+            max-width: var(--measure);
             margin: 0;
             padding-inline-start: 1.5em;
         }
@@ -539,16 +342,13 @@
             margin-top: 0.5em;
         }
 
-        .defaults code {
-            font: 0.875rem var(--font-mono);
-        }
-
         .defaults-table {
             min-width: 30rem;
+            font: var(--type-ui-meta);
         }
 
         .defaults-table caption {
-            color: var(--color-text-secondary, #666);
+            color: var(--color-text-secondary);
         }
 
         .defaults-table td:first-child {
@@ -557,14 +357,12 @@
 
         .table-note {
             margin-top: 12px !important;
-            color: var(--color-text-secondary, #666);
+            color: var(--color-text-secondary);
         }
 
         .page-footer {
             margin-top: 28px;
-            font-family: var(--font-mono);
-            font-size: 0.875rem;
-            line-height: 1.6;
+            font: var(--type-ui-meta);
         }
 
         @media (max-width: 900px) {
@@ -597,10 +395,6 @@
                 padding: 20px 12px 32px;
             }
 
-            .page-header {
-                margin-bottom: 20px;
-            }
-
             .controls, .defaults {
                 padding: 16px;
             }
@@ -622,19 +416,27 @@
 <a class="skip-link" href="#typography-specimens">Skip to specimens</a>
 <div class="page">
     <header class="page-header">
-        <p class="brand">i12e <span>/ typography</span></p>
-        <div class="header-links"><a href="./index.html">← Design index</a><a href="./colours.html">Colours ↗</a>
-            <div class="theme-control" hidden><label for="page-appearance">Appearance</label><select
-                    id="page-appearance" autocomplete="off">
-                <option value="light" selected>Light</option>
-                <option value="dark">Dark</option>
-            </select></div>
+        <p class="brand">i12e.eu <span>/ typography</span></p>
+        <div class="page-tools">
+            <nav class="page-nav" aria-label="Design references">
+                <a href="./index.html">Design Index</a>
+                <a href="./logotype.html">Logo Type</a>
+                <a href="./typography.html" aria-current="page">Typography</a>
+                <a href="./colours.html">Colours</a>
+            </nav>
+            <div class="theme-control" hidden>
+                <label for="page-appearance">Appearance</label>
+                <select id="page-appearance" autocomplete="off">
+                    <option value="light" selected>Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
         </div>
     </header>
 
     <div class="workspace">
         <aside class="controls" aria-labelledby="controls-title" hidden>
-            <h2 id="controls-title">Preview controls</h2>
+            <h2 class="type-panel-title" id="controls-title">Preview controls</h2>
             <p class="secondary">Temporary settings. Reload to return to the brand defaults.</p>
             <form id="preview-controls" autocomplete="off">
                 <div class="control">
@@ -691,15 +493,13 @@
             </div>
             <noscript><p>The specimens below use the narrow brand defaults. Enable JavaScript for responsive previews
                 and controls.</p></noscript>
-            <div class="preview-frame" id="preview-frame">
+            <div class="preview-frame" id="preview-frame" data-type-scope="container">
                 <article class="specimen" id="specimen" aria-labelledby="sample-h1">
-                    <p class="specimen-label">H1 / Page title <span data-measurement="h1"></span></p>
-                    <h1 id="sample-h1" data-size-sample="h1">Typography for i12e</h1>
-                    <p data-size-sample="body">Roboto for headings and prose. Roboto Mono for brand accents, code, and
-                        the details.</p>
-                    <p class="specimen-label">Body / Regular 400 <span data-measurement="body"></span></p>
-
-                    <section class="specimen-section" aria-label="Heading hierarchy">
+                    <section class="heading-hierarchy" aria-label="Heading hierarchy">
+                        <div class="heading-sample">
+                            <p class="specimen-label">H1 / Page title <span data-measurement="h1"></span></p>
+                            <h1 id="sample-h1" data-size-sample="h1">i12e.eu / typography</h1>
+                        </div>
                         <div class="heading-sample">
                             <p class="specimen-label">H2 / Section <span data-measurement="h2"></span></p>
                             <h2 data-size-sample="h2">A clear starting point</h2>
@@ -720,9 +520,12 @@
                             <p class="specimen-label">H6 / Nested detail <span data-measurement="h6"></span></p>
                             <h6 data-size-sample="h6">Even the smallest heading has a role</h6>
                         </div>
-                        <p><small>Choose heading levels for the document’s structure. Use the type scale to express
-                            their hierarchy.</small></p>
                     </section>
+                    <div class="paragraph-sample">
+                        <p class="specimen-label">Paragraph / Regular 400 <span data-measurement="body"></span></p>
+                        <p data-size-sample="body">Roboto for headings and prose. Roboto Mono for brand accents, code,
+                            and the details.</p>
+                    </div>
 
                     <section class="specimen-section" aria-labelledby="paragraphs-title">
                         <p class="specimen-label">01 / Reading &amp; emphasis</p>
@@ -964,9 +767,72 @@
                     </li>
                 </ul>
 
+                <h3>Compact interface roles</h3>
+                <p>Document headings use the responsive scale. Cards and controls use explicit compact roles without
+                    changing their semantic heading levels. All heading roles use 1.2 line-height; control values,
+                    labels, and supporting text use 1.6.</p>
+                <div class="table-scroll" role="region" aria-label="Compact typography roles" tabindex="0">
+                    <table class="defaults-table">
+                        <caption>Relative sizes at a 16px browser default</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">Role</th>
+                            <th scope="col">Size</th>
+                            <th scope="col">Weight</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th scope="row">Card / group title</th>
+                            <td>1.125rem / 18px</td>
+                            <td>600</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Panel / subgroup title</th>
+                            <td>1rem / 16px</td>
+                            <td>600</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Control value / output / button / select / textarea</th>
+                            <td>1rem / 16px</td>
+                            <td>400</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Control label</th>
+                            <td>0.875rem / 14px</td>
+                            <td>600</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Supporting text / metadata</th>
+                            <td>0.875rem / 14px</td>
+                            <td>400</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Brand identifier · Roboto Mono</th>
+                            <td>1rem / 16px</td>
+                            <td>400</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3>Header navigation</h3>
+                <p>Every page uses the same header pattern: a 16px-equivalent Roboto Mono brand identifier,
+                    plain Roboto navigation links following the 16–18px body scale, and a separate Appearance
+                    control. All four links stay visible in the same order: Design Index, Logo Type, Typography, and
+                    Colours. The current page is identified with aria-current. Navigation follows the
+                    page width; embedded specimens follow their own available width.</p>
+                <h3>Shared implementation &amp; artwork</h3>
+                <p><code>assets/css/typography.css</code> defines the families, scale, rhythm, and compact roles. <code>assets/js/typography.js</code>
+                    follows viewport width for pages and actual container width for embedded specimens. Preview changes
+                    affect only their specimen.</p>
+                <p>The animated logotype is an intentional exception: Roboto Mono 400 at a 48px default, with its own
+                    measured letter spacing and animation geometry. Its size control adjusts the artwork, independently
+                    of document typography. The large “Aa” on the design index is a decorative type specimen.</p>
+
                 <h3 id="colour-defaults">Colour roles</h3>
                 <p>The <a href="./colours.html">colour specification</a> defines the approved light and dark palette.
-                    This page shares <code>colours.css</code> and its semantic properties for text, links, warnings,
+                    This page shares <code>assets/css/colours.css</code> and its semantic properties for text, links,
+                    warnings,
                     backgrounds, surfaces, and borders.</p>
                 <p>Light mode uses #191919 main text, #666666 secondary text, #0E47CB links, #ffffff surfaces,
                     and a #f7f7f7 page. Dark mode uses #f7f7f7 main text, #bdbdbd secondary text, #9fb5ea links,
@@ -1009,35 +875,24 @@
     const leadingOutput = document.getElementById("leading-value");
     const measureOutput = document.getElementById("measure-value");
 
-    // rem endpoints at 390px and 1200px. Keep the source defaults table in sync.
-    const typeScale = {
-      h1: [2, 3], h2: [1.75, 2.25], h3: [1.5, 1.75],
-      h4: [1.25, 1.5], h5: [1.125, 1.25],
-      h6: [1, 1.125], body: [1, 1.125], small: [0.875, 0.875],
-    };
-    const samples = Object.keys(typeScale).filter(key => key !== "small").map(key => ({
-      key,
-      element: specimen.querySelector("[data-size-sample=\"" + key + "\"]"),
-      output: specimen.querySelector("[data-measurement=\"" + key + "\"]"),
+    const samples = [...specimen.querySelectorAll("[data-size-sample]")].map(element => ({
+      element,
+      output: specimen.querySelector("[data-measurement=\"" + element.dataset.sizeSample + "\"]"),
     }));
     let pendingFrame = 0;
 
     function updatePreview() {
       pendingFrame = 0;
       const actualWidth = frame.getBoundingClientRect().width;
-      const progress = Math.max(0, Math.min(1, (actualWidth - 390) / 810));
       const factor = Number(scale.value) / 100;
       const selectedLeading = Number(leading.value);
       const effectiveLeading = spacing.checked ? Math.max(1.5, selectedLeading) : selectedLeading;
       controlsPanel.classList.toggle("too-tall",
         controlsPanel.getBoundingClientRect().height > window.innerHeight - 40);
 
-      Object.entries(typeScale).forEach(([key, endpoints]) => {
-        const value = (endpoints[0] + (endpoints[1] - endpoints[0]) * progress) * factor;
-        specimen.style.setProperty("--type-" + key, value + "rem");
-      });
-      specimen.style.setProperty("--body-leading", String(effectiveLeading));
-      specimen.style.setProperty("--measure", measure.value + "ch");
+      frame.style.setProperty("--type-scale", String(factor));
+      frame.style.setProperty("--body-leading", String(effectiveLeading));
+      frame.style.setProperty("--measure", measure.value + "ch");
       specimen.classList.toggle("spacing-test", spacing.checked);
 
       scaleOutput.value = scale.value + "%";
@@ -1079,6 +934,7 @@
     controlsPanel.hidden = false;
     window.addEventListener("pageshow", () => form.reset());
     window.addEventListener("resize", schedulePreview);
+    document.addEventListener("i12e:typographychange", schedulePreview);
     if ("ResizeObserver" in window) {
       const resizeObserver = new ResizeObserver(schedulePreview);
       resizeObserver.observe(frame);
