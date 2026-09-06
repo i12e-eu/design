@@ -22,7 +22,8 @@
         width: 100%;
         height: 100%;
         --transition-duration: 250ms;
-        --hold-duration: 150ms;
+        --hold-duration: 250ms;
+        --loop-duration: 1000ms; /* Full return: text absorption, then the fold back to 12. */
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
@@ -140,6 +141,7 @@
             return {
                 transitionDuration: milliseconds(value('--transition-duration')),
                 holdDuration: milliseconds(value('--hold-duration')),
+                loopDuration: milliseconds(value('--loop-duration')),
                 easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
                 characterSpacing: parseFloat(value('--character-spacing')),
                 flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
@@ -530,7 +532,7 @@
             // Only looping adds the return to 12. Other comparison previews hold
             // their completed design through that return so every cycle stays aligned.
             forwardDuration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
-            duration = forwardDuration + (config.loop && (swapVariant || preview) ? 2 * config.transitionDuration : 0);
+            duration = forwardDuration + (config.loop && (swapVariant || preview) ? config.loopDuration : 0);
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
@@ -603,9 +605,10 @@
             if (!swapVariant || !config.loop || time < forwardDuration) return null;
             if (time >= duration) return { phase: 'complete', progress: 1 };
             const elapsed = time - forwardDuration;
-            return elapsed < config.transitionDuration
-                ? { phase: 'text', progress: elapsed / config.transitionDuration }
-                : { phase: 'flaps', progress: (elapsed - config.transitionDuration) / config.transitionDuration };
+            const segmentDuration = config.loopDuration / 2;
+            return elapsed < segmentDuration
+                ? { phase: 'text', progress: elapsed / segmentDuration }
+                : { phase: 'flaps', progress: (elapsed - segmentDuration) / segmentDuration };
         }
 
         function render(time) {
@@ -649,8 +652,15 @@
                             : mix(compactEX, initial.get(key).x, eased);
                         alpha = 1;
                     } else {
-                        x = Math.max(flagX, final.get(key).x - shift * (phase === 'text' ? eased : 1));
-                        alpha = phase === 'text' ? ease(Math.max(0, 1 - 2 * progress)) : 0;
+                        // Carry every disappearing glyph fully inside the flag,
+                        // including when a custom outer gap leaves the final e far away.
+                        x = Math.max(flagX, final.get(key).x
+                            - (shift + config.flapOuterGap) * (phase === 'text' ? eased : 1));
+                        // Use the i's fade-out curve locally as each letter crosses
+                        // the edge, instead of fading the whole word at once.
+                        const flagRight = flagX + 2 * tileWidth;
+                        const remaining = clamp((x - flagRight + glyphWidth) / (2 * glyphWidth), 0, 1);
+                        alpha = phase === 'text' ? ease(remaining) : 0;
                     }
                     sprite.draw(word[index], word[index], 0);
                 }
@@ -876,7 +886,7 @@
         function seek(time) { pause(numeric(time, 0, duration, currentTime())); }
         function seekStep(step) {
             const target = Math.round(numeric(step, 0, count + (swapVariant && config.loop ? 2 : 0), 0));
-            seek(target > count ? forwardDuration + (target - count - 1) * config.transitionDuration
+            seek(target > count ? forwardDuration + (target - count - 1) * config.loopDuration / 2
                 : target * (config.holdDuration + config.transitionDuration));
         }
         function restart(options = {}) { play({ ...options, time: 0 }); }
@@ -889,7 +899,7 @@
                 // preserve each return transition's progress without adding holds.
                 if (duration === forwardDuration || previousTiming.duration === oldForward) return forwardDuration;
                 return Math.min(duration, forwardDuration + (oldTime - oldForward)
-                    / previousTiming.transitionDuration * config.transitionDuration);
+                    / (previousTiming.duration - oldForward) * config.loopDuration);
             }
             if (previousTiming.holdDuration === config.holdDuration
                 && previousTiming.transitionDuration === config.transitionDuration) return clamp(oldTime, 0, duration);
@@ -916,12 +926,14 @@
             const previousTiming = supplied
                 && [supplied.holdDuration, supplied.transitionDuration, supplied.duration].every(Number.isFinite)
                 && supplied.holdDuration >= 0 && supplied.transitionDuration > 0 && supplied.duration > 0
-                ? supplied : { holdDuration: config.holdDuration, transitionDuration: config.transitionDuration, duration };
+                ? supplied : { holdDuration: config.holdDuration, transitionDuration: config.transitionDuration,
+                    loopDuration: config.loopDuration, duration };
             playing = false;
             cancelAnimationFrame(frame);
             config = {
                 transitionDuration: numeric(next.transitionDuration ?? config.transitionDuration, 1, 5000, config.transitionDuration),
                 holdDuration: numeric(next.holdDuration ?? config.holdDuration, 0, 10000, config.holdDuration),
+                loopDuration: numeric(next.loopDuration ?? config.loopDuration, 1, 10000, config.loopDuration),
                 easing: typeof next.easing === 'string' && easingFor(next.easing) ? next.easing : config.easing,
                 fontSize: numeric(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
                 characterSpacing: numeric(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),

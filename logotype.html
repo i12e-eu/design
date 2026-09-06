@@ -420,7 +420,7 @@
                     </div>
                     <p class="caption">The last counter turn reveals a clean leading flag, with no intermediate hold.
                         The i fades out and reappears as the cards move left and close into one seamless face.
-                        With Loop enabled, the letters return around the flag before it folds back into 12.</p>
+                        With Loop enabled, the letters slide and fade into the flag before it folds back into 12.</p>
                     <fieldset class="flag-interaction" id="flag-interaction" disabled>
                         <legend>Flag interaction</legend>
                         <div class="flag-controls">
@@ -546,9 +546,18 @@
                     <div class="control">
                         <label for="hold-duration">Hold duration</label>
                         <div class="input-row"><input id="hold-duration" type="number" min="0" max="10000" step="1"
-                                                      value="150" data-config="holdDuration"/><span
+                                                      value="250" data-config="holdDuration"/><span
                                 class="unit">ms</span>
                         </div>
+                    </div>
+                    <div class="control">
+                        <label for="loop-duration">Loop duration</label>
+                        <div class="input-row"><input id="loop-duration" type="number" min="1" max="10000" step="1"
+                                                      value="1000" data-config="loopDuration"
+                                                      aria-describedby="loop-duration-note"/><span
+                                class="unit">ms</span></div>
+                        <p id="loop-duration-note" class="caption">Full return to i12e: half for the text, half for the
+                            flag fold.</p>
                     </div>
                     <div class="control">
                         <label for="easing">Easing</label>
@@ -793,6 +802,7 @@
                 timing: {
                     holdDuration: latestState.config.holdDuration,
                     transitionDuration: latestState.config.transitionDuration,
+                  loopDuration: latestState.config.loopDuration,
                     duration: latestState.duration
                 },
                 playing: Boolean(latestState?.playing), startedAt: startedAt(0)
