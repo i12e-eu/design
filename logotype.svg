@@ -189,7 +189,7 @@
             };
         }
 
-        function stateAt(remaining, padded = variant > 0) {
+        function stateAt(remaining, padded = variant > 1) {
             if (!remaining) return word;
             const digits = padded ? String(remaining).padStart(2, '0') : String(remaining);
             return word[0] + digits + word.slice(remaining + 1);
@@ -202,9 +202,9 @@
                 const cells = variant === 4 ? text.padEnd(capacity, ' ') : text;
                 [...cells].forEach((character, index) => state.set(`cell:${index}`, { character, x: index * flapAdvance }));
             } else {
-                // Every split-flap counter keeps two digits. At zero, persistent
-                // counter places turn directly into flag faces below.
-                const digits = remaining ? String(remaining).padStart(variant > 0 ? 2 : 1, '0')
+                // The visible-digits variant drops the tens card below ten.
+                // Other split-flap counters keep both places until their final turn.
+                const digits = remaining ? String(remaining).padStart(variant > 1 ? 2 : 1, '0')
                     : flagVariant ? '00' : '';
                 const digitWidth = variant === 0 ? glyphWidth : tileWidth;
                 const digitAdvance = variant === 0 ? characterAdvance : swapped ? tileWidth : flapAdvance;
