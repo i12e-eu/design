@@ -3,11 +3,12 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content="The i12e design index. Explore the logotype and its variants."/>
+    <meta name="description" content="The i12e design index. Explore the logotype, typography, and brand decisions."/>
     <title>i12e — Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&amp;family=Roboto+Mono:wght@400&amp;display=swap"
+          rel="stylesheet"/>
     <style>
         :root {
             color-scheme: light;
@@ -100,6 +101,47 @@
             outline-offset: 6px;
         }
 
+        .designs > li + li {
+            margin-top: 28px;
+        }
+
+        .typography-preview {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            height: auto;
+            min-height: 172px;
+            padding: 24px;
+            overflow: visible;
+            overflow-wrap: anywhere;
+        }
+
+        .typography-glyph {
+            flex-shrink: 0;
+            font-family: "Roboto", Arial, sans-serif;
+            font-size: clamp(3rem, 8vw, 4.5rem);
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .typography-copy {
+            min-width: 0;
+        }
+
+        .typography-copy p {
+            margin: 0;
+            font-family: "Roboto", Arial, sans-serif;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .typography-copy .typography-mono {
+            margin-top: 8px;
+            font-family: "Roboto Mono", monospace;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
         @media (max-width: 600px) {
             body {
                 padding: 28px 18px;
@@ -107,6 +149,18 @@
 
             h1 {
                 margin-bottom: 36px;
+            }
+
+            .typography-preview {
+                gap: 18px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .typography-preview {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
     </style>
@@ -129,6 +183,25 @@
                     <iframe src="./logotype.svg?variant=6&amp;preview=1"
                             title="Primary i12e logotype — variant 05, EU flag to leading flag"
                             tabindex="-1" aria-hidden="true"></iframe>
+                </div>
+            </a>
+        </li>
+        <li>
+            <a class="design-link" href="./typography.html" aria-labelledby="typography-title typography-variant">
+                <div class="details">
+                    <div>
+                        <h2 id="typography-title">Typography</h2>
+                        <p class="variant" id="typography-variant">Roboto + Roboto Mono · Scale, specimens &amp;
+                            controls</p>
+                    </div>
+                    <span aria-hidden="true">↗</span>
+                </div>
+                <div class="preview typography-preview" aria-hidden="true">
+                    <span class="typography-glyph">Aa</span>
+                    <div class="typography-copy">
+                        <p>Roboto for the words.</p>
+                        <p class="typography-mono">Roboto Mono for the details.</p>
+                    </div>
                 </div>
             </a>
         </li>
