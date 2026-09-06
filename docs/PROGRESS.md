@@ -16,6 +16,42 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## Digit hinge correction and rendered checks, 6 September 2026
+
+Browser access now works following the user's permission correction. Earlier
+access-denied notes below record the state at those stages, not the current state.
+
+The digit flap renderer painted the incoming stationary top underneath the whole
+outgoing leaf, and usually painted the old bottom underneath the arriving leaf.
+Those hidden glyphs could leak at shared antialiased edges. Both backing faces
+now have independent exposure clips that follow the rotating leaf boundaries.
+This uses the same approach already present in the country-flag fold. Existing
+half-face clips, typography, shading, detail strength and flag cleanup remain.
+
+The SVG root also paints its existing configurable background across the entire
+viewport. This removes white letterbox bands outside the fitted viewBox in dark
+index and logotype previews, without coupling cut-outs to a background colour.
+
+Independent in-memory checks executed the current drawing functions for 1,904
+poses across variants 1–6 and four dimension sets, including unchanged/blank
+glyphs, reverse scrubbing and 224 flag poses. Exposure coverage, transforms,
+return shading, unique IDs and 240 detail-effect switches passed. SVG XML,
+embedded JavaScript syntax and `git diff --check` also passed. No test files,
+dependencies or project tooling were added.
+
+Normal browser controls and screenshots checked paused digit transitions in
+Light and Dark at the default 48px and enlarged 96px preview font settings;
+all seven variants; detail strengths of 0%, 50% and 100%; retained Colour mode;
+flag formation, country-flag return and continued playback across a loop boundary.
+The detached pale hinge fragments were not visible in the sampled frames. The
+index animation and corrected dark viewport fill were also inspected. Embedded
+artwork initially remained stale after reload; navigating between the index and
+logotype pages refreshed it. Temporary preview settings were restored.
+
+These are sampled checks in the in-app browser, not exhaustive verification of
+every browser, frame, display scale or responsive layout. The independent checks
+use an in-memory element graph and do not establish rasterization by themselves.
+
 ## Shared headers and flap cut-outs, 6 September 2026
 
 All four headers sit outside their page-specific content wrappers and share one
@@ -61,10 +97,9 @@ stand-ins, not a browser renderer. SVG XML, syntax of ten JavaScript blocks/file
 `git diff --check`, and independent source review passed. No test files,
 dependencies or project tooling were added.
 
-The screenshot establishes the earlier artefact, not the corrected appearance.
-Browser access remains declined; updated screenshots or subsequently authorised
-browser access are still needed to confirm the fringe is gone at normal/enlarged
-sizes and during animation in both appearances.
+At this stage, the screenshot established the earlier artefact and browser access
+was declined. Subsequent rendered checks are recorded in the digit hinge section
+above.
 
 ## Current design-reference follow-up, 6 September 2026
 
