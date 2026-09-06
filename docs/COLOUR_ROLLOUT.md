@@ -14,6 +14,14 @@ rebuilding geometry; `configure` accepts optional `editedColors` metadata. Origi
 rollout evidence below remains historical. Current follow-up evidence and pending
 browser validation are recorded in [PROGRESS.md](PROGRESS.md).
 
+The subsequent approved flap correction makes seams and edge notches true
+cut-outs by default. Full-strength vector clipping reveals the underlying canvas
+without matching its colour; intermediate strengths use an expanded mask. Hidden
+or zero-strength details and Colour mode remove both detail effects. The optional
+Colour detail style retains custom painted details; strength
+and visibility controls work with both styles. Flag cleanup and lettering geometry
+retain their existing behavior.
+
 ## Goal
 
 Complete the approved colour specification across all four HTML pages, preserve
@@ -33,13 +41,15 @@ remain required. The separate Typography rollout keeps its own acceptance record
 - EU web blue is `#0E47CB`; the blue scale retains ECL EU v5.2.1 values mapped in
   ascending order to i12e 50–950. Neutral values and the encoded-sRGB status-scale
   calculations retain the approved specification.
-- Each HTML page starts light with a temporary Light/Dark selector. No storage,
-  operating-system theme detection or cross-page theme persistence.
+- Each HTML page follows the system appearance, falling back to light if unavailable.
+  The temporary Light/Dark selector overrides it until reload; no storage or
+  cross-page theme persistence. Resetting colour experiments restores system appearance.
 - Underline links including visited links. Use semantic control boundaries and
   visible focus outlines with a surface-coloured gap. Preserve Roboto/Roboto Mono.
 - Colours keeps approved references immutable, separate sample-only experiments
   per appearance, strict HEX validation, independent comparison and live contrast.
-  Reset clears experiments and comparison changes and restores light defaults.
+  Reset clears experiments and comparison changes and restores system appearance,
+  falling back to light when no system preference is available.
 - Copy HEX/RGB and export CSS, JSON and Tailwind from actual stylesheet values.
   JSON retains `{schemaVersion, kind, brand, emblem, palette, themes}`. Tailwind
   v4.3.3 uses prefixed colours, `@theme static`, `@theme inline` and a manual dark

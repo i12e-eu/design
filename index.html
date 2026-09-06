@@ -2,6 +2,7 @@
 <html lang="en" data-type-scope="viewport" data-theme="light">
 <head>
     <meta charset="utf-8"/>
+    <script src="./assets/js/appearance.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description"
           content="The i12e.eu design index. Explore the logo, typography, and colour specifications."/>
@@ -270,11 +271,7 @@
 <script>
   (() => {
     const appearance = document.getElementById("page-appearance");
-    document.documentElement.dataset.theme = "light";
-    appearance.value = "light";
-    appearance.addEventListener("change", () => {
-      document.documentElement.dataset.theme = appearance.value === "dark" ? "dark" : "light";
-    });
+    window.i12eAppearance.bind(appearance);
     appearance.closest(".theme-control").hidden = false;
   })();
 </script>

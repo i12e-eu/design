@@ -2,6 +2,7 @@
 <html lang="en" data-type-scope="viewport" data-theme="light">
 <head>
     <meta charset="utf-8"/>
+    <script src="./assets/js/appearance.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>i12e.eu / logotype</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -143,7 +144,7 @@
             top: 0;
             z-index: 2;
             display: grid;
-            grid-template-columns: minmax(11rem, auto) minmax(12rem, 1fr) minmax(14rem, auto);
+            grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) minmax(0, 18rem);
             align-items: center;
             gap: 16px 28px;
             background: var(--color-background);
@@ -332,13 +333,17 @@
         }
 
         .transport {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
         }
 
         .transport button {
-            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .playback-actions, .playback-timeline {
+            min-width: 0;
         }
 
         .loop {
@@ -370,26 +375,58 @@
 
         .time {
             color: var(--color-text-secondary);
+            font: var(--type-ui-control);
             font-variant-numeric: tabular-nums;
             font-family: var(--font-mono);
+            max-width: 100%;
+            text-align: right;
         }
 
         .readout {
+            display: grid;
+            gap: 6px;
             min-width: 0;
         }
 
-        #current-state {
-            display: block;
+        /* Hidden sizing text shares a grid cell with the changing value. It
+           reserves wrapping space at every font size without frame-by-frame
+           measurements, fixed heights or truncated status labels. */
+        .stable-slot, .slot-sizer {
+            display: grid;
+            min-width: 0;
             overflow-wrap: anywhere;
-            min-height: 24px;
+        }
+
+        .stable-slot > *, .slot-sizer > * {
+            grid-area: 1 / 1;
+            min-width: 0;
+            margin: 0;
+            font: inherit;
+        }
+
+        .slot-sizer {
+            visibility: hidden;
+            pointer-events: none;
+            user-select: none;
         }
 
         #phase {
-            margin: 6px 0 0;
+            display: grid;
+            gap: 2px;
+            margin: 0;
             color: var(--color-text-secondary);
-            min-height: 1.6em;
-            overflow-wrap: anywhere;
             font: var(--type-ui-meta);
+        }
+
+        .status-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px 1rem;
+        }
+
+        .step-counter {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
         }
 
         .help {
@@ -442,15 +479,22 @@
             }
 
             .playback-controls {
-                grid-template-columns: auto minmax(0, 1fr);
+                grid-template-columns: minmax(0, 1fr);
                 gap: 12px 20px;
             }
 
             .playback-actions {
+                grid-column: 1;
+                grid-row: 1;
                 display: flex;
                 align-items: center;
                 flex-wrap: wrap;
                 gap: 8px 16px;
+            }
+
+            .playback-actions .transport {
+                flex: 0 1 13rem;
+                max-width: 100%;
             }
 
             .playback-actions .loop {
@@ -463,7 +507,9 @@
             }
 
             .readout {
-                text-align: right;
+                grid-column: 1;
+                grid-row: 3;
+                text-align: left;
             }
         }
 
@@ -522,7 +568,10 @@
         <fieldset id="playback" class="playback-controls" disabled aria-label="Playback controls">
             <div class="playback-actions">
                 <div class="transport">
-                    <button id="play-pause" type="button">Pause</button>
+                    <button id="play-pause" type="button"><span class="stable-slot">
+                        <span class="slot-sizer" aria-hidden="true"><span>Play</span><span>Pause</span></span>
+                        <span id="play-pause-label">Pause</span>
+                    </span></button>
                     <button id="restart" type="button">Restart</button>
                 </div>
                 <label class="loop"><input id="loop" type="checkbox" data-config="loop" checked/>Loop animation</label>
@@ -530,13 +579,39 @@
             <div class="playback-timeline">
                 <div class="timeline-label">
                     <label for="timeline">Timeline</label>
-                    <output id="time" class="time" for="timeline">0.0 / 0.0 s</output>
+                    <span class="time stable-slot">
+                        <span id="time-sizer" class="slot-sizer" aria-hidden="true">0.0 / 0.0 s</span>
+                        <output id="time" for="timeline">0.0 / 0.0 s</output>
+                    </span>
                 </div>
                 <input id="timeline" type="range" min="0" max="1" step="1" value="0" aria-label="Animation timeline"/>
             </div>
             <div class="readout">
-                <output class="brand" id="current-state">i12e</output>
-                <p id="phase">Waiting for SVG</p>
+                <div class="brand stable-slot">
+                    <!-- Longest padded state emitted by the SVG's stateAt(). -->
+                    <span class="slot-sizer" aria-hidden="true">i01frastructure</span>
+                    <output id="current-state">i12e</output>
+                </div>
+                <div id="phase">
+                    <div class="status-summary">
+                        <span class="stable-slot">
+                            <span class="slot-sizer" aria-hidden="true"><span>Playing</span><span>Paused</span><span>Waiting</span></span>
+                            <span id="playing-state">Waiting</span>
+                        </span>
+                        <span class="step-counter stable-slot">
+                            <span id="step-sizer" class="slot-sizer" aria-hidden="true">Step 88 / 88</span>
+                            <span id="step-count">Step 0 / 0</span>
+                        </span>
+                    </div>
+                    <span class="stable-slot">
+                        <span class="slot-sizer" aria-hidden="true">
+                            <span>Waiting for SVG</span><span>Expanded hold</span><span>Collapsed hold</span>
+                            <span>Collapse: text</span><span>Collapse: flag</span><span>Complete</span>
+                            <span>Step hold</span><span>Expansion</span>
+                        </span>
+                        <span id="animation-phase">Waiting for SVG</span>
+                    </span>
+                </div>
             </div>
         </fieldset>
         <aside class="settings" aria-label="Animation controls">
@@ -713,23 +788,32 @@
                                 </div>
                             </div>
                             <div class="control">
+                                <label for="flap-detail-mode">Detail style</label>
+                                <select id="flap-detail-mode" data-config="detailMode"
+                                        aria-describedby="flap-detail-help">
+                                    <option value="cutout" selected>Cut-outs</option>
+                                    <option value="colour">Colour</option>
+                                </select>
+                                <p id="flap-detail-help" class="caption">Cut-outs reveal the canvas. Colour uses the
+                                    custom detail colour.</p>
+                            </div>
+                            <div class="control">
                                 <label for="flap-detail-color">Flap detail color</label>
                                 <div class="input-row">
-                                    <input id="flap-detail-color" type="color" value="#ffffff"
+                                    <input id="flap-detail-color" type="color" value="#ffffff" disabled
                                            data-config="detailColor"/>
-                                    <input id="flap-detail-color-hex" type="text" value="#ffffff"
+                                    <input id="flap-detail-color-hex" type="text" value="#ffffff" disabled
                                            pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
                                            maxlength="7" required spellcheck="false" autocomplete="off"
                                            aria-label="Flap detail color hexadecimal value"
                                            data-color-for="flap-detail-color"/>
                                 </div>
-                                <p class="caption">Middle line and edge pieces.</p>
                                 <label class="detail-toggle">
                                     <input id="flap-details-visible" type="checkbox" checked
                                            data-config="detailsVisible"
                                     />Show flap details
                                 </label>
-                                <label for="flap-detail-opacity">Detail opacity</label>
+                                <label for="flap-detail-opacity">Detail strength</label>
                                 <div class="input-row">
                                     <input id="flap-detail-opacity" type="range" min="0" max="100" step="1" value="100"
                                            data-config="detailOpacity" data-scale="100"/>
@@ -903,11 +987,7 @@
 <script>
   (() => {
     const appearance = document.getElementById("page-appearance");
-    document.documentElement.dataset.theme = "light";
-    appearance.value = "light";
-    appearance.addEventListener("change", () => {
-      document.documentElement.dataset.theme = appearance.value === "dark" ? "dark" : "light";
-    });
+    window.i12eAppearance.bind(appearance);
     appearance.closest(".theme-control").hidden = false;
   })();
 </script>
@@ -932,6 +1012,7 @@
         let latestReceivedAt = 0;
         let initialized = false;
         let lastConfig = "";
+      let lastReadoutSize = "";
       const manualColors = new Map();
       const themeProperties = {backgroundColor: "--color-surface", textColor: "--color-text-primary"};
 
@@ -1022,6 +1103,12 @@
             }
         }
 
+      function updateDetailControls() {
+        const cutouts = document.getElementById("flap-detail-mode").value === "cutout";
+        document.getElementById("flap-detail-color").disabled = cutouts;
+        document.getElementById("flap-detail-color-hex").disabled = cutouts;
+      }
+
         function updateFlagControls(state) {
             const interaction = state?.flagInteraction;
             const phase = interaction?.phase || "idle";
@@ -1037,6 +1124,8 @@
         }
 
         updateRangeReadouts();
+      updateDetailControls();
+      document.getElementById("flap-detail-mode").addEventListener("change", updateDetailControls);
         flagReturnMode.addEventListener("change", () => updateFlagControls(latestState));
 
         configInputs.forEach(input => {
@@ -1091,6 +1180,47 @@
             frame.contentWindow.postMessage({type: "i12e:command", action: "triggerFlag"}, "*");
         });
 
+      function setReadoutText(id, value) {
+        const element = document.getElementById(id);
+        if (element.textContent !== value) element.textContent = value;
+      }
+
+      function renderPlaybackStatus(state) {
+        const duration = Math.max(0, Number(state.duration) || 0);
+        const currentTime = Math.min(duration, Math.max(0, Number(state.currentTime) || 0));
+        const durationSeconds = (duration / 1000).toFixed(1);
+        const stepDigits = Math.max(2, String(state.totalSteps).length);
+        const sizingKey = `${durationSeconds.length}:${stepDigits}`;
+
+        // Reserve the widest numeric shapes once per duration/step range,
+        // rather than changing the layout as the current values gain digits.
+        if (sizingKey !== lastReadoutSize) {
+          const timeDigits = durationSeconds.replace(/\d/g, "8");
+          const steps = "8".repeat(stepDigits);
+          setReadoutText("time-sizer", `${timeDigits} / ${timeDigits} s`);
+          setReadoutText("step-sizer", `Step ${steps} / ${steps}`);
+          lastReadoutSize = sizingKey;
+        }
+
+        timeline.max = duration;
+        timeline.value = currentTime;
+        timeline.setAttribute("aria-valuetext", `${(currentTime / 1000).toFixed(1)} seconds, ${state.state}`);
+        setReadoutText("time", `${(currentTime / 1000).toFixed(1)} / ${durationSeconds} s`);
+        setReadoutText("current-state", state.state);
+        const phase = state.animationPhase === "expanded-hold" ? "Expanded hold"
+          : state.animationPhase === "collapsed-hold" ? "Collapsed hold"
+            : state.animationPhase === "collapse-text" || state.loopPhase === "text" ? "Collapse: text"
+              : state.animationPhase === "collapse-flaps" || state.loopPhase === "flaps" ? "Collapse: flag"
+                : state.animationPhase === "complete" || state.phase === "complete" ? "Complete"
+                  : state.phase === "hold" ? "Step hold" : "Expansion";
+        const playing = state.playing ? "Playing" : "Paused";
+        setReadoutText("playing-state", playing);
+        setReadoutText("animation-phase", phase);
+        setReadoutText("step-count", `Step ${state.step} / ${state.totalSteps}`);
+        document.getElementById("phase").title = `${playing} · ${phase} · ${state.step}/${state.totalSteps}`;
+        setReadoutText("play-pause-label", state.playing ? "Pause" : "Play");
+      }
+
         function updateUI(state) {
             latestState = state;
             latestReceivedAt = performance.now();
@@ -1116,27 +1246,11 @@
                 lastConfig = signature;
             }
             updateRangeReadouts();
+          updateDetailControls();
             updateFlagControls(state);
 
-            const duration = Math.max(0, Number(state.duration) || 0);
-            const currentTime = Math.min(duration, Math.max(0, Number(state.currentTime) || 0));
-            timeline.max = duration;
-            timeline.value = currentTime;
-            timeline.setAttribute("aria-valuetext", `${(currentTime / 1000).toFixed(1)} seconds, ${state.state}`);
-            document.getElementById("time").textContent = `${(currentTime / 1000).toFixed(1)} / ${(duration / 1000).toFixed(1)} s`;
-            document.getElementById("current-state").textContent = state.state;
-          const phase = state.animationPhase === "expanded-hold" ? "Expanded hold"
-            : state.animationPhase === "collapsed-hold" ? "Collapsed hold"
-              : state.animationPhase === "collapse-text" || state.loopPhase === "text" ? "Collapse: text"
-                : state.animationPhase === "collapse-flaps" || state.loopPhase === "flaps" ? "Collapse: flag"
-                  : state.animationPhase === "complete" || state.phase === "complete" ? "Complete"
-                    : state.phase === "hold" ? "Step hold" : "Expansion";
-          const status = `${state.playing ? "Playing" : "Paused"} · ${phase} · ${state.step}/${state.totalSteps}`;
-          const phaseReadout = document.getElementById("phase");
-          phaseReadout.textContent = status;
-          phaseReadout.title = status;
+          renderPlaybackStatus(state);
             document.getElementById("motion-note").hidden = !state.reducedMotion;
-            playPause.textContent = state.playing ? "Pause" : "Play";
         }
 
         window.addEventListener("message", event => {

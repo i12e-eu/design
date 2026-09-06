@@ -13,6 +13,11 @@ below. Logo groups use the shared H2 scale; variant titles use 18px Roboto Mono,
 and Flag Interaction uses 16px Roboto Mono. Typography specimens now progress
 from H1 through H6 to a labelled paragraph. Preview controls remain available.
 
+The subsequent header correction gives all four pages the same independent
+1320px header frame, offsets, responsive breakpoints and Appearance control size.
+Headers sit outside the content wrappers so differing content widths cannot move
+the navigation. Page content retains its original widths and gutters.
+
 The follow-up also authorizes SVG appearance changes, superseding earlier
 unchanged-SVG constraints. Earlier rollout and byte-identity evidence below is
 historical; current evidence is in [PROGRESS.md](PROGRESS.md).

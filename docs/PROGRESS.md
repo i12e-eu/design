@@ -16,6 +16,56 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## Shared headers and flap cut-outs, 6 September 2026
+
+All four headers sit outside their page-specific content wrappers and share one
+1320px frame, spacing, responsive breakpoints, navigation layout and Appearance
+control sizing. Content retains its existing widths and gutters. A stable
+scrollbar gutter prevents horizontal movement between short and long pages.
+
+Split-flap seams and edge notches now default to cut-outs. Each assembled tile
+uses stationary vector clipping at full strength, preserving glyph positions and
+the existing face-folding transforms. Partial strengths use a luminance mask.
+Gaps reveal the canvas without reading or copying its colour. The
+existing flag cleanup also removes the gaps as the final flag forms. Detail
+strength and visibility remain adjustable; the Colour style enables the retained
+custom detail colour controls.
+
+Source checks passed for all four header structures, 70 local links/assets,
+nine JavaScript blocks/files, unique HTML IDs and SVG XML. Independent source
+reviews found no actionable issues; `git diff --check` passed. No tests,
+dependencies or project tooling were added. Browser preview access was previously
+declined, so rendered header layout, mask compositing and animation appearance
+remain unverified.
+
+## Cut-out fringe correction, 6 September 2026
+
+The user's screenshot showed a soft grey rim along the seam and rounded notches,
+including areas away from the white lettering. No stroke had been added. The
+approved correction replaces full-strength masking with two retained vector
+contours: an upper shape and its reflected lower shape. They preserve the original
+cut-out geometry without overlapping holes. An inner stationary artwork group
+keeps the existing outer flag clip, face order and folding transforms intact.
+
+Full strength attaches only the detail clip. Intermediate strengths attach only
+the mask, whose region and white keep rectangle extend one font size beyond the
+card. Zero strength, hidden details, Colour mode and completed flag cleanup remove
+both detail effects. The existing configuration fields and fade timing remain.
+
+Independent geometry checks sampled 24,000 points across default and extreme
+dimensions with no discrepancies against the original seam/notch union. In-memory
+checks of the actual drawing function passed 4,323 render-state samples across all
+seven variants and default/minimum/maximum sizes, including effect switching,
+removal, unique IDs, mask bounds and unchanged folding transforms. These use DOM
+stand-ins, not a browser renderer. SVG XML, syntax of ten JavaScript blocks/files,
+`git diff --check`, and independent source review passed. No test files,
+dependencies or project tooling were added.
+
+The screenshot establishes the earlier artefact, not the corrected appearance.
+Browser access remains declined; updated screenshots or subsequently authorised
+browser access are still needed to confirm the fringe is gone at normal/enlarged
+sizes and during animation in both appearances.
+
 ## Current design-reference follow-up, 6 September 2026
 
 Implemented the approved refinement plan across the existing static pages:
@@ -33,11 +83,13 @@ column at all widths. Loop animation is checked on initial load, and the shared
 SVG's saved default enables looping for the logo page, index preview, and
 standalone artwork.
 
-The complete automated suite passes **26 tests**, and `git diff --check` passes.
-Independent source reviews found no outstanding code issues. The actual SVG script
-is exercised with deterministic geometry and timing; tests verify all seven
+Before the tooling was removed, the complete automated suite passed **26 tests**,
+and `git diff --check` passed. These are historical results, not validation of the
+later header and cut-out changes. Independent source reviews found no outstanding
+code issues at that stage. The SVG script was exercised with deterministic geometry
+and timing; tests verified all seven
 variants, appearance/custom-colour behavior, iframe readiness, playback and flag
-commands, and reduced motion. They also verify default repeat/restart behavior
+commands, and reduced motion. They also verified default repeat/restart behavior
 across all variants and automatic playback through multiple cycles using the
 index page's actual SVG embed URL. These checks do not establish rendered layout.
 

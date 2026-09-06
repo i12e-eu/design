@@ -2,6 +2,7 @@
 <html lang="en" data-type-scope="viewport" data-theme="light">
 <head>
     <meta charset="utf-8"/>
+    <script src="./assets/js/appearance.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description"
           content="The i12e colour specification: EU web blue, full palettes, light and dark roles, contrast checks, and theme exports."/>
@@ -713,7 +714,8 @@
                         <p id="edit-approved" class="help"></p></div>
                     <div class="control">
                         <button id="reset-experiments" type="button">Reset all experiments</button>
-                        <p class="help">Clears both appearances and the comparison, then returns to light. Reload also
+                        <p class="help">Clears both appearances and the comparison, then returns to the system
+                            appearance (light if unavailable). Reload also
                             restores defaults.</p></div>
                 </aside>
                 <div class="sample-column">
@@ -924,7 +926,8 @@
                             href="https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.3.3">v4.3.3</a>.
                 </li>
             </ul>
-            <p class="help">Reference decisions verified 6 September 2026. Start light; theme switches and experiments
+            <p class="help">Reference decisions verified 6 September 2026. Follow the system appearance, with light as
+                the fallback; manual theme switches and experiments
                 last only until reload. The shared stylesheet is the source of the displayed values.</p>
         </section>
     </main>
@@ -1288,7 +1291,7 @@
     }
 
     buildReference();
-    themeSelect.addEventListener("change", () => setTheme(themeSelect.value));
+    window.i12eAppearance.bind(themeSelect, setTheme);
     $("edit-role").addEventListener("change", () => {
       syncEditor();
       renderChecks();
@@ -1351,7 +1354,7 @@
       $("sample-name").value = "European infrastructure";
       $("demo-feedback").textContent = "";
       resetComparison();
-      setTheme("light");
+      window.i12eAppearance.reset();
     });
     $("export-kind").addEventListener("change", updateExport);
     $("export-format").addEventListener("change", updateExport);
@@ -1365,11 +1368,11 @@
     document.querySelectorAll("[data-demo-message]").forEach(button => button.addEventListener("click", () => {
       $("demo-feedback").textContent = button.dataset.demoMessage;
     }));
-    // Explicit start state: never read storage or the operating-system appearance.
+    // Experiments are temporary; appearance initially follows the system.
     $("export-kind").value = "approved";
     $("export-format").value = "css";
     resetComparison();
-    setTheme("light");
+    setTheme(document.documentElement.dataset.theme);
     document.querySelector(".theme-control").hidden = false;
     document.querySelector(".editor").hidden = false;
     $("live-checks").hidden = false;

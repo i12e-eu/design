@@ -36,8 +36,9 @@
         --flap-outer-gap: 4px; /* Space between the flap group and adjacent plain letters. */
         --leading-flag-gap: 16px; /* Final space between the leading flag and the word. */
         --flap-color: #000000; /* Customizable countdown cards; the flag keeps its official colors. */
-        --flap-detail-color: #ffffff; /* Shared middle line and edge pieces. */
-        --flap-detail-opacity: 1; /* 0 = transparent; 1 = fully opaque. */
+        --flap-detail-mode: cutout; /* cutout reveals the canvas; colour paints the details. */
+        --flap-detail-color: #ffffff; /* Used only in colour mode. */
+        --flap-detail-opacity: 1; /* Detail strength: 0 = absent; 1 = fully cut out or painted. */
         --flap-details-visible: 1; /* Toggle without losing the chosen opacity. */
         --background-color: #ffffff;
         --flap-text-color: #f8faff;
@@ -158,6 +159,7 @@
                 flapColor: normalizeColor(value('--flap-color')) || '#000000',
                 textColor: normalizeColor(value('--text-color')) || '#000000',
                 flapTextColor: normalizeColor(value('--flap-text-color')) || '#f8faff',
+                detailMode: value('--flap-detail-mode') === 'colour' ? 'colour' : 'cutout',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
                 detailOpacity: numeric(value('--flap-detail-opacity') || 1, 0, 1, 1),
                 detailsVisible: value('--flap-details-visible') !== '0',
@@ -403,10 +405,48 @@
             const tile = create('g', { 'data-flap': 'true' }, parent);
             if (swapVariant) tile.setAttribute('clip-path', `url(#flap-solid-${column})`);
             const half = tileHeight / 2;
+            const detailRects = [
+                { x: 0, y: half - 0.55, width: tileWidth, height: 1.1 },
+                ...[0, tileWidth - 1.5].map(x => ({ x, y: half - 2, width: 1.5, height: 4, rx: 0.5 })),
+            ];
+            // Keep detail clipping stationary while the faces fold inside it.
+            // The outer tile retains its separate, animated flag silhouette.
+            const artwork = create('g', { 'data-flap-artwork': 'true' }, tile);
+            const detailId = `flap-detail-${parent.dataset.key.replace(/[^a-z0-9-]/gi, '-')}`;
+            const clipId = `${detailId}-clip`, maskId = `${detailId}-mask`;
+            const padding = config.fontSize;
+            const bounds = { x: -padding, y: -padding,
+                width: tileWidth + 2 * padding, height: tileHeight + 2 * padding };
+            const seamTop = half - 0.55, notchTop = half - 2;
+            const notchWidth = 1.5, radius = 0.5;
+            // Two retained contours remove the UNION of seam and rounded notches.
+            // Overlapping hole subpaths would instead leave islands at their joins.
+            const upperContour = `M ${-padding} ${-padding}
+                H ${tileWidth + padding} V ${seamTop} H ${tileWidth}
+                V ${notchTop + radius}
+                A ${radius} ${radius} 0 0 0 ${tileWidth - radius} ${notchTop}
+                H ${tileWidth - notchWidth + radius}
+                A ${radius} ${radius} 0 0 0 ${tileWidth - notchWidth} ${notchTop + radius}
+                V ${seamTop} H ${notchWidth} V ${notchTop + radius}
+                A ${radius} ${radius} 0 0 0 ${notchWidth - radius} ${notchTop}
+                H ${radius} A ${radius} ${radius} 0 0 0 0 ${notchTop + radius}
+                V ${seamTop} H ${-padding} Z`;
+            const detailClip = create('clipPath', { id: clipId, clipPathUnits: 'userSpaceOnUse' }, definitions);
+            create('path', { d: upperContour }, detailClip);
+            create('path', { d: upperContour, transform: `translate(0 ${tileHeight}) scale(1 -1)` }, detailClip);
+            // Only partial strengths need a mask. Overscan its perimeter so it
+            // cannot add a second antialiased boundary along the card edges.
+            const mask = create('mask', {
+                id: maskId, maskUnits: 'userSpaceOnUse', maskContentUnits: 'userSpaceOnUse',
+                ...bounds, style: 'mask-type: luminance',
+            }, definitions);
+            create('rect', { ...bounds, fill: '#fff' }, mask);
+            const cutouts = create('g', { fill: '#000' }, mask);
+            for (const rect of detailRects) create('rect', rect, cutouts);
             function face(part) {
                 // Transform the wrapper AFTER clipping its child, so the glyph
                 // and its half-card rotate together about the centre hinge.
-                const wrapper = create('g', {}, tile);
+                const wrapper = create('g', {}, artwork);
                 const clipped = create('g', { 'clip-path': `url(#flap-${part})` }, wrapper);
                 const surface = swapVariant ? create('path', { class: 'flap-surface' }, clipped)
                     : create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045, class: 'flap-surface' }, clipped);
@@ -427,23 +467,39 @@
             }
             const top = face('top'), bottom = face('bottom');
             const fallingTop = face('top'), arrivingBottom = face('bottom');
-            let bottomMask;
-            if (swapVariant) {
-                const clip = create('clipPath', { id: `flap-outgoing-bottom-${column}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
-                bottomMask = create('rect', { y: half, width: tileWidth, height: half }, clip);
-                bottom.wrapper.setAttribute('clip-path', `url(#flap-outgoing-bottom-${column})`);
-            }
+            // A backing face only paints where the rotating leaf has exposed it.
+            // Drawing it beneath that leaf can leak a second glyph at the hinge.
+            const topExposureClip = create('clipPath', {
+                id: `${detailId}-top-exposure`, clipPathUnits: 'userSpaceOnUse',
+            }, definitions);
+            const topExposure = create('rect', { width: tileWidth, height: half }, topExposureClip);
+            top.wrapper.setAttribute('clip-path', `url(#${detailId}-top-exposure)`);
+            const bottomExposureClip = create('clipPath', {
+                id: `${detailId}-bottom-exposure`, clipPathUnits: 'userSpaceOnUse',
+            }, definitions);
+            const bottomExposure = create('rect', { y: half, width: tileWidth, height: half }, bottomExposureClip);
+            bottom.wrapper.setAttribute('clip-path', `url(#${detailId}-bottom-exposure)`);
             fallingTop.wrapper.dataset.face = 'outgoing-top';
             arrivingBottom.wrapper.dataset.face = 'incoming-bottom';
-            const details = create('g', { 'data-flap-details': 'true' }, tile);
-            create('rect', { x: 0, y: half - 0.55, width: tileWidth, height: 1.1, class: 'flap-detail' }, details);
-            for (const x of [0, tileWidth - 1.5]) {
-                create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, details);
-            }
-            let previousPair = '';
+            const details = create('g', { 'data-flap-details': 'true' }, artwork);
+            for (const rect of detailRects) create('rect', { ...rect, class: 'flap-detail' }, details);
+            let previousPair = '', previousDetailEffect = '';
             return (before, after, progress, cleanupProgress = 0, settledTopShade = 0.025) => {
                 const formingFlag = swapVariant && before !== after && after === flagFace;
-                details.setAttribute('opacity', swapVariant ? 1 - cleanupProgress : 1);
+                const detailVisibility = swapVariant ? 1 - cleanupProgress : 1;
+                details.setAttribute('opacity', detailVisibility);
+                const detailStrength = config.detailsVisible && config.detailMode === 'cutout'
+                    ? clamp(config.detailOpacity * detailVisibility, 0, 1) : 0;
+                const detailEffect = detailStrength === 0 ? 'none' : detailStrength === 1 ? 'clip' : 'mask';
+                if (detailEffect !== previousDetailEffect) {
+                    artwork.removeAttribute('clip-path');
+                    artwork.removeAttribute('mask');
+                    if (detailEffect === 'clip') artwork.setAttribute('clip-path', `url(#${clipId})`);
+                    else if (detailEffect === 'mask') artwork.setAttribute('mask', `url(#${maskId})`);
+                    previousDetailEffect = detailEffect;
+                }
+                // One group opacity keeps the overlapping seam/notches equally strong.
+                if (detailEffect === 'mask') cutouts.setAttribute('opacity', detailStrength);
                 if (swapVariant) {
                     const offset = -column * mix(flapAdvance, tileWidth, cleanupProgress);
                     // The face silhouettes close their inner corners too; changing
@@ -474,13 +530,11 @@
                 fallingTop.wrapper.setAttribute('display', topScale > 0.00001 ? 'inline' : 'none');
                 top.wrapper.setAttribute('display', formingFlag ? 'none' : 'inline');
                 arrivingBottom.wrapper.setAttribute('display', !formingFlag && bottomScale > 0.00001 ? 'inline' : 'none');
-                if (bottomMask) {
-                    // Match the incoming leaf's reveal boundary, but expose the
-                    // continuous flag below instead of painting separate star crops.
-                    const revealed = formingFlag ? half * bottomScale : 0;
-                    bottomMask.setAttribute('y', half + revealed);
-                    bottomMask.setAttribute('height', half - revealed);
-                }
+                topExposure.setAttribute('height', half * (1 - topScale));
+                // During flag formation, this exposes the continuous flag below.
+                const revealedBottom = half * bottomScale;
+                bottomExposure.setAttribute('y', half + revealedBottom);
+                bottomExposure.setAttribute('height', half - revealedBottom);
                 // Mechanical shading must not tint the flag's specified blue.
                 fallingTop.shadow.setAttribute('opacity', formingFlag || before === flagFace ? 0 : (1 - topScale) * 0.28);
                 // Settle the returning digit into its stationary shade so the
@@ -523,7 +577,7 @@
             root.style.setProperty('--flap-color', config.flapColor);
             root.style.setProperty('--flap-detail-color', config.detailColor);
             root.style.setProperty('--flap-detail-opacity', String(config.detailOpacity));
-            root.style.setProperty('--flap-detail-display', config.detailsVisible ? 'inline' : 'none');
+            root.style.setProperty('--flap-detail-display', config.detailsVisible && config.detailMode === 'colour' ? 'inline' : 'none');
             root.style.setProperty('--background-color', config.backgroundColor);
             root.style.setProperty('--text-color', config.textColor);
             root.style.setProperty('--flap-text-color', config.flapTextColor);
@@ -1020,6 +1074,7 @@
                 flapColor: normalizeColor(next.flapColor) || config.flapColor,
                 textColor: normalizeColor(next.textColor) || config.textColor,
                 flapTextColor: normalizeColor(next.flapTextColor) || config.flapTextColor,
+                detailMode: ['cutout', 'colour'].includes(next.detailMode) ? next.detailMode : config.detailMode,
                 detailColor: normalizeColor(next.detailColor) || config.detailColor,
                 detailOpacity: numeric(next.detailOpacity ?? config.detailOpacity, 0, 1, config.detailOpacity),
                 detailsVisible: typeof next.detailsVisible === 'boolean' ? next.detailsVisible : config.detailsVisible,

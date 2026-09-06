@@ -3,7 +3,6 @@
 (() => {
   const frames = [...document.querySelectorAll("iframe[src^=\"./assets/images/logotype.svg\"]")];
   const ready = new Set();
-  const appearance = document.querySelector(".theme-control select");
 
   function send(frame) {
     const style = getComputedStyle(document.documentElement);
@@ -23,7 +22,7 @@
     ready.add(frame);
     send(frame);
   });
-  appearance.addEventListener("change", () => ready.forEach(send));
+  window.addEventListener("i12e:themechange", () => ready.forEach(send));
   frames.forEach(frame => {
     const status = () => frame.contentWindow.postMessage({type: "i12e:command", action: "status"}, "*");
     frame.addEventListener("load", () => {

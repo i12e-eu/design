@@ -231,14 +231,24 @@
     font-weight: var(--weight-regular);
 }
 
-/* All page headers use the logotype reference's navigation pattern. */
+/* One header frame, independent of each page's content width. */
+html {
+    scrollbar-gutter: stable;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
 .page-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    width: calc(100% - 48px);
+    max-width: 1320px;
     gap: 1.25rem;
-    margin-bottom: 1.25rem;
+    margin: 24px auto 1.25rem;
     font-family: var(--font-prose);
     font-size: var(--type-body);
     font-weight: var(--weight-regular);
@@ -249,7 +259,15 @@
     margin: 0;
 }
 
-.page-tools, .page-nav {
+.page-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.page-nav {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -274,5 +292,34 @@
 }
 
 .page-header .theme-control label {
+    display: block;
     margin: 0;
+    white-space: nowrap;
+}
+
+.page-header .theme-control select {
+    display: block;
+    width: 6rem;
+    min-width: 6rem;
+}
+
+@media (max-width: 60em) {
+    .page-header {
+        grid-template-columns: minmax(0, 1fr);
+        width: calc(100% - 36px);
+        margin-top: 18px;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 40em) {
+    .page-tools {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem 1rem;
+    }
 }
