@@ -419,7 +419,8 @@
                                 title="Logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
                     </div>
                     <p class="caption">The last counter turn reveals a clean leading flag, with no intermediate hold.
-                        The i fades out and reappears as the cards move left and close into one seamless face.</p>
+                        The i fades out and reappears as the cards move left and close into one seamless face.
+                        With Loop enabled, the letters return around the flag before it folds back into 12.</p>
                     <fieldset class="flag-interaction" id="flag-interaction" disabled>
                         <legend>Flag interaction</legend>
                         <div class="flag-controls">
@@ -914,7 +915,9 @@
             timeline.setAttribute("aria-valuetext", `${(currentTime / 1000).toFixed(1)} seconds, ${state.state}`);
             document.getElementById("time").textContent = `${(currentTime / 1000).toFixed(1)} / ${(duration / 1000).toFixed(1)} s`;
             document.getElementById("current-state").textContent = state.state;
-            const phase = state.swapPhase === "swapping" ? "swapping" : state.phase;
+          const phase = state.loopPhase === "text" ? "returning text"
+            : state.loopPhase === "flaps" ? "restoring flaps"
+              : state.swapPhase === "swapping" ? "swapping" : state.phase;
             document.getElementById("phase").textContent = `${state.playing ? "Playing" : "Paused"} · ${phase} · step ${state.step} / ${state.totalSteps}`;
             document.getElementById("motion-note").hidden = !state.reducedMotion;
             playPause.textContent = state.playing ? "Pause" : "Play";

@@ -119,8 +119,8 @@
             )).toString(16).padStart(2, '0')).join('');
         }
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
-        let config, ease, duration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
-        let flagArtwork, joinedFlag, drawFlagFold, solidClips = [];
+        let config, ease, duration, forwardDuration, characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
+        let flagArtwork, joinedFlag, loopFlagCover, drawFlagFold, solidClips = [];
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
         let lastPublished = -Infinity, ready = false;
@@ -434,7 +434,7 @@
                 create('rect', { x, y: half - 2, width: 1.5, height: 4, rx: 0.5, class: 'flap-detail' }, details);
             }
             let previousPair = '';
-            return (before, after, progress, cleanupProgress = 0) => {
+            return (before, after, progress, cleanupProgress = 0, settledTopShade = 0.025) => {
                 const formingFlag = swapVariant && before !== after && after === flagFace;
                 details.setAttribute('opacity', swapVariant ? 1 - cleanupProgress : 1);
                 if (swapVariant) {
@@ -476,8 +476,12 @@
                 }
                 // Mechanical shading must not tint the flag's specified blue.
                 fallingTop.shadow.setAttribute('opacity', formingFlag || before === flagFace ? 0 : (1 - topScale) * 0.28);
-                arrivingBottom.shadow.setAttribute('opacity', after === flagFace ? 0 : (1 - bottomScale) * 0.28);
-                top.shadow.setAttribute('opacity', after === flagFace ? 0 : 0.025);
+                // Settle the returning digit into its stationary shade so the
+                // loop boundary cannot brighten/darken custom-coloured cards.
+                const arrivingShade = (1 - bottomScale) * 0.28
+                    + (swapVariant && before === flagFace ? bottomScale * 0.07 : 0);
+                arrivingBottom.shadow.setAttribute('opacity', after === flagFace ? 0 : arrivingShade);
+                top.shadow.setAttribute('opacity', after === flagFace ? 0 : settledTopShade);
                 const bottomContent = !changing || progress >= 1 ? after : before;
                 bottom.shadow.setAttribute('opacity', formingFlag || bottomContent === flagFace ? 0 : 0.07);
                 // Holds (including p=1 when manually sampled) show the new face.
@@ -523,9 +527,10 @@
             root.dataset.flapWidth = String(tileWidth);
             root.dataset.flapHeight = String(tileHeight);
             root.dataset.variant = String(variant);
-            // The final counter turn also completes the leading flag. Every
-            // variant reaches its finished state together, with no extra cycle.
-            duration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            // Only looping adds the return to 12. Other comparison previews hold
+            // their completed design through that return so every cycle stays aligned.
+            forwardDuration = count * (config.holdDuration + config.transitionDuration) + config.holdDuration;
+            duration = forwardDuration + (config.loop && (swapVariant || preview) ? 2 * config.transitionDuration : 0);
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
@@ -558,6 +563,9 @@
             }
             if (swapVariant) {
                 layer.append(sprites.get('letter:0').group);
+                // During the text return, letters pass behind one seamless flag.
+                loopFlagCover = create('g', { 'data-loop-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
+                create('use', { href: '#flag-interaction-eu' }, loopFlagCover);
             }
             const canvasHeight = preview ? 180 : 1000;
             root.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
@@ -591,7 +599,77 @@
             return { step, progress, eased: ease(progress) };
         }
 
+        function sampleReturn(time) {
+            if (!swapVariant || !config.loop || time < forwardDuration) return null;
+            if (time >= duration) return { phase: 'complete', progress: 1 };
+            const elapsed = time - forwardDuration;
+            return elapsed < config.transitionDuration
+                ? { phase: 'text', progress: elapsed / config.transitionDuration }
+                : { phase: 'flaps', progress: (elapsed - config.transitionDuration) / config.transitionDuration };
+        }
+
         function render(time) {
+            if (swapVariant) loopFlagCover.setAttribute('display', 'none');
+            // The exact boundary shares the initial render, including hidden faces.
+            if (config.loop && time >= duration) return renderCountdown(0);
+            const returning = sampleReturn(time);
+            if (returning) renderReturn(returning);
+            else renderCountdown(time);
+        }
+
+        function renderReturn({ phase, progress }) {
+            renderCountdown(count * (config.holdDuration + config.transitionDuration));
+            const final = models[count], initial = models[0];
+            const eased = ease(progress);
+            const compactEX = initial.get(`letter:${word.length - 1}`).x - (flapAdvance - tileWidth);
+            const flagX = phase === 'text' ? mix(0, initial.get('digit:0').x, eased) : initial.get('digit:0').x;
+            const shift = final.get(`letter:${word.length - 1}`).x - compactEX;
+            const cleanup = phase === 'text' ? 1 : 1 - eased;
+            updateFlagGeometry(cleanup, false, flagX);
+            for (const [key, sprite] of sprites) {
+                let x, alpha;
+                if (key.startsWith('digit:')) {
+                    const column = Number(key.split(':')[1]);
+                    x = flagX + column * mix(tileWidth, flapAdvance, 1 - cleanup);
+                    alpha = phase === 'flaps' && progress > 0 ? 1 : 0;
+                    // At the initial hold, a changing digit's top is its unshaded
+                    // outgoing leaf. Match that paint before the timeline wraps.
+                    const topShade = initial.get(key).character === models[1].get(key).character ? 0.025 : 0;
+                    sprite.draw(flagFace, initial.get(key).character, phase === 'flaps' ? eased : 0, cleanup, topShade);
+                } else {
+                    const index = Number(key.split(':')[1]);
+                    if (index === 0) {
+                        // Match the earlier i crossing: fade out, change sides while
+                        // invisible, then reveal on the same baseline.
+                        x = phase === 'text' && progress < 0.5
+                            ? Math.max(flagX, final.get(key).x - shift * eased) : initial.get(key).x;
+                        alpha = phase === 'flaps' ? 1 : ease(progress < 0.5 ? 1 - 2 * progress : 2 * progress - 1);
+                    } else if (index === word.length - 1) {
+                        x = phase === 'text' ? mix(final.get(key).x, compactEX, eased)
+                            : mix(compactEX, initial.get(key).x, eased);
+                        alpha = 1;
+                    } else {
+                        x = Math.max(flagX, final.get(key).x - shift * (phase === 'text' ? eased : 1));
+                        alpha = phase === 'text' ? ease(Math.max(0, 1 - 2 * progress)) : 0;
+                    }
+                    sprite.draw(word[index], word[index], 0);
+                }
+                sprite.group.setAttribute('transform', `translate(${x} 0)`);
+                sprite.group.setAttribute('opacity', alpha);
+                sprite.group.setAttribute('display', alpha > 0 ? 'inline' : 'none');
+            }
+            loopFlagCover.setAttribute('transform', `translate(${flagX} 0)`);
+            loopFlagCover.setAttribute('display', phase === 'text' || progress === 0 ? 'inline' : 'none');
+            root.style.setProperty('--rendered-flap-color', config.flapColor);
+            root.dataset.loopPhase = phase;
+            root.dataset.state = phase === 'flaps' ? 'i12e' : word;
+            root.dataset.displayState = phase === 'flaps' ? 'i12e' : 'i  e';
+            root.dataset.swapProgress = String(phase === 'text' ? 1 - eased : 0);
+            root.dataset.flagCleanupProgress = String(cleanup);
+        }
+
+        function renderCountdown(time) {
+            root.dataset.loopPhase = 'none';
             const { step, progress, eased } = sample(time);
             // Blend outgoing countdown faces during the last turn. Incoming flag
             // faces are always EU blue; sampling keeps edits and seeks deterministic.
@@ -664,6 +742,7 @@
         function flagTriggerAvailable() {
             return swapVariant && ready && !playing
                 && currentTime() >= count * (config.holdDuration + config.transitionDuration)
+                && !sampleReturn(currentTime())
                 && flagRun.phase !== 'outbound' && flagRun.phase !== 'returning';
         }
 
@@ -735,11 +814,16 @@
 
         function snapshot() {
             const time = currentTime();
-            const { step, progress } = sample(time);
+            const returning = sampleReturn(time);
+            const atLoopBoundary = config.loop && time >= duration;
+            const sampled = sample(atLoopBoundary ? 0 : time);
+            const step = returning && returning.phase !== 'complete' ? count + (returning.phase === 'text' ? 1 : 2) : sampled.step;
+            const progress = returning ? returning.progress : sampled.progress;
             return {
                 type: 'i12e:state', variant, config: { ...config }, duration, currentTime: time, playing,
-                step, totalSteps: lastModelStep,
-                state: stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
+                step, totalSteps: count + (swapVariant && config.loop ? 2 : 0),
+                state: returning && returning.phase === 'flaps' ? 'i12e' : stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
+                ...(swapVariant ? { loopPhase: returning?.phase || 'none' } : {}),
                 ...(flagVariant ? { flagPhase: step >= count ? 'flag' : step === count - 1 && progress > 0 ? 'turning' : 'countdown' } : {}),
                 ...(swapVariant ? { swapPhase: step === count ? 'complete' : step === count - 1 && progress > 0 ? 'swapping' : 'waiting' } : {}),
                 ...(swapVariant ? { flagInteraction: {
@@ -747,7 +831,7 @@
                     country: flagRun.phase === 'idle' ? config.flagCountry : flagRun.country,
                     mode: config.flagReturnMode,
                 } } : {}),
-                phase: time >= duration ? 'complete' : progress > 0 ? 'transition' : 'hold',
+                phase: time >= duration ? 'complete' : returning || progress > 0 ? 'transition' : 'hold',
             };
         }
         function publish() {
@@ -790,11 +874,23 @@
             publish();
         }
         function seek(time) { pause(numeric(time, 0, duration, currentTime())); }
-        function seekStep(step) { seek(Math.round(numeric(step, 0, lastModelStep, 0)) * (config.holdDuration + config.transitionDuration)); }
+        function seekStep(step) {
+            const target = Math.round(numeric(step, 0, count + (swapVariant && config.loop ? 2 : 0), 0));
+            seek(target > count ? forwardDuration + (target - count - 1) * config.transitionDuration
+                : target * (config.holdDuration + config.transitionDuration));
+        }
         function restart(options = {}) { play({ ...options, time: 0 }); }
         function remapTime(time, previousTiming) {
             const oldTime = clamp(time, 0, previousTiming.duration);
-            if (oldTime >= previousTiming.duration) return duration;
+            const oldForward = count * (previousTiming.holdDuration + previousTiming.transitionDuration) + previousTiming.holdDuration;
+            if (oldTime >= oldForward) {
+                // Enabling Loop at the completed logo starts the return. Disabling
+                // it during the return restores that completed logo. Timing edits
+                // preserve each return transition's progress without adding holds.
+                if (duration === forwardDuration || previousTiming.duration === oldForward) return forwardDuration;
+                return Math.min(duration, forwardDuration + (oldTime - oldForward)
+                    / previousTiming.transitionDuration * config.transitionDuration);
+            }
             if (previousTiming.holdDuration === config.holdDuration
                 && previousTiming.transitionDuration === config.transitionDuration) return clamp(oldTime, 0, duration);
             // Preserve the fraction of the current hold or transition.
@@ -852,7 +948,7 @@
             // Editing a completed animation must never invoke play()'s replay behaviour.
             if (resume && position < duration) play({ ...options, time: position });
             else {
-                if (position < count * (config.holdDuration + config.transitionDuration)) resetFlagInteraction();
+                if (position < count * (config.holdDuration + config.transitionDuration) || sampleReturn(position)) resetFlagInteraction();
                 else {
                     if (flagSpan) flagRun.startedAt = flagTime - flagProgress * flagSegmentDuration();
                     advanceFlagInteraction(flagTime);
