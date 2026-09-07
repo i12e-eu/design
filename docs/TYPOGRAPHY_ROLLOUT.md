@@ -95,7 +95,7 @@ at the user's request.
 | Semantic specimens and navigation                                                                                 | Source review and page checks confirm the requested heading levels, prose, emphasis, lists, code, quotations, tables, valid local links/fragments, unique IDs, labels, and script syntax.                                                                  |
 | Colour tools and themes                                                                                           | Tests cover all 27 roles in both appearances, valid/invalid edits, comparison thresholds, reset, exports, copying and selectable fallback. All 57 palette values remain approved defaults.                                                                 |
 | Export compatibility                                                                                              | Approved and experimental CSS/JSON agree; Tailwind exports compile using the pinned v4 package without losing approved tokens or framework defaults.                                                                                                       |
-| Logotype artwork and behaviour contracts                                                                          | Independent source review confirms the animation script, seven iframe contracts, and all 25 configuration controls match HEAD. logotype.svg is byte-identical to the baseline.                                                                             |
+| Logotype artwork and behaviour contracts                                                                          | Independent source review confirms the animation script, seven iframe contracts, and all 25 configuration controls match HEAD. assets/images/logo.svg is byte-identical to the baseline.                                                                   |
 | Responsive layout, keyboard use, real font loading/fallback, browser enlargement and spacing, native interactions | Browser validation skipped at the user's request. Automated checks do not prove these rendered or native behaviours.                                                                                                                                       |
 | Static implementation and scope                                                                                   | No app build, backend, persistence, hosting changes, commit, push, or deployment. The existing static pages use shared CSS and a deferred script. Test dependencies are development-only.                                                                  |
 
@@ -107,7 +107,7 @@ coverage. No unresolved source findings remain.
 
 ## Intentional exceptions
 
-logotype.svg remains independent brand artwork: Mono 400, 48px default,
+assets/images/logo.svg remains independent brand artwork: Mono 400, 48px default,
 12–96px configurable range, measured glyphs, animation and pixel/em geometry.
 Its Git blob hash remains d1adcd91d4aca190d70d75e59178f4de3ca26648.
 The decorative index “Aa” remains an oversized display specimen. Navigation card

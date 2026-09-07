@@ -16,6 +16,65 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## Static Logomark, 6 September 2026
+
+The shared asset is now `assets/images/logo.svg`. Existing variants 0–6 retain
+their IDs, and variant 7 is a static i12e mark in a new Logomark section between
+V1 and Draft. It matches variant 6's initial layout and preview sizing, with
+EU-blue cards. The subsequent refinement removes the stars from the logomark;
+stars remain part of the animated EU flags. Logomark and Logotype use one-word names.
+Shared visual controls still work; the card blue is fixed and only the lettering
+receives the original initial-state shading.
+
+The mark joins preview readiness and visual configuration but is excluded from
+playback broadcasts. Its own API also prevents motion: playback and seeking keep
+i12e at zero time, configuration never resumes playback, and flag interaction is
+unavailable. The state reports zero duration/steps, static phases and loop disabled.
+
+Independent in-memory validation covered 672 comparisons of variants 0–6 with
+their previous implementation, 72 static API/message/reduced-motion cases, eight
+geometry comparisons, 24 colour/shading/star cases and 40 detail cases. No animation
+frames were scheduled for the mark. Browser screenshots checked the section,
+standalone artwork, default/enlarged geometry, Light/Dark, star scaling, detail
+strength and fixed blue under custom flap colours. These checks preceded the
+separate transparency/framing change below. SVG XML and ten JavaScript blocks/files
+parsed successfully; no test files, packages or dependencies were added.
+
+## Transparent logo and compact framing, 6 September 2026
+
+The current change removes the SVG background paint, background configuration and
+editor control globally. The containing page supplies the background; appearance
+messages update only text, with existing manual text and flap colours retained.
+Compact framing is the default for `assets/images/logo.svg`; `preview=1` preserves
+the reference artboards. All seven animated variants and the static `variant=7`
+mark remain available. The reference SVG and appearance helper URLs share
+`v=transparent-1` to refresh both sides of the appearance-message contract together.
+The helper matches relative and absolute logo URLs and checks message source and
+expected origin. Legacy background fields have no effect. This supersedes the
+configurable-canvas and background-override descriptions below; earlier validation
+results remain historical and do not verify this change.
+
+The SVG declares support for both colour schemes and adopts explicit parent
+appearance messages for its canvas. This prevents the browser from painting an
+opaque fallback behind a transparent iframe when the page and SVG schemes differ.
+The plan site loads the shared appearance/helper scripts, uses the default logo
+framing in a 176 × 24px iframe on all three pages, and keeps production asset URLs.
+
+Local browser validation passed 3,958 sampled poses across variants 0–7, four
+geometry configurations, expansion/collapse, joined flags, and font fallback.
+Checks covered stable bounds, six country flags, ignored legacy background
+messages, manual text overrides, retained preview artboards and a simulated
+reduced-motion preference. Screenshots confirmed transparency over light, dark
+and checkerboard surfaces, including the browser canvas behaviour. Editor checks
+confirmed Light/Dark switching and retained text, card, flap-text and detail colour
+controls. All three plan pages displayed 176 × 24px frames with working navigation,
+current-page markers, visible keyboard focus and no desktop overflow. XML parsing,
+six JavaScript syntax checks, relative/absolute helper messaging checks and scoped
+whitespace checks passed. Test fixtures stayed outside the repositories.
+
+Publication remains pending. Publish the SVG, appearance helper and referencing
+HTML together with the shared cache version, refreshing CDN caches if applicable.
+
 ## Digit hinge correction and rendered checks, 6 September 2026
 
 Browser access now works following the user's permission correction. Earlier

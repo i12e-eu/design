@@ -86,16 +86,25 @@
             padding-bottom: 10px;
         }
 
-        .variant-heading {
+        .variant-heading,
+        .group-heading {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
             flex-wrap: wrap;
             gap: 16px;
+        }
+
+        .variant-heading {
             margin-bottom: 8px;
         }
 
-        .variant-heading a {
+        .group-heading h2 {
+            margin: 0;
+        }
+
+        .variant-heading a,
+        .group-heading a {
             white-space: normal;
             font: var(--type-ui-meta);
         }
@@ -560,10 +569,10 @@
         </div>
     </header>
 <div class="page">
-    <p class="appearance-note" id="appearance-note">Appearance updates the logo canvas and text. Custom colour choices
-        stay in place for this visit.</p>
+    <p class="appearance-note" id="appearance-note">The logo background is always transparent. Appearance updates the
+        text; custom text and flap colours stay in place for this visit.</p>
 
-    <p id="loading" role="status">Loading previews… 0 / 7</p>
+    <p id="loading" role="status">Loading previews… 0 / 8 (7 animated, 1 static)</p>
     <main class="workspace">
         <fieldset id="playback" class="playback-controls" disabled aria-label="Playback controls">
             <div class="playback-actions">
@@ -835,23 +844,11 @@
                                     flap
                                     edges.</p>
                             </div>
-                            <div class="control">
-                                <label for="background-color">Background color</label>
-                                <div class="input-row">
-                                    <input id="background-color" type="color" value="#ffffff"
-                                           data-config="backgroundColor"/>
-                                    <input id="background-color-hex" type="text" value="#ffffff"
-                                           pattern="#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})"
-                                           maxlength="7" required spellcheck="false" autocomplete="off"
-                                           aria-label="Background color hexadecimal value"
-                                           data-color-for="background-color"/>
-                                </div>
-                            </div>
                         </div>
                     </details>
-                    <p class="help">Controls update all seven previews in place, whether playing, paused, or finished.
+                    <p class="help">Visual controls update all seven animated previews and the static logomark in place.
                         Timing edits preserve the current step and progress. Use Restart to replay.
-                        Edit the CSS variables in assets/images/logotype.svg to save defaults.</p>
+                        Edit the CSS variables in assets/images/logo.svg to save defaults.</p>
                     <p class="help">Previews scale down to fit. Large dimensions or gaps can reduce the apparent text
                         size
                         and spacing.</p>
@@ -868,10 +865,11 @@
                 <article class="variant" aria-labelledby="variant-6-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-6-title">05 / EU Flag → Leading Flag</h3>
-                        <a href="./assets/images/logotype.svg?variant=6" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=6&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=6&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=6&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — EU flag swaps with the leading i" data-variant="6"></iframe>
                     </div>
                     <fieldset class="flag-interaction" id="flag-interaction" disabled>
@@ -915,65 +913,82 @@
                     </fieldset>
                 </article>
             </section>
+            <section class="variant-group" aria-labelledby="logomark-title">
+                <div class="group-title group-heading">
+                    <h2 id="logomark-title">Logomark</h2>
+                    <a href="./assets/images/logo.svg?variant=7&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                        SVG ↗</a>
+                </div>
+                <div class="artboard">
+                    <iframe src="./assets/images/logo.svg?variant=7&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
+                            title="Static logomark" data-variant="7" data-static></iframe>
+                </div>
+            </section>
             <section class="variant-group" aria-labelledby="draft-variants-title">
                 <h2 class="group-title" id="draft-variants-title">Draft</h2>
                 <article class="variant" aria-labelledby="variant-0-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-0-title">01 / Default</h3>
-                        <a href="./assets/images/logotype.svg?variant=0" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=0&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=0&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=0&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — default" data-variant="0"></iframe>
                     </div>
                 </article>
                 <article class="variant" aria-labelledby="variant-1-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-1-title">02 / Visible Digits</h3>
-                        <a href="./assets/images/logotype.svg?variant=1" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=1&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=1&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=1&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — visible digit flaps" data-variant="1"></iframe>
                     </div>
                 </article>
                 <article class="variant" aria-labelledby="variant-2-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-2-title">03 / Digits + Zero Tens</h3>
-                        <a href="./assets/images/logotype.svg?variant=2" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=2&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=2&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=2&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — digit flaps including leading zeros" data-variant="2"></iframe>
                     </div>
                 </article>
                 <article class="variant" aria-labelledby="variant-5-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-5-title">04 / Digits → EU Flag</h3>
-                        <a href="./assets/images/logotype.svg?variant=5" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=5&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=5&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=5&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — counter flaps become an EU flag" data-variant="5"></iframe>
                     </div>
                 </article>
                 <article class="variant" aria-labelledby="variant-3-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-3-title">06 / Visible Glyphs</h3>
-                        <a href="./assets/images/logotype.svg?variant=3" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=3&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=3&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=3&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — flaps for all visible glyphs" data-variant="3"></iframe>
                     </div>
                 </article>
                 <article class="variant" aria-labelledby="variant-4-title">
                     <div class="variant-heading">
                         <h3 class="type-card-title type-technical" id="variant-4-title">07 / Glyphs + Blank Slots</h3>
-                        <a href="./assets/images/logotype.svg?variant=4" target="_blank" rel="noopener">Open SVG ↗</a>
+                        <a href="./assets/images/logo.svg?variant=4&amp;v=transparent-1" target="_blank" rel="noopener">Open
+                            SVG ↗</a>
                     </div>
                     <div class="artboard">
-                        <iframe src="./assets/images/logotype.svg?variant=4&amp;preview=1&amp;autoplay=0"
+                        <iframe src="./assets/images/logo.svg?variant=4&amp;preview=1&amp;autoplay=0&amp;v=transparent-1"
                                 title="Logotype — flaps including blank character slots" data-variant="4"></iframe>
                     </div>
                 </article>
@@ -991,10 +1006,12 @@
     appearance.closest(".theme-control").hidden = false;
   })();
 </script>
-<script src="./assets/js/logo-appearance.js"></script>
+    <script src="./assets/js/logo-appearance.js?v=transparent-1"></script>
 <script>
     (() => {
         const frames = [...document.querySelectorAll("iframe[data-variant]")];
+      const animatedFrames = frames.filter(frame => !frame.hasAttribute("data-static"));
+      const playbackActions = new Set(["play", "pause", "restart", "seek", "seekStep", "triggerFlag"]);
         const transportIndex = frames.findIndex(frame => frame.dataset.variant === "6");
         const controls = document.getElementById("controls");
         const configInputs = [...document.querySelectorAll("[data-config]")];
@@ -1014,7 +1031,7 @@
         let lastConfig = "";
       let lastReadoutSize = "";
       const manualColors = new Map();
-      const themeProperties = {backgroundColor: "--color-surface", textColor: "--color-text-primary"};
+      const themeProperties = {textColor: "--color-text-primary"};
 
       function effectiveColor(key) {
         return manualColors.get(key) || getComputedStyle(document.documentElement).getPropertyValue(themeProperties[key]).trim().toLowerCase();
@@ -1030,7 +1047,8 @@
         // postMessage also supports the distinct origins of local file:// documents.
         function command(action, values = {}) {
             const message = {type: "i12e:command", action, ...values};
-            frames.forEach(frame => frame.contentWindow.postMessage(message, "*"));
+          const targets = playbackActions.has(action) ? animatedFrames : frames;
+          targets.forEach(frame => frame.contentWindow.postMessage(message, "*"));
         }
 
         // Every child receives the same absolute clock origin for synchronized playback.
@@ -1162,7 +1180,7 @@
 
         playPause.addEventListener("click", () => {
             if (latestState?.playing) {
-                // Seeking pauses every preview at the exact same logical time.
+              // Seeking pauses every animated preview at the exact same logical time.
                 command("seek", {time: sharedTime()});
             } else command("play", {startedAt: startedAt()});
         });
@@ -1260,7 +1278,7 @@
             readyFrames.add(index);
 
             if (!initialized) {
-                document.getElementById("loading").textContent = `Loading previews… ${readyFrames.size} / ${frames.length}`;
+              document.getElementById("loading").textContent = `Loading previews… ${readyFrames.size} / ${frames.length} (${animatedFrames.length} animated, ${frames.length - animatedFrames.length} static)`;
                 if (readyFrames.size < frames.length) return;
                 initialized = true;
                 controls.disabled = false;

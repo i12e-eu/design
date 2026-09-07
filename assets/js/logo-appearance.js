@@ -1,32 +1,59 @@
 /* Embedded artwork follows its reference page. A child announces readiness
    after loading its font; send the latest appearance once, then on changes. */
 (() => {
-  const frames = [...document.querySelectorAll("iframe[src^=\"./assets/images/logotype.svg\"]")];
-  const ready = new Set();
+  function logoURL(frame) {
+    try {
+      const url = new URL(frame.getAttribute("src"), document.baseURI);
+      return ["http:", "https:", "file:"].includes(url.protocol)
+      && /\/assets\/images\/(?:logo|logotype)\.svg$/.test(url.pathname) ? url : null;
+    } catch {
+      return null;
+    }
+  }
 
-  function send(frame) {
+  const frames = [...document.querySelectorAll("iframe[src]")]
+    .map(frame => ({frame, url: logoURL(frame), ready: false}))
+    .filter(entry => entry.url);
+
+  function currentURL(entry) {
+    const url = logoURL(entry.frame);
+    if (url?.href !== entry.url?.href) entry.ready = false;
+    entry.url = url;
+    return url;
+  }
+
+  function command(entry, message) {
+    const url = currentURL(entry);
+    if (!url || !entry.frame.contentWindow) return;
+    // file:// children have opaque origins; their exact window is still checked.
+    entry.frame.contentWindow.postMessage(message, url.origin === "null" ? "*" : url.origin);
+  }
+
+  function send(entry) {
+    if (!currentURL(entry) || !entry.ready) return;
     const style = getComputedStyle(document.documentElement);
-    frame.contentWindow.postMessage({
+    command(entry, {
       type: "i12e:command", action: "appearance",
       theme: document.documentElement.dataset.theme,
       colors: {
-        backgroundColor: style.getPropertyValue("--color-surface").trim().toLowerCase(),
         textColor: style.getPropertyValue("--color-text-primary").trim().toLowerCase(),
       },
-    }, "*");
+    });
   }
 
   window.addEventListener("message", event => {
-    const frame = frames.find(frame => frame.contentWindow === event.source);
-    if (!frame || event.data?.type !== "i12e:state" || ready.has(frame)) return;
-    ready.add(frame);
-    send(frame);
+    const entry = frames.find(entry => entry.frame.contentWindow === event.source);
+    if (!entry || event.data?.type !== "i12e:state") return;
+    const url = currentURL(entry);
+    if (!url || event.origin !== url.origin || entry.ready) return;
+    entry.ready = true;
+    send(entry);
   });
-  window.addEventListener("i12e:themechange", () => ready.forEach(send));
-  frames.forEach(frame => {
-    const status = () => frame.contentWindow.postMessage({type: "i12e:command", action: "status"}, "*");
-    frame.addEventListener("load", () => {
-      ready.delete(frame);
+  window.addEventListener("i12e:themechange", () => frames.forEach(send));
+  frames.forEach(entry => {
+    const status = () => command(entry, {type: "i12e:command", action: "status"});
+    entry.frame.addEventListener("load", () => {
+      entry.ready = false;
       status();
     });
     status();

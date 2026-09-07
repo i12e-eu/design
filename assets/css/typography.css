@@ -1,6 +1,6 @@
 /* i12e typography. Sizes are rem equivalents at the browser's default size.
    Numeric endpoints live here; typography.js supplies only width progress.
-   logotype.svg is independent brand artwork and does not load this stylesheet. */
+   logo.svg is independent brand artwork and does not load this stylesheet. */
 :root {
     --font-prose: "Roboto", Arial, sans-serif;
     --font-mono: "Roboto Mono", ui-monospace, monospace;

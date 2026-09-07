@@ -7,12 +7,25 @@ historical rollout have been removed; do not recreate them for this static site.
 ## Design-reference follow-up, 6 September 2026
 
 The approved follow-up supersedes this rollout's white-artboard and unchanged-SVG
-constraints. Embedded logos now follow the page surface/text roles while explicit
-colour edits remain in place. Official flags and approved palette values retain
-their colours. The SVG accepts an `appearance` message that updates paint without
-rebuilding geometry; `configure` accepts optional `editedColors` metadata. Original
-rollout evidence below remains historical. Current follow-up evidence and pending
-browser validation are recorded in [PROGRESS.md](PROGRESS.md).
+constraints. The logo SVG is always transparent: its background paint, configuration
+field and editor control are removed. The containing page supplies the visible
+background, while embedded logo text follows the page text role unless explicitly
+customized. Official flags and approved palette values retain their colours. The SVG
+accepts a text-only `appearance` message that updates paint without rebuilding
+geometry; legacy background fields are ignored. `configure` retains optional
+`editedColors` metadata for the remaining colour controls. Original
+rollout evidence below remains historical. Current follow-up validation is
+recorded in [PROGRESS.md](PROGRESS.md).
+
+`assets/images/logo.svg` uses compact framing by default; `preview=1` retains the
+reference artboard framing. All seven animated variants and the static `variant=7`
+mark remain available. Reference pages version the SVG and appearance helper URLs
+together with `v=transparent-1` so a new text-only helper does not reuse an older
+cached SVG that requires a background colour in appearance messages.
+Publish the SVG, helper and referencing HTML together, and refresh any CDN caches
+for those assets in the same release. The plan pages retain production asset URLs;
+the local preview server substitutes local design URLs only in its responses.
+No publication has been performed for this change.
 
 The subsequent approved flap correction makes seams and edge notches true
 cut-outs by default. Full-strength vector clipping reveals the underlying canvas
@@ -71,7 +84,7 @@ remain required. The separate Typography rollout keeps its own acceptance record
 
 Keep white artboards and the white index preview in both appearances. Preserve
 black/white logotype defaults, user-selected artwork colours, hinge shadows, EU
-emblem `#003399`/`#FFCC00`, and factual national-flag colours. `logotype.svg` must
+emblem `#003399`/`#FFCC00`, and factual national-flag colours. `assets/images/logo.svg` must
 remain byte-for-byte unchanged. Its standalone parameters, frozen `window.i12e`
 API, seven-variant messaging/synchronisation and reduced-motion behaviour remain.
 Instructional colour examples and picker bootstrap values are audited for

@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" fill="none"
+<svg xmlns="http://www.w3.org/2000/svg" width="410" height="72" viewBox="-2 -2 410 72" fill="none"
      role="img" aria-labelledby="title description">
     <title id="title">i12e.eu / logotype</title>
     <desc id="description">A logotype expanding from i12e to infrastructure. Seven selectable styles compare a plain
         countdown with mechanical split-flap digits, characters, blank places, and an EU flag that can swap with the
-        leading i.
+        leading i. A static logomark combines the initial i12e with EU-blue split-flap cards.
     </desc>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&amp;display=swap');
@@ -12,16 +12,21 @@
         variant=0: default; 1: visible digits; 2: both digit places;
         3: visible cells; 4: all 15 cells, including blanks; 5: persistent digit flaps becoming an EU flag;
         6: the last counter turn reveals a clean flag directly in the leading position.
+        7: a permanently static i12e logomark with EU-blue cards.
         On the completed variant 6, i12e.triggerFlag() folds to the selected country;
         it returns automatically or on a second trigger, separately from the countdown.
-        Use ?variant=2 to open a standalone option; &amp;preview=1 crops the canvas.
+        The default canvas fits the complete animation and is always transparent.
+        Use ?variant=2 to open a standalone option; &amp;preview=1 uses the reference artboard.
         Embed as an iframe/object or open directly to enable scripting and the
         linked font. An img/CSS image displays the static text fallback. */
         :root {
         display: block;
         width: 100%;
         height: 100%;
-        background: var(--background-color);
+        background: transparent;
+        /* Match the embedding page so the browser does not paint an opaque
+        fallback canvas when its colour scheme differs from the document. */
+        color-scheme: light dark;
         --transition-duration: 250ms;
         --hold-duration: 250ms;
         --expanded-hold-duration: 2500ms;
@@ -41,13 +46,15 @@
         --flap-detail-color: #ffffff; /* Used only in colour mode. */
         --flap-detail-opacity: 1; /* Detail strength: 0 = absent; 1 = fully cut out or painted. */
         --flap-details-visible: 1; /* Toggle without losing the chosen opacity. */
-        --background-color: #ffffff;
         --flap-text-color: #f8faff;
         --text-color: #000000;
         --loop: 1;
         --flag-country: NL;
         --flag-return-mode: auto; /* auto = timed return; manual = trigger to return. */
         --flag-hold-duration: 5000ms;
+        }
+        @media (prefers-color-scheme: dark) {
+        :root { --text-color: #f7f7f7; }
         }
         text {
         fill: var(--text-color);
@@ -63,11 +70,9 @@
         opacity: var(--flap-detail-opacity);
         display: var(--flap-detail-display, inline);
         }
-        #background { fill: var(--background-color); }
         #fallback { letter-spacing: var(--character-spacing); }
     </style>
 
-    <rect id="background" width="1000" height="1000"/>
     <text id="fallback" x="0" y="55">infrastructure</text>
     <defs id="flap-definitions"/>
     <g id="logotype" visibility="hidden" aria-hidden="true"/>
@@ -85,9 +90,11 @@
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
         const numeric = (value, min, max, fallback) => Number.isFinite(Number(value))
             ? clamp(Number(value), min, max) : fallback;
-        const variant = Math.round(numeric(params.get('variant') || 0, 0, 6, 0));
+        const variant = Math.round(numeric(params.get('variant') || 0, 0, 7, 0));
         const flagVariant = variant === 5 || variant === 6;
         const swapVariant = variant === 6;
+        const markVariant = variant === 7;
+        const shapedFlaps = swapVariant || markVariant;
         const flagFace = '@eu-flag';
         const euFlagBlue = '#003399';
         // Native proportions; RGB approximates cloth standards where necessary.
@@ -107,6 +114,7 @@
         const lastModelStep = count;
         const preview = params.get('preview') === '1';
         const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+        const appearancePreference = matchMedia('(prefers-color-scheme: dark)');
         const clock = () => performance.timeOrigin + performance.now();
         const mix = (a, b, progress) => a + (b - a) * progress;
         function normalizeColor(value) {
@@ -157,15 +165,14 @@
                 flapOuterGap: numeric(parseFloat(value('--flap-outer-gap')), 0, 96, 4),
                 leadingFlagGap: numeric(parseFloat(value('--leading-flag-gap')), 0, 96, 16),
                 starScale: numeric(value('--eu-star-scale') || 1, 0.25, 4, 1),
-                flapColor: normalizeColor(value('--flap-color')) || '#000000',
+                flapColor: markVariant ? euFlagBlue : normalizeColor(value('--flap-color')) || '#000000',
                 textColor: normalizeColor(value('--text-color')) || '#000000',
                 flapTextColor: normalizeColor(value('--flap-text-color')) || '#f8faff',
                 detailMode: value('--flap-detail-mode') === 'colour' ? 'colour' : 'cutout',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
                 detailOpacity: numeric(value('--flap-detail-opacity') || 1, 0, 1, 1),
                 detailsVisible: value('--flap-details-visible') !== '0',
-                backgroundColor: normalizeColor(value('--background-color')) || '#ffffff',
-                loop: value('--loop') === '1',
+                loop: !markVariant && value('--loop') === '1',
                 flagCountry: countryFor(value('--flag-country')),
                 flagReturnMode: value('--flag-return-mode') === 'manual' ? 'manual' : 'auto',
                 flagHoldDuration: numeric(milliseconds(value('--flag-hold-duration')), 0, 10000, 5000),
@@ -215,7 +222,7 @@
                 // The visible-digits variant drops the tens card below ten.
                 // Other split-flap counters keep both places until their final turn.
                 const digits = remaining ? String(remaining).padStart(variant > 1 ? 2 : 1, '0')
-                    : flagVariant ? '00' : '';
+                    : flagVariant || markVariant ? '00' : '';
                 const digitWidth = variant === 0 ? glyphWidth : tileWidth;
                 const digitAdvance = variant === 0 ? characterAdvance : swapped ? tileWidth : flapAdvance;
                 const counterWidth = digits.length ? digitWidth + (digits.length - 1) * digitAdvance : 0;
@@ -404,7 +411,7 @@
 
         function makeFlap(parent, column) {
             const tile = create('g', { 'data-flap': 'true' }, parent);
-            if (swapVariant) tile.setAttribute('clip-path', `url(#flap-solid-${column})`);
+            if (shapedFlaps) tile.setAttribute('clip-path', `url(#flap-solid-${column})`);
             const half = tileHeight / 2;
             const detailRects = [
                 { x: 0, y: half - 0.55, width: tileWidth, height: 1.1 },
@@ -449,7 +456,7 @@
                 // and its half-card rotate together about the centre hinge.
                 const wrapper = create('g', {}, artwork);
                 const clipped = create('g', { 'clip-path': `url(#flap-${part})` }, wrapper);
-                const surface = swapVariant ? create('path', { class: 'flap-surface' }, clipped)
+                const surface = shapedFlaps ? create('path', { class: 'flap-surface' }, clipped)
                     : create('rect', { width: tileWidth, height: tileHeight, rx: config.fontSize * 0.045, class: 'flap-surface' }, clipped);
                 const glyph = text('', clipped, { x: tileWidth / 2, class: 'flap-text' });
                 const shadow = create('rect', { width: tileWidth, height: tileHeight, fill: '#000', opacity: 0 }, clipped);
@@ -462,9 +469,16 @@
             }
             function setFace(face, content) {
                 const flag = content === flagFace;
-                face.surface.setAttribute('class', flag ? 'eu-flag-surface' : 'flap-surface');
+                face.surface.setAttribute('class', flag || markVariant ? 'eu-flag-surface' : 'flap-surface');
                 face.glyph.textContent = flag ? '' : content;
                 if (face.stars) face.stars.setAttribute('display', flag ? 'inline' : 'none');
+            }
+            function shadeFace(face, opacity) {
+                if (markVariant) {
+                    // Preserve the initial digit shading without tinting the
+                    // logomark's EU-blue cards.
+                    face.glyph.style.setProperty('fill', mixColor(config.flapTextColor, '#000000', opacity));
+                } else face.shadow.setAttribute('opacity', opacity);
             }
             const top = face('top'), bottom = face('bottom');
             const fallingTop = face('top'), arrivingBottom = face('bottom');
@@ -501,13 +515,15 @@
                 }
                 // One group opacity keeps the overlapping seam/notches equally strong.
                 if (detailEffect === 'mask') cutouts.setAttribute('opacity', detailStrength);
-                if (swapVariant) {
-                    const offset = -column * mix(flapAdvance, tileWidth, cleanupProgress);
+                if (shapedFlaps) {
                     // The face silhouettes close their inner corners too; changing
                     // only the outer clip would leave a notch in the blue surfaces.
                     for (const face of [top, bottom, fallingTop, arrivingBottom]) {
                         face.surface.setAttribute('d', flapOutline(column, cleanupProgress));
                     }
+                }
+                if (swapVariant) {
+                    const offset = -column * mix(flapAdvance, tileWidth, cleanupProgress);
                     for (const stars of [top.stars, bottom.stars, fallingTop.stars, arrivingBottom.stars]) {
                         stars.setAttribute('transform', `translate(${offset} 0)`);
                     }
@@ -537,15 +553,15 @@
                 bottomExposure.setAttribute('y', half + revealedBottom);
                 bottomExposure.setAttribute('height', half - revealedBottom);
                 // Mechanical shading must not tint the flag's specified blue.
-                fallingTop.shadow.setAttribute('opacity', formingFlag || before === flagFace ? 0 : (1 - topScale) * 0.28);
+                shadeFace(fallingTop, formingFlag || before === flagFace ? 0 : (1 - topScale) * 0.28);
                 // Settle the returning digit into its stationary shade so the
                 // loop boundary cannot brighten/darken custom-coloured cards.
                 const arrivingShade = (1 - bottomScale) * 0.28
                     + (swapVariant && before === flagFace ? bottomScale * 0.07 : 0);
-                arrivingBottom.shadow.setAttribute('opacity', after === flagFace ? 0 : arrivingShade);
-                top.shadow.setAttribute('opacity', after === flagFace ? 0 : settledTopShade);
+                shadeFace(arrivingBottom, after === flagFace ? 0 : arrivingShade);
+                shadeFace(top, after === flagFace ? 0 : settledTopShade);
                 const bottomContent = !changing || progress >= 1 ? after : before;
-                bottom.shadow.setAttribute('opacity', formingFlag || bottomContent === flagFace ? 0 : 0.07);
+                shadeFace(bottom, formingFlag || bottomContent === flagFace ? 0 : 0.07);
                 // Holds (including p=1 when manually sampled) show the new face.
                 setFace(bottom, bottomContent);
                 tile.dataset.flipping = String(changing && progress > 0 && progress < 1);
@@ -555,7 +571,7 @@
             };
         }
 
-        const automaticColors = {backgroundColor: true, textColor: true};
+        const automaticColors = {textColor: true};
         let appearanceColors = null;
         function applyAutomaticColors() {
             if (!appearanceColors) return;
@@ -565,10 +581,12 @@
         }
         function applyAppearance(data) {
             if (!['light', 'dark'].includes(data.theme)) return;
-            const backgroundColor = normalizeColor(data.colors?.backgroundColor);
             const textColor = normalizeColor(data.colors?.textColor);
-            if (!backgroundColor || !textColor) return;
-            appearanceColors = {backgroundColor, textColor};
+            if (!textColor) return;
+            // An explicit parent appearance also governs the embedded canvas,
+            // even if the device preference or a manual text override differs.
+            root.style.colorScheme = data.theme;
+            appearanceColors = {textColor};
             applyAutomaticColors();
             applyColors();
             publish();
@@ -579,7 +597,6 @@
             root.style.setProperty('--flap-detail-color', config.detailColor);
             root.style.setProperty('--flap-detail-opacity', String(config.detailOpacity));
             root.style.setProperty('--flap-detail-display', config.detailsVisible && config.detailMode === 'colour' ? 'inline' : 'none');
-            root.style.setProperty('--background-color', config.backgroundColor);
             root.style.setProperty('--text-color', config.textColor);
             root.style.setProperty('--flap-text-color', config.flapTextColor);
         }
@@ -618,22 +635,30 @@
             // The collapsed hold replaces the initial step hold on automatic repeats.
             // Loading and Restart still begin at zero with the original startup timing.
             loopStartTime = hasCollapse ? config.holdDuration : 0;
+            if (markVariant) {
+                hasCollapse = false;
+                duration = expansionEnd = collapseStart = collapseEnd = loopStartTime = 0;
+            }
             ease = easingFor(config.easing) || easingFor('ease-in-out');
 
             for (const [part, y] of [['top', 0], ['bottom', tileHeight / 2]]) {
                 const clip = create('clipPath', { id: `flap-${part}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
                 create('rect', { x: 0, y, width: tileWidth, height: tileHeight / 2 }, clip);
             }
-            if (swapVariant) {
+            if (shapedFlaps) {
                 for (const column of [0, 1]) {
                     const clip = create('clipPath', { id: `flap-solid-${column}`, clipPathUnits: 'userSpaceOnUse' }, definitions);
-                    solidClips.push(create('path', {}, clip));
+                    solidClips.push(create('path', { d: flapOutline(column, 0) }, clip));
                 }
+            }
+            if (swapVariant) {
                 const joinedClip = create('clipPath', { id: 'flag-joined', clipPathUnits: 'userSpaceOnUse' }, definitions);
                 create('rect', { width: 2 * tileWidth, height: tileHeight, rx: config.fontSize * 0.045 }, joinedClip);
             }
             if (flagVariant) makeFlagArtwork();
-            models = Array.from({ length: count + 1 }, (_, step) => layout(count - step, swapVariant && step === count));
+            // The mark uses the same fit reference as variant 6, so its initial
+            // geometry stays identical even when custom dimensions need scaling.
+            models = Array.from({ length: count + 1 }, (_, step) => layout(count - step, shapedFlaps && step === count));
             if (swapVariant) {
                 // Paint a single flag first; outgoing digit faces above it mask
                 // and reveal the artwork without a white seam during movement.
@@ -654,23 +679,83 @@
                 loopFlagCover = create('g', { 'data-loop-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
                 create('use', { href: '#flag-interaction-eu' }, loopFlagCover);
             }
-            const canvasHeight = preview ? 180 : 1000;
-            root.setAttribute('viewBox', `0 0 1000 ${canvasHeight}`);
-            root.setAttribute('height', canvasHeight);
-            document.getElementById('background').setAttribute('height', canvasHeight);
-            // Keep the reference origin in standalone mode; add preview gutters.
-            const inset = preview ? 24 : 0;
-            // Fit the widest actual state, keeping scale stable across the animation.
+            // Reference artboards retain their existing scale, including the mark's
+            // comparison with variant 6. Default embeds fit only their actual artwork.
             const contentWidth = Math.max(...models.flatMap(model => [...model].map(([key, cell]) =>
                 cell.x + (sprites.get(key).flapped ? tileWidth : glyphWidth))));
-            const scale = Math.min(1, (1000 - inset * 2) / contentWidth, (canvasHeight - inset * 2) / tileHeight);
-            const y = preview ? (canvasHeight - tileHeight * scale) / 2
-                : Math.max(0, config.fontSize * 55 / 48 - baseline) * scale;
-            layer.setAttribute('transform', `translate(${inset} ${y}) scale(${scale})`);
+            let scale = 1;
+            if (preview) {
+                scale = Math.min(1, 952 / contentWidth, 132 / tileHeight);
+                root.setAttribute('viewBox', '0 0 1000 180');
+                root.setAttribute('width', '1000');
+                root.setAttribute('height', '180');
+                layer.setAttribute('transform', `translate(24 ${(180 - tileHeight * scale) / 2}) scale(${scale})`);
+            } else {
+                const bounds = animationBounds();
+                const padding = 2;
+                const width = bounds.right - bounds.left + 2 * padding;
+                const height = bounds.bottom - bounds.top + 2 * padding;
+                root.setAttribute('viewBox', `${bounds.left - padding} ${bounds.top - padding} ${width} ${height}`);
+                root.setAttribute('width', String(width));
+                root.setAttribute('height', String(height));
+                layer.removeAttribute('transform');
+            }
             root.dataset.fitScale = String(scale);
             root.dataset.contentWidth = String(contentWidth);
             fallback.setAttribute('visibility', 'hidden');
             layer.setAttribute('visibility', 'visible');
+        }
+
+        function animationBounds() {
+            const bounds = {left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity};
+            const measure = text('', layer);
+            const glyphs = new Map();
+            function include(key, character, x) {
+                let box;
+                if (sprites.get(key).flapped) box = {x: 0, y: 0, width: tileWidth, height: tileHeight};
+                else {
+                    if (!glyphs.has(character)) {
+                        measure.textContent = character;
+                        const rect = measure.getBBox();
+                        glyphs.set(character, {x: rect.x, y: rect.y, width: rect.width, height: rect.height});
+                    }
+                    box = glyphs.get(character);
+                }
+                bounds.left = Math.min(bounds.left, x + box.x);
+                bounds.right = Math.max(bounds.right, x + box.x + box.width);
+                bounds.top = Math.min(bounds.top, box.y);
+                bounds.bottom = Math.max(bounds.bottom, box.y + box.height);
+            }
+            // All ordinary motion interpolates between these poses without overshoot.
+            for (const model of markVariant ? [models[0]] : models) {
+                for (const [key, cell] of model) include(key, cell.character, cell.x);
+            }
+            if (swapVariant) {
+                const initial = models[0], before = models[count - 1], final = models[count];
+                // The final i/n crossing uses positions derived from the third letter,
+                // which can extend beyond model endpoints with custom spacing.
+                for (const model of [before, final]) {
+                    const firstX = model.get('letter:2').x - 2 * characterAdvance;
+                    include('letter:0', word[0], firstX);
+                    include('letter:1', word[1], firstX + characterAdvance);
+                }
+                if (hasCollapse) {
+                    const lastKey = `letter:${word.length - 1}`;
+                    const compactEX = initial.get(lastKey).x - (flapAdvance - tileWidth);
+                    const shift = final.get(lastKey).x - compactEX;
+                    include(lastKey, word.at(-1), compactEX);
+                    for (let index = 0; index < word.length - 1; index++) {
+                        const key = `letter:${index}`;
+                        // max(flagX, movingX) can have an interior minimum. Zero is
+                        // its safe lower bound; retain glyph overhang at that edge.
+                        include(key, word[index], 0);
+                        const endX = final.get(key).x - (index === 0 ? shift / 2 : shift + config.flapOuterGap);
+                        include(key, word[index], Math.max(initial.get('digit:0').x, endX));
+                    }
+                }
+            }
+            measure.remove();
+            return bounds;
         }
 
         function currentTime() {
@@ -698,6 +783,10 @@
         }
 
         function render(time) {
+            if (markVariant) {
+                renderCountdown(0);
+                return;
+            }
             if (swapVariant) loopFlagCover.setAttribute('display', 'none');
             // The exact boundary shares the initial render, including hidden faces.
             if (config.loop && time >= duration) {
@@ -918,6 +1007,11 @@
         }
 
         function snapshot() {
+            if (markVariant) return {
+                type: 'i12e:state', variant, config: { ...config }, duration: 0, loopStartTime: 0,
+                currentTime: 0, playing: false, animationPhase: 'static', phase: 'static',
+                step: 0, totalSteps: 0, state: 'i12e', reducedMotion: motionPreference.matches,
+            };
             const time = currentTime();
             const returning = sampleReturn(time);
             const atLoopBoundary = config.loop && time >= duration;
@@ -964,6 +1058,7 @@
         }
         function play(options = {}) {
             if (!ready) return;
+            if (markVariant) { pause(0); return; }
             resetFlagInteraction();
             cancelAnimationFrame(frame);
             position = Number.isFinite(options.time) ? clamp(options.time, 0, duration) : currentTime();
@@ -977,7 +1072,7 @@
         }
         function pause(time) {
             resetFlagInteraction();
-            position = Number.isFinite(time) ? clamp(time, 0, duration) : currentTime();
+            position = markVariant ? 0 : Number.isFinite(time) ? clamp(time, 0, duration) : currentTime();
             playing = false;
             cancelAnimationFrame(frame);
             render(position);
@@ -1072,21 +1167,21 @@
                 flapOuterGap: numeric(next.flapOuterGap ?? config.flapOuterGap, 0, 96, config.flapOuterGap),
                 leadingFlagGap: numeric(next.leadingFlagGap ?? config.leadingFlagGap, 0, 96, config.leadingFlagGap),
                 starScale: numeric(next.starScale ?? config.starScale, 0.25, 4, config.starScale),
-                flapColor: normalizeColor(next.flapColor) || config.flapColor,
+                flapColor: markVariant ? euFlagBlue : normalizeColor(next.flapColor) || config.flapColor,
                 textColor: normalizeColor(next.textColor) || config.textColor,
                 flapTextColor: normalizeColor(next.flapTextColor) || config.flapTextColor,
                 detailMode: ['cutout', 'colour'].includes(next.detailMode) ? next.detailMode : config.detailMode,
                 detailColor: normalizeColor(next.detailColor) || config.detailColor,
                 detailOpacity: numeric(next.detailOpacity ?? config.detailOpacity, 0, 1, config.detailOpacity),
                 detailsVisible: typeof next.detailsVisible === 'boolean' ? next.detailsVisible : config.detailsVisible,
-                backgroundColor: normalizeColor(next.backgroundColor) || config.backgroundColor,
-                loop: typeof next.loop === 'boolean' ? next.loop : config.loop,
+                loop: !markVariant && (typeof next.loop === 'boolean' ? next.loop : config.loop),
                 flagCountry: countryFor(next.flagCountry, config.flagCountry),
                 flagReturnMode: ['auto', 'manual'].includes(next.flagReturnMode) ? next.flagReturnMode : config.flagReturnMode,
                 flagHoldDuration: numeric(next.flagHoldDuration ?? config.flagHoldDuration, 0, 10000, config.flagHoldDuration),
             };
             applyAutomaticColors();
             build();
+            if (markVariant) { pause(0); return; }
             position = remapTime(time, previousTiming);
             // Removing an active collapsed hold continues at the next expansion.
             // Editing a paused endpoint must never invoke play()'s replay behaviour.
@@ -1106,11 +1201,22 @@
 
         async function init() {
             config = readDefaults();
+            if (markVariant) {
+                document.getElementById('title').textContent = 'i12e.eu / logomark';
+                document.getElementById('description').textContent = 'A static i12e logomark with EU-blue split-flap digits.';
+                fallback.textContent = 'i12e';
+            }
             try { await document.fonts.load(`400 ${config.fontSize}px "Roboto Mono"`, word + '0123456789'); }
             catch { /* A network failure retains the monospaced system fallback. */ }
             build();
             ready = true;
             window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, triggerFlag, getState: snapshot });
+            appearancePreference.addEventListener('change', () => {
+                if (appearanceColors || !automaticColors.textColor) return;
+                config.textColor = appearancePreference.matches ? '#f7f7f7' : '#000000';
+                applyColors();
+                publish();
+            });
             window.addEventListener('message', event => {
                 if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
                 const data = event.data;
@@ -1125,7 +1231,8 @@
                 else if (data.action === 'status') publish();
             });
             motionPreference.addEventListener('change', event => { if (event.matches) seek(duration); });
-            if (motionPreference.matches) seek(duration);
+            if (markVariant) pause(0);
+            else if (motionPreference.matches) seek(duration);
             else if (params.get('autoplay') === '0') seek(0);
             else play();
         }
