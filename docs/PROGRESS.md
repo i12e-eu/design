@@ -16,6 +16,38 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## File-preview appearance messaging, 7 September 2026
+
+The user reported white text remaining after selecting Light when opening
+`logotype.html` directly from disk. The appearance helper assumed that a file
+URL's origin and its SVG message origin serialized identically. An isolated
+execution of the previous helper reproduced a failure when the URL origin was
+`file://` and the message origin was `null`: the readiness message was rejected,
+no appearance updates were sent, and the initial status request used `file://`
+instead of the required wildcard destination.
+
+The helper now sends to `*` whenever the recognized SVG URL uses `file:`. It
+accepts the matching URL origin or `null` / `file://` for those file frames, while
+still matching the exact source window. HTTP (S) retains exact origin matching.
+The existing readiness and iframe-load handling sends the latest selected theme.
+No SVG artwork, API, playback or custom-colour semantics changed. Both reference
+pages now version all logo/helper references with `v=appearance-3`, superseding
+the cache version in the earlier appearance notes below.
+
+Independent in-memory execution passed 19 message-flow scenarios covering local
+origin serializations, wildcard destinations, strict HTTP (S) origins, rejected
+senders, delayed readiness, duplicate messages, reloads and changed iframe URLs.
+The helper sends only status and appearance messages. JavaScript syntax,
+whitespace and all 19 versioned asset references passed. In the HTTP browser,
+three consecutive appearance changes updated all eight SVGs to the expected
+black/white surrounding text while flap lettering stayed white; the seven
+animations kept playing and the Logomark stayed static. A screenshot confirmed
+the Light rendering. No tests or dependencies were added.
+
+Direct local-file browser verification remains pending: the browser automation
+URL policy explicitly blocks `file://` pages. Source and simulated message-flow
+checks cannot establish the rendered result in the user's browser.
+
 ## SVG appearance modes and EU blue defaults, 7 September 2026
 
 `assets/images/logo.svg` now owns its Light/Dark palette. Surrounding text defaults

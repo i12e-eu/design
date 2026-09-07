@@ -35,12 +35,22 @@ the selected mode, so unrelated form edits cannot import the website's text pale
 `assets/images/logo.svg` uses compact framing by default; `preview=1` retains the
 reference artboard framing. All seven animated variants and the static `variant=7`
 mark remain available. Reference pages version the SVG and appearance helper URLs
-together with `v=appearance-2` so a mode-only helper does not reuse an older
+together with `v=appearance-3` so the file-compatible helper does not reuse an older
 cached SVG that requires supplied colours in appearance messages.
 Publish the SVG, helper and referencing HTML together, and refresh any CDN caches
 for those assets in the same release. The plan pages retain production asset URLs;
 the local preview server substitutes local design URLs only in its responses.
 No publication has been performed for this change.
+
+The file-preview correction selects the wildcard message destination by the
+`file:` protocol, rather than assuming its URL origin is `null`. For recognized
+file SVG frames, readiness accepts the matching URL origin or the local
+serializations `null` and `file://`, always checking the exact source window.
+HTTP (S) origin matching stays strict. Delayed or reloaded frames receive the
+currently selected appearance through the existing readiness exchange. This does
+not change the SVG's palette, public API, animation or custom-colour overrides.
+Direct `file://` visual verification requires the user's browser because the
+automation URL policy blocks opening local-file pages.
 
 The subsequent approved flap correction makes seams and edge notches true
 cut-outs by default. Full-strength vector clipping reveals the underlying canvas

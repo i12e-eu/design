@@ -25,8 +25,8 @@
   function command(entry, message) {
     const url = currentURL(entry);
     if (!url || !entry.frame.contentWindow) return;
-    // file:// children have opaque origins; their exact window is still checked.
-    entry.frame.contentWindow.postMessage(message, url.origin === "null" ? "*" : url.origin);
+    // File destinations require '*', regardless of how URL.origin is serialized.
+    entry.frame.contentWindow.postMessage(message, url.protocol === "file:" ? "*" : url.origin);
   }
 
   function send(entry) {
@@ -41,7 +41,12 @@
     const entry = frames.find(entry => entry.frame.contentWindow === event.source);
     if (!entry || event.data?.type !== "i12e:state") return;
     const url = currentURL(entry);
-    if (!url || event.origin !== url.origin || entry.ready) return;
+    if (!url || entry.ready) return;
+    // Browsers can serialize a file message's origin differently from URL.origin.
+    // This exception applies only to a recognized file SVG in its exact window.
+    const matchesOrigin = event.origin === url.origin
+      || (url.protocol === "file:" && ["null", "file://"].includes(event.origin));
+    if (!matchesOrigin) return;
     entry.ready = true;
     send(entry);
   });
