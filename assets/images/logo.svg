@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="410" height="72" viewBox="-2 -2 410 72" fill="none"
+<svg xmlns="http://www.w3.org/2000/svg" width="406" height="68" viewBox="0 0 406 68"
+     preserveAspectRatio="xMinYMin meet" fill="none"
      role="img" aria-labelledby="title description">
     <title id="title">i12e.eu / logotype</title>
     <desc id="description">A logotype expanding from i12e to infrastructure. Seven selectable styles compare a plain
@@ -15,8 +16,9 @@
         7: a permanently static i12e logomark with EU-blue cards.
         On the completed variant 6, i12e.triggerFlag() folds to the selected country;
         it returns automatically or on a second trigger, separately from the countdown.
-        The default canvas fits the complete animation and is always transparent.
+        The default canvas fits the complete animation without padding and is always transparent.
         Use ?variant=2 to open a standalone option; &amp;preview=1 uses the reference artboard.
+        State messages report intrinsicSize so the embedding page can match its container's ratio.
         Appearance follows the embedding page or device until i12e.setAppearance()
         selects light or dark; auto resumes that preference. configure({textColor: null})
         clears a custom text colour and restores the selected appearance palette.
@@ -139,6 +141,7 @@
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
         let config, ease, duration, expansionEnd, collapseStart, collapseEnd, loopStartTime, hasCollapse;
         let characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
+        let intrinsicSize;
         let flagArtwork, joinedFlag, loopFlagCover, drawFlagFold, solidClips = [];
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
@@ -694,18 +697,21 @@
             let scale = 1;
             if (preview) {
                 scale = Math.min(1, 952 / contentWidth, 132 / tileHeight);
+                intrinsicSize = {width: 1000, height: 180};
                 root.setAttribute('viewBox', '0 0 1000 180');
                 root.setAttribute('width', '1000');
                 root.setAttribute('height', '180');
+                root.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                 layer.setAttribute('transform', `translate(24 ${(180 - tileHeight * scale) / 2}) scale(${scale})`);
             } else {
                 const bounds = animationBounds();
-                const padding = 2;
-                const width = bounds.right - bounds.left + 2 * padding;
-                const height = bounds.bottom - bounds.top + 2 * padding;
-                root.setAttribute('viewBox', `${bounds.left - padding} ${bounds.top - padding} ${width} ${height}`);
+                const width = bounds.right - bounds.left;
+                const height = bounds.bottom - bounds.top;
+                intrinsicSize = {width, height};
+                root.setAttribute('viewBox', `${bounds.left} ${bounds.top} ${width} ${height}`);
                 root.setAttribute('width', String(width));
                 root.setAttribute('height', String(height));
+                root.setAttribute('preserveAspectRatio', 'xMinYMin meet');
                 layer.removeAttribute('transform');
             }
             root.dataset.fitScale = String(scale);
@@ -1018,6 +1024,7 @@
             const appearance = {mode: appearanceMode, theme: appearanceTheme};
             if (markVariant) return {
                 type: 'i12e:state', variant, appearance, config: { ...config }, duration: 0, loopStartTime: 0,
+                intrinsicSize: {...intrinsicSize},
                 currentTime: 0, playing: false, animationPhase: 'static', phase: 'static',
                 step: 0, totalSteps: 0, state: 'i12e', reducedMotion: motionPreference.matches,
             };
@@ -1032,6 +1039,7 @@
                 : returning ? `collapse-${returning.phase}` : time >= expansionEnd ? 'expanded-hold' : 'expansion';
             return {
                 type: 'i12e:state', variant, appearance, config: { ...config }, duration, loopStartTime,
+                intrinsicSize: {...intrinsicSize},
                 currentTime: time, playing, animationPhase,
                 step, totalSteps: count + (swapVariant && config.loop ? 2 : 0),
                 state: returning && returning.phase === 'flaps' ? 'i12e' : stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
