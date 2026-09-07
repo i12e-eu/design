@@ -278,6 +278,14 @@ body {
     font: var(--type-brand);
 }
 
+/* Keep embedded logo canvases transparent in the page's selected appearance. */
+.page-header .site-logo,
+.logo-preview iframe,
+.variant-group iframe {
+    background: transparent;
+    color-scheme: inherit;
+}
+
 /* Reserve the full animation canvas so surrounding content stays still. */
 .page-header .site-logo {
     display: block;
@@ -287,7 +295,6 @@ body {
     height: auto;
     aspect-ratio: var(--logo-aspect-ratio, 22 / 3);
     border: 0;
-    background: transparent;
     pointer-events: none;
 }
 
