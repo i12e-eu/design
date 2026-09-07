@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
     <link rel="stylesheet" href="./assets/css/colours.css"/>
-    <link rel="stylesheet" href="./assets/css/typography.css"/>
+    <link rel="stylesheet" href="./assets/css/typography.css?v=document-title-1"/>
     <script src="./assets/js/typography.js" defer></script>
     <style>
         :root {
@@ -52,10 +52,6 @@
             color: var(--color-text-secondary);
             max-width: var(--measure);
             font: var(--type-ui-meta);
-        }
-
-        .brand span {
-            color: var(--color-text-secondary);
         }
 
         .workspace {
@@ -194,7 +190,7 @@
             margin: 0;
         }
 
-        iframe {
+        .variant-group iframe {
             display: block;
             width: 100%;
             height: 100%;
@@ -551,7 +547,13 @@
 </head>
 <body>
     <header class="page-header">
-        <h1 class="brand">i12e.eu <span>/ logotype</span></h1>
+        <div class="brand">
+            <iframe class="site-logo" data-logo-fit
+                    src="./assets/images/logo.svg?variant=6&amp;autoplay=1&amp;v=header-logo-1"
+                    title="Animated i12e.eu logotype"
+                    width="256" height="35" tabindex="-1" aria-hidden="true"></iframe>
+            <span class="brand-name">i12e.eu</span>
+        </div>
         <div class="page-tools">
             <nav class="page-nav" aria-label="Design references">
                 <a href="./index.html">Design Index</a>
@@ -568,12 +570,13 @@
             </div>
         </div>
     </header>
-<div class="page">
+    <main class="page" aria-labelledby="page-title">
+        <h1 class="document-title" id="page-title">Logotype</h1>
     <p class="appearance-note" id="appearance-note">Light uses black text; Dark uses white. Flaps default to EU blue
         with white lettering, on a transparent canvas. Custom colours stay in place for this visit.</p>
 
     <p id="loading" role="status">Loading previews… 0 / 8 (7 animated, 1 static)</p>
-    <main class="workspace">
+        <div class="workspace">
         <fieldset id="playback" class="playback-controls" disabled aria-label="Playback controls">
             <div class="playback-actions">
                 <div class="transport">
@@ -997,8 +1000,8 @@
         </section>
 
 
+        </div>
     </main>
-</div>
 
 <script>
   (() => {
@@ -1007,7 +1010,7 @@
     appearance.closest(".theme-control").hidden = false;
   })();
 </script>
-    <script src="./assets/js/logo-appearance.js?v=appearance-3"></script>
+    <script src="./assets/js/logo-appearance.js?v=header-logo-1"></script>
 <script>
     (() => {
         const frames = [...document.querySelectorAll("iframe[data-variant]")];

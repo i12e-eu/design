@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
     <link rel="stylesheet" href="./assets/css/colours.css"/>
-    <link rel="stylesheet" href="./assets/css/typography.css"/>
+    <link rel="stylesheet" href="./assets/css/typography.css?v=document-title-1"/>
     <script src="./assets/js/typography.js" defer></script>
     <style>
         :root {
@@ -31,7 +31,7 @@
             margin: 0 auto;
         }
 
-        .brand span, .variant {
+        .variant {
             color: var(--color-text-secondary);
         }
 
@@ -79,7 +79,7 @@
             background: var(--color-surface);
         }
 
-        iframe {
+        .logo-preview iframe {
             display: block;
             width: 100%;
             min-width: 640px;
@@ -198,7 +198,13 @@
 </head>
 <body>
     <header class="page-header">
-        <h1 class="brand">i12e.eu <span>/ design</span></h1>
+        <div class="brand">
+            <iframe class="site-logo" data-logo-fit
+                    src="./assets/images/logo.svg?variant=6&amp;autoplay=1&amp;v=header-logo-1"
+                    title="Animated i12e.eu logotype"
+                    width="256" height="35" tabindex="-1" aria-hidden="true"></iframe>
+            <span class="brand-name">i12e.eu</span>
+        </div>
         <div class="page-tools">
             <nav class="page-nav" aria-label="Design references">
                 <a href="./index.html" aria-current="page">Design Index</a>
@@ -215,7 +221,8 @@
             </div>
         </div>
     </header>
-<main>
+    <main aria-labelledby="page-title">
+        <h1 class="document-title" id="page-title">Design</h1>
     <ul class="designs" aria-label="Design elements">
         <li>
             <a class="design-link" href="./logotype.html" aria-labelledby="logotype-title logotype-variant">
@@ -275,6 +282,6 @@
     appearance.closest(".theme-control").hidden = false;
   })();
 </script>
-    <script src="./assets/js/logo-appearance.js?v=appearance-3"></script>
+    <script src="./assets/js/logo-appearance.js?v=header-logo-1"></script>
 </body>
 </html>

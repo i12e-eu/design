@@ -207,6 +207,16 @@
     font: var(--type-brand);
 }
 
+/* Page titles live in the document flow, independently of artwork and specimens. */
+.document-title {
+    margin: 0 0 0.65em;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--type-h1);
+    font-weight: var(--weight-regular);
+    line-height: var(--heading-leading);
+}
+
 :where(button, input, select, textarea, output) {
     font: var(--type-ui-control);
 }
@@ -256,7 +266,50 @@ body {
 }
 
 .page-header .brand {
+    position: relative;
+    display: block;
+    width: 16rem;
+    max-width: 100%;
+    min-width: 0;
     margin: 0;
+    color: var(--color-text-primary);
+    font: var(--type-brand);
+}
+
+/* Reserve the full animation canvas so surrounding content stays still. */
+.page-header .site-logo {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    aspect-ratio: var(--logo-aspect-ratio, 22 / 3);
+    border: 0;
+    background: transparent;
+    pointer-events: none;
+}
+
+.page-header .brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Preserve the Plan Index link over the logo without nesting an iframe in it. */
+.page-header .brand-link {
+    position: absolute;
+    inset: 0;
+}
+
+.page-header .brand-link:focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 4px;
 }
 
 .page-tools {
