@@ -30,6 +30,8 @@
     --type-ui-label: var(--weight-heading) 0.875rem/1.6 var(--font-prose);
     --type-ui-meta: var(--weight-regular) 0.875rem/1.6 var(--font-prose);
     --type-brand: var(--weight-regular) 1rem/1.6 var(--font-mono);
+    /* Major page regions use one viewport H1 unit, independent of specimens. */
+    --header-content-gap: var(--type-h1);
     font-family: var(--font-prose);
     /* Fluid text belongs on body, never on html: rem keeps its browser basis. */
     font-size: 100%;
@@ -258,7 +260,7 @@ body {
     width: calc(100% - 48px);
     max-width: 1320px;
     gap: 1.25rem;
-    margin: 24px auto 1.25rem;
+    margin: 24px auto var(--header-content-gap);
     font-family: var(--font-prose);
     font-size: var(--type-body);
     font-weight: var(--weight-regular);

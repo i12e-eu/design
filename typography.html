@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
     <link rel="stylesheet" href="./assets/css/colours.css"/>
-    <link rel="stylesheet" href="./assets/css/typography.css?v=document-title-1"/>
+    <link rel="stylesheet" href="./assets/css/typography.css?v=header-spacing-1"/>
     <script src="./assets/js/typography.js" defer></script>
     <style>
         :root {
@@ -830,6 +830,10 @@
                 <p>Every page uses the same header pattern: the looping primary SVG logotype and navigation.
                     The logo occupies up to 16rem of width, with roughly 24px lettering and a stable canvas that
                     fits its complete animation. Page titles sit in the document flow below the header.
+                    A shared 2–3rem gap (32–48px at the default browser size) separates the header from the next
+                    page region, following the viewport H1 scale. This applies to titles, workspaces, and format
+                    toolbars; document wrappers add no extra top spacing. It is larger than paragraph spacing
+                    to distinguish site navigation from page content, and remains independent of preview controls.
                     Plain Roboto navigation links follow the 16–18px body scale, with a separate Appearance control.
                     All four design links stay visible in the same order: Design Index, Logotype, Typography, and
                     Colours. The current page is identified with aria-current. Navigation follows the
