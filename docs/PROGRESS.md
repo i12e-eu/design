@@ -16,6 +16,45 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## Transparent SVG startup, 7 September 2026
+
+The logo SVG declares `background: transparent; color-scheme: light dark` on its
+root before its remote font stylesheet loads. All four pages declare their
+supported colour schemes before scripts/styles, and shared logo iframe styles
+inherit the page's scheme with a transparent background.
+
+Early paint declarations alone did not resolve the user's refresh flash. The
+appearance helper now runs synchronously in the head and enables an initial
+`visibility: hidden` rule before any logo iframe is parsed. It binds the frames
+at DOMContentLoaded and requests status to recover any earlier readiness messages.
+Each frame becomes visible only after a validated SVG state reports the current
+page theme. Its space remains reserved throughout; ordinary theme switches do
+not hide already-visible artwork. Reloads require a fresh acknowledgment. The
+existing source/origin checks, intrinsic sizing, animation and SVG APIs remain.
+
+With JavaScript disabled or the helper unavailable, the hiding marker is never
+set and the existing fallback remains visible. A stalled SVG/font load stays
+hidden until ready; there is no timer that exposes an unfinished iframe. Real
+font failures retain the SVG's existing system-font fallback. This gate applies
+to the website embeds; standalone SVGs retain their existing startup behaviour.
+
+SVG and helper URLs use `v=logo-canvas-2`; shared stylesheet URLs use
+`v=css-type-1-logo-canvas-2` to include the concurrent CSS typography update.
+Publish the shared assets and all four referencing pages together.
+
+Verification: 24 in-memory message/lifecycle scenarios passed, including delayed
+readiness, current-theme acknowledgments, duplicate messages, reload ordering,
+file-origin variants, rejected senders and header sizing. HTTP checks showed all
+13 embeds becoming visible with transparent canvases; Light/Dark screenshots
+and SVG paint checks preserved black/white surrounding text, white flap letters,
+animated playback and the static Logomark. Source/XML, syntax and reference
+checks use existing runtimes only; no test files or dependencies were added.
+
+HTTP refresh screenshots do not prove that every intermediate browser frame is
+free of flashing. A full cold-cache/slow-font visual run and direct local-file
+refresh confirmation remain pending. The browser automation URL policy blocks
+`file://` pages, so direct-file verification requires the user's browser.
+
 ## File-preview appearance messaging, 7 September 2026
 
 The user reported white text remaining after selecting Light when opening

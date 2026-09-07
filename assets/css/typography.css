@@ -1,5 +1,5 @@
 /* i12e typography. Sizes are rem equivalents at the browser's default size.
-   Numeric endpoints live here; typography.js supplies only width progress.
+   CSS resolves page sizes before first paint; JS measures specimen containers only.
    logo.svg is independent brand artwork and does not load this stylesheet. */
 :root {
     --font-prose: "Roboto", Arial, sans-serif;
@@ -54,6 +54,37 @@
     --type-h6: calc((var(--type-h6-min) + (var(--type-h6-max) - var(--type-h6-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
     --type-body: calc((var(--type-body-min) + (var(--type-body-max) - var(--type-body-min)) * var(--type-progress)) * var(--type-scale) * 1rem);
     --type-small: calc(var(--type-small-size) * var(--type-scale) * 1rem);
+}
+
+/* Stable, rem-relative page sizes for older engines without CSS trigonometry. */
+@media (min-width: 768px) {
+    :root {
+        --type-progress: calc((768 - var(--type-width-min)) / (var(--type-width-max) - var(--type-width-min)));
+    }
+}
+
+@media (min-width: 960px) {
+    :root {
+        --type-progress: calc((960 - var(--type-width-min)) / (var(--type-width-max) - var(--type-width-min)));
+    }
+}
+
+@media (min-width: 1200px) {
+    :root {
+        --type-progress: 1;
+    }
+}
+
+/* tan(atan2(y, x)) yields y/x without newer CSS length-division syntax.
+   Keeping progress unitless preserves both the pixel width bounds and rem scaling.
+   This runs in CSS on initial load and resize; page sizing never waits for JS. */
+@supports (font-size: calc(1rem * tan(atan2(1px, 1px)))) {
+    :root {
+        --type-progress: clamp(0, tan(atan2(
+                calc(100vw - var(--type-width-min) * 1px),
+                calc((var(--type-width-max) - var(--type-width-min)) * 1px)
+        )), 1);
+    }
 }
 
 :where(body, [data-type-scope="container"]) {
@@ -284,6 +315,13 @@ body {
 .variant-group iframe {
     background: transparent;
     color-scheme: inherit;
+}
+
+/* The helper enables this before any iframe is parsed. Reserve its layout while
+   its document and fonts load, then reveal the SVG after its theme confirmation. */
+[data-logo-loading] iframe[src*="assets/images/logo.svg"]:not([data-logo-ready]),
+[data-logo-loading] iframe[src*="assets/images/logotype.svg"]:not([data-logo-ready]) {
+    visibility: hidden;
 }
 
 /* Reserve the full animation canvas so surrounding content stays still. */
