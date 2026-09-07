@@ -1,4 +1,4 @@
-/* Embedded artwork follows its reference page. A child announces readiness
+/* Embedded artwork owns its palette and follows the reference page's mode. A child announces readiness
    after loading its font; send the latest appearance once, then on changes. */
 (() => {
   function logoURL(frame) {
@@ -31,13 +31,9 @@
 
   function send(entry) {
     if (!currentURL(entry) || !entry.ready) return;
-    const style = getComputedStyle(document.documentElement);
     command(entry, {
       type: "i12e:command", action: "appearance",
       theme: document.documentElement.dataset.theme,
-      colors: {
-        textColor: style.getPropertyValue("--color-text-primary").trim().toLowerCase(),
-      },
     });
   }
 

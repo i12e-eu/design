@@ -17,6 +17,9 @@
         it returns automatically or on a second trigger, separately from the countdown.
         The default canvas fits the complete animation and is always transparent.
         Use ?variant=2 to open a standalone option; &amp;preview=1 uses the reference artboard.
+        Appearance follows the embedding page or device until i12e.setAppearance()
+        selects light or dark; auto resumes that preference. configure({textColor: null})
+        clears a custom text colour and restores the selected appearance palette.
         Embed as an iframe/object or open directly to enable scripting and the
         linked font. An img/CSS image displays the static text fallback. */
         :root {
@@ -41,20 +44,22 @@
         --flap-gap: 0.035; /* Edge-to-edge gap between cards in em. */
         --flap-outer-gap: 4px; /* Space between the flap group and adjacent plain letters. */
         --leading-flag-gap: 16px; /* Final space between the leading flag and the word. */
-        --flap-color: #000000; /* Customizable countdown cards; the flag keeps its official colors. */
+        --flap-color: #003399; /* EU blue by default; custom cards do not recolour the flag. */
         --flap-detail-mode: cutout; /* cutout reveals the canvas; colour paints the details. */
         --flap-detail-color: #ffffff; /* Used only in colour mode. */
         --flap-detail-opacity: 1; /* Detail strength: 0 = absent; 1 = fully cut out or painted. */
         --flap-details-visible: 1; /* Toggle without losing the chosen opacity. */
-        --flap-text-color: #f8faff;
-        --text-color: #000000;
+        --flap-text-color: #ffffff;
+        --text-color-light: #000000;
+        --text-color-dark: #ffffff;
+        --text-color: var(--text-color-light);
         --loop: 1;
         --flag-country: NL;
         --flag-return-mode: auto; /* auto = timed return; manual = trigger to return. */
         --flag-hold-duration: 5000ms;
         }
         @media (prefers-color-scheme: dark) {
-        :root { --text-color: #f7f7f7; }
+        :root { --text-color: var(--text-color-dark); }
         }
         text {
         fill: var(--text-color);
@@ -165,9 +170,9 @@
                 flapOuterGap: numeric(parseFloat(value('--flap-outer-gap')), 0, 96, 4),
                 leadingFlagGap: numeric(parseFloat(value('--leading-flag-gap')), 0, 96, 16),
                 starScale: numeric(value('--eu-star-scale') || 1, 0.25, 4, 1),
-                flapColor: markVariant ? euFlagBlue : normalizeColor(value('--flap-color')) || '#000000',
+                flapColor: markVariant ? euFlagBlue : normalizeColor(value('--flap-color')) || euFlagBlue,
                 textColor: normalizeColor(value('--text-color')) || '#000000',
-                flapTextColor: normalizeColor(value('--flap-text-color')) || '#f8faff',
+                flapTextColor: normalizeColor(value('--flap-text-color')) || '#ffffff',
                 detailMode: value('--flap-detail-mode') === 'colour' ? 'colour' : 'cutout',
                 detailColor: normalizeColor(value('--flap-detail-color')) || '#ffffff',
                 detailOpacity: numeric(value('--flap-detail-opacity') || 1, 0, 1, 1),
@@ -572,24 +577,27 @@
         }
 
         const automaticColors = {textColor: true};
-        let appearanceColors = null;
+        let appearanceMode = 'auto';
+        let appearanceTheme = appearancePreference.matches ? 'dark' : 'light';
         function applyAutomaticColors() {
-            if (!appearanceColors) return;
-            for (const key of Object.keys(automaticColors)) {
-                if (automaticColors[key]) config[key] = appearanceColors[key];
+            if (automaticColors.textColor) {
+                const colour = getComputedStyle(root).getPropertyValue(`--text-color-${appearanceTheme}`);
+                config.textColor = normalizeColor(colour) || (appearanceTheme === 'dark' ? '#ffffff' : '#000000');
             }
         }
-        function applyAppearance(data) {
-            if (!['light', 'dark'].includes(data.theme)) return;
-            const textColor = normalizeColor(data.colors?.textColor);
-            if (!textColor) return;
-            // An explicit parent appearance also governs the embedded canvas,
-            // even if the device preference or a manual text override differs.
-            root.style.colorScheme = data.theme;
-            appearanceColors = {textColor};
+        function setAppearance(mode) {
+            if (!['light', 'dark', 'auto'].includes(mode)) return false;
+            appearanceMode = mode;
+            appearanceTheme = mode === 'auto' ? (appearancePreference.matches ? 'dark' : 'light') : mode;
+            root.dataset.appearance = appearanceMode;
+            root.dataset.theme = appearanceTheme;
+            // Match the resolved appearance without painting an opaque canvas.
+            // The SVG owns its palette; older parent-supplied colours are ignored.
+            root.style.colorScheme = appearanceTheme;
             applyAutomaticColors();
             applyColors();
-            publish();
+            if (ready) publish();
+            return true;
         }
 
         function applyColors() {
@@ -1007,8 +1015,9 @@
         }
 
         function snapshot() {
+            const appearance = {mode: appearanceMode, theme: appearanceTheme};
             if (markVariant) return {
-                type: 'i12e:state', variant, config: { ...config }, duration: 0, loopStartTime: 0,
+                type: 'i12e:state', variant, appearance, config: { ...config }, duration: 0, loopStartTime: 0,
                 currentTime: 0, playing: false, animationPhase: 'static', phase: 'static',
                 step: 0, totalSteps: 0, state: 'i12e', reducedMotion: motionPreference.matches,
             };
@@ -1022,7 +1031,7 @@
             const animationPhase = time >= duration ? 'complete' : collapsedHold ? 'collapsed-hold'
                 : returning ? `collapse-${returning.phase}` : time >= expansionEnd ? 'expanded-hold' : 'expansion';
             return {
-                type: 'i12e:state', variant, config: { ...config }, duration, loopStartTime,
+                type: 'i12e:state', variant, appearance, config: { ...config }, duration, loopStartTime,
                 currentTime: time, playing, animationPhase,
                 step, totalSteps: count + (swapVariant && config.loop ? 2 : 0),
                 state: returning && returning.phase === 'flaps' ? 'i12e' : stateAt(count - Math.min(count, step)), reducedMotion: motionPreference.matches,
@@ -1131,8 +1140,9 @@
             // The reference sends its whole form, plus explicit edit intent.
             // Existing direct callers supplying a colour still make an override.
             const editedColors = Array.isArray(options.editedColors) ? options.editedColors : Object.keys(next);
-            for (const key of editedColors) {
-                if (key in automaticColors && normalizeColor(next[key])) automaticColors[key] = false;
+            for (const key of Object.keys(automaticColors)) {
+                if (next[key] === null) automaticColors[key] = true;
+                else if (editedColors.includes(key) && normalizeColor(next[key])) automaticColors[key] = false;
             }
             const flagTime = clock();
             advanceFlagInteraction(flagTime);
@@ -1201,6 +1211,7 @@
 
         async function init() {
             config = readDefaults();
+            setAppearance(appearanceMode);
             if (markVariant) {
                 document.getElementById('title').textContent = 'i12e.eu / logomark';
                 document.getElementById('description').textContent = 'A static i12e logomark with EU-blue split-flap digits.';
@@ -1208,20 +1219,19 @@
             }
             try { await document.fonts.load(`400 ${config.fontSize}px "Roboto Mono"`, word + '0123456789'); }
             catch { /* A network failure retains the monospaced system fallback. */ }
+            // Re-resolve in case the preference changed while the font loaded.
+            setAppearance(appearanceMode);
             build();
             ready = true;
-            window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, triggerFlag, getState: snapshot });
+            window.i12e = Object.freeze({ play, pause, restart, seek, seekStep, configure, setAppearance, triggerFlag, getState: snapshot });
             appearancePreference.addEventListener('change', () => {
-                if (appearanceColors || !automaticColors.textColor) return;
-                config.textColor = appearancePreference.matches ? '#f7f7f7' : '#000000';
-                applyColors();
-                publish();
+                if (appearanceMode === 'auto') setAppearance('auto');
             });
             window.addEventListener('message', event => {
                 if (event.source !== window.parent || event.data?.type !== 'i12e:command') return;
                 const data = event.data;
                 if (data.action === 'configure') configure(data.config, data);
-                else if (data.action === 'appearance') applyAppearance(data);
+                else if (data.action === 'appearance') setAppearance(data.theme);
                 else if (data.action === 'seek') seek(data.time);
                 else if (data.action === 'seekStep') seekStep(data.step);
                 else if (data.action === 'play') play(data);

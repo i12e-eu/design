@@ -6,22 +6,37 @@ historical rollout have been removed; do not recreate them for this static site.
 
 ## Design-reference follow-up, 6 September 2026
 
+The 7 September appearance update makes the SVG the source of its own palette:
+outside lettering is exactly `#000000` in Light and `#FFFFFF` in Dark, with
+`#003399` flap backgrounds and `#FFFFFF` flap lettering in both modes. These are
+base paints; mechanical shading remains. EU flags keep `#003399` / `#FFCC00`.
+The static Logomark keeps fixed EU blue and has no stars.
+
 The approved follow-up supersedes this rollout's white-artboard and unchanged-SVG
 constraints. The logo SVG is always transparent: its background paint, configuration
 field and editor control are removed. The containing page supplies the visible
-background, while embedded logo text follows the page text role unless explicitly
-customized. Official flags and approved palette values retain their colours. The SVG
-accepts a text-only `appearance` message that updates paint without rebuilding
-geometry; legacy background fields are ignored. `configure` retains optional
+background, while embedded logo text follows the SVG's selected appearance unless
+explicitly customized. Official flags and the website palette retain their colours.
+The SVG accepts a mode-only `appearance` message that updates paint without rebuilding
+geometry; legacy `colors` and background fields are ignored. `configure` retains optional
 `editedColors` metadata for the remaining colour controls. Original
 rollout evidence below remains historical. Current follow-up validation is
 recorded in [PROGRESS.md](PROGRESS.md).
 
+`i12e.setAppearance("light" | "dark" | "auto")` selects an explicit mode or resumes
+the embedding page/device preference. Auto is the standalone default. The existing
+`{type: "i12e:command", action: "appearance", theme: "dark"}` message uses the same
+implementation. Invalid modes are ignored. State messages and `getState()` include
+`appearance: {mode, theme}`, distinguishing the requested mode from resolved Light/Dark.
+Explicit custom colours survive theme changes; `configure({textColor: null})`
+clears the text override. The preview displays SVG-reported colours and sends only
+the selected mode, so unrelated form edits cannot import the website's text palette.
+
 `assets/images/logo.svg` uses compact framing by default; `preview=1` retains the
 reference artboard framing. All seven animated variants and the static `variant=7`
 mark remain available. Reference pages version the SVG and appearance helper URLs
-together with `v=transparent-1` so a new text-only helper does not reuse an older
-cached SVG that requires a background colour in appearance messages.
+together with `v=appearance-2` so a mode-only helper does not reuse an older
+cached SVG that requires supplied colours in appearance messages.
 Publish the SVG, helper and referencing HTML together, and refresh any CDN caches
 for those assets in the same release. The plan pages retain production asset URLs;
 the local preview server substitutes local design URLs only in its responses.

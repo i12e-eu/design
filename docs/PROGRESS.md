@@ -16,6 +16,45 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## SVG appearance modes and EU blue defaults, 7 September 2026
+
+`assets/images/logo.svg` now owns its Light/Dark palette. Surrounding text defaults
+to exact black (`#000000`) in Light and white (`#FFFFFF`) in Dark. Flap backgrounds
+default to EU blue (`#003399`) and flap lettering to white in both modes. Existing
+mechanical shading remains; EU flag surfaces/stars retain `#003399` / `#FFCC00`,
+and the static starless Logomark keeps fixed, unshaded blue cards. The canvas and
+cutouts stay transparent.
+
+The new `i12e.setAppearance("light" | "dark" | "auto")` method and existing
+`appearance` command select the same modes. Auto follows the embedding page/device
+preference; explicit modes stay selected until changed. Both `getState()` and
+state messages report `appearance: {mode, theme}`. Appearance changes update paint
+without rebuilding geometry, scheduling frames or resetting playback/flag state.
+Legacy supplied `colors` fields are ignored. Custom colours remain intentional
+overrides; `configure({textColor: null})` restores the selected theme's text colour.
+
+The shared helper sends only the page's selected mode, and preview colour controls
+display the SVG's reported configuration, retaining pending edits until acknowledged.
+Other form edits no longer import the website text palette. SVG and helper URLs now
+share `v=appearance-2`; this supersedes the text-colour message contract and cache
+version documented in the historical transparency section below. Publish the SVG,
+helper and referencing HTML together; this change does not publish the site.
+
+Independent in-memory verification passed 772 assertions across all eight variants
+in both initial appearances: palettes, requested/resolved modes, preference changes,
+custom overrides/null reset, legacy messages, invalid modes, unchanged drawing
+geometry and playback/flag state, looping, detail strengths and the static mark.
+These checks use deterministic SVG text metrics and do not establish rendered output
+or native browser media inheritance. XML structure, ten JavaScript blocks/files,
+local page links and all 19 shared-version logo/helper references also passed.
+Browser screenshots separately checked every variant in Light/Dark, normal and
+enlarged artwork, paused folding faces, the static mark and transparent detail strengths
+of 0%, 50% and 100%. Preview colour edits persisted through theme/size changes, and
+the country-flag interaction continued through an appearance change. The index
+rendered black/white lettering in its selected modes while retaining active looping
+playback. The local preview server was restarted for these checks. No tests,
+packages or dependencies were added.
+
 ## Static Logomark, 6 September 2026
 
 The shared asset is now `assets/images/logo.svg`. Existing variants 0–6 retain
