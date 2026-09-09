@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="color-scheme" content="light dark"/>
     <script src="./assets/js/appearance.js?v=plan-appearance-1"></script>
-    <script src="./assets/js/logo-appearance.js?v=logo-canvas-2"></script>
+    <script src="./assets/js/logo-appearance.js?v=logo-once-1"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description"
           content="i12e.eu / typography: Roboto and Roboto Mono, a responsive type scale, and interactive specimens."/>
@@ -417,8 +417,8 @@
 <a class="skip-link" href="#typography-specimens">Skip to specimens</a>
     <header class="page-header">
         <div class="brand">
-            <iframe class="site-logo" data-logo-fit
-                    src="./assets/images/logo.svg?variant=6&amp;autoplay=1&amp;v=logo-canvas-2"
+            <iframe data-logo-play-once class="site-logo" data-logo-fit
+                    src="./assets/images/logo.svg?variant=6&amp;autoplay=0&amp;v=logo-canvas-2"
                     title="Animated i12e.eu logotype"
                     width="256" height="35" tabindex="-1" aria-hidden="true"></iframe>
             <span class="brand-name">i12e.eu</span>
@@ -829,7 +829,8 @@
                     <code>.document-title</code> role uses the usual H1 bottom spacing and scrolls with the document.
                     Body headings and the adjustable specimens retain their existing Roboto styles.</p>
                 <h3>Header navigation</h3>
-                <p>Every page uses the same header pattern: the looping primary SVG logotype and navigation.
+                <p>Every page uses the same header pattern: the primary SVG logotype and navigation.
+                    The logo plays once, then stays expanded; reduced motion shows the expanded logo immediately.
                     The logo occupies up to 16rem of width, with roughly 24px lettering and a stable canvas that
                     fits its complete animation. Page titles sit in the document flow below the header.
                     A shared 2–3rem gap (32–48px at the default browser size) separates the header from the next
