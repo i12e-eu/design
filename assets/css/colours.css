@@ -145,16 +145,16 @@
     --color-button-text: var(--palette-neutral-0);
     --color-button-border: var(--palette-blue-400);
     --color-focus: var(--palette-blue-300);
-    --color-text-success: var(--palette-green-300);
+    --color-text-success: var(--palette-green-200);
     --color-background-success: var(--palette-green-950);
     --color-border-success: var(--palette-green-500);
-    --color-text-warning: var(--palette-yellow-300);
+    --color-text-warning: var(--palette-yellow-200);
     --color-background-warning: var(--palette-yellow-950);
     --color-border-warning: var(--palette-yellow-500);
-    --color-text-error: var(--palette-red-300);
+    --color-text-error: var(--palette-red-200);
     --color-background-error: var(--palette-red-950);
     --color-border-error: var(--palette-red-500);
-    --color-text-info: var(--palette-info-300);
+    --color-text-info: var(--palette-info-200);
     --color-background-info: var(--palette-info-950);
     --color-border-info: var(--palette-info-500);
 }

@@ -4,6 +4,56 @@ Current project policy: keep only static site assets, domain/Git configuration,
 and Markdown documentation. The Node tooling and tests described in this
 historical rollout have been removed; do not recreate them for this static site.
 
+## Inline status text follow-up, 11 September 2026
+
+Each notice now uses one flowing paragraph: a semibold status title followed by
+a colon, a space and the regular-weight message. Both use the existing status
+text role. The preceding two-colour, stacked-text treatment is superseded;
+icons, tinted backgrounds, leading accents and the responsive grid are retained.
+
+The duplicate title/body checks are consolidated into 35 checks per appearance,
+all passing (70 total). Browser checks at 1440px and 320px in both appearances
+confirmed matching text colours, 600/400 font weights and natural wrapping.
+Long-message fixtures outside the repository also passed without overflow.
+All 26 experiment cases passed, including whole-sentence status text changes
+and isolation from Main text; reset restored both appearances. All 73 displayed
+palette values and the approved CSS, JSON and Tailwind exports remain exact.
+Shared tokens, icon geometry and licences are unchanged. This follow-up remains
+local, with no commit, push or publication and no changes to unrelated staging.
+
+## Status message refinement, 11 September 2026
+
+The four Colours playground notices retain their approved tinted backgrounds
+and square corners, with a 3px leading accent replacing the full outline.
+Status titles use the existing label typography and status text roles; message
+bodies use neutral primary text. Official Lucide circle-check, triangle-alert,
+circle-x and info SVGs render at 20px using the status border role, matching the
+accent. Both Lucide and Feather licence notices are embedded beside the icons.
+Icons remain decorative, labels and wording stay visible, and no runtime
+dependency or new interaction has been added.
+
+Validation confirmed all 39 contrast checks in each appearance (78 total),
+including four new neutral-body/background pairs. The body pairs range from
+13.12:1 to 13.47:1 in light and 15.03:1 to 15.88:1 in dark. A deliberate contrast
+failure was detected by the new body checks. All 26 role-control cases passed:
+status text changes titles, status backgrounds change fills, status borders
+change icons and accents, and Main text changes all four message bodies.
+Experiments stay confined to the sample and reset restores both appearances.
+
+Desktop (1440px) and narrow (320px) browser inspection passed in both appearances.
+A temporary fixture outside the repository also verified longer messages at
+both widths: natural panel heights, wrapped text, fixed-size icons and no
+horizontal overflow. The shipped message wording is unchanged. All 73 displayed
+palette values and RGB labels remain exact; approved CSS, JSON and Tailwind
+exports are byte-identical to the pre-change outputs, including while experiments
+are active. Experimental JSON includes the requested role overrides in both
+appearances. An independent source review found no issues with the SVG geometry,
+role inheritance, checks or export isolation.
+
+The shared palette stylesheet and historical rollout records remain unchanged.
+This refinement is local only: no commit, push or publication was performed,
+and unrelated staged changes were preserved.
+
 ## Shared palette rollout, 11 September 2026
 
 The approved OKLCH palettes now live in `assets/css/colours.css` and supply all

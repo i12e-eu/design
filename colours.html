@@ -318,44 +318,57 @@
 
         .notice {
             display: flex;
+            align-items: flex-start;
             gap: 12px;
             padding: 16px;
-            border: 1px solid;
+            border-inline-start: 3px solid var(--notice-accent);
             font: var(--type-ui-meta);
+        }
+
+        .notice-content {
+            min-width: 0;
         }
 
         .notice p {
             margin: 0;
         }
 
+        .notice-title {
+            font: var(--type-ui-label);
+            margin-inline-end: 12px;
+        }
+
         .notice-icon {
-            flex-shrink: 0;
-            font: var(--type-ui-title);
-            font-weight: var(--weight-strong);
+            display: block;
+            flex: 0 0 20px;
+            width: 20px;
+            height: 20px;
+            margin-block-start: 1px;
+            color: var(--notice-accent);
         }
 
         .notice.success {
+            --notice-accent: var(--color-border-success);
             color: var(--color-text-success);
             background: var(--color-background-success);
-            border-color: var(--color-border-success);
         }
 
         .notice.warning {
+            --notice-accent: var(--color-border-warning);
             color: var(--color-text-warning);
             background: var(--color-background-warning);
-            border-color: var(--color-border-warning);
         }
 
         .notice.error {
+            --notice-accent: var(--color-border-error);
             color: var(--color-text-error);
             background: var(--color-background-error);
-            border-color: var(--color-border-error);
         }
 
         .notice.info {
+            --notice-accent: var(--color-border-info);
             color: var(--color-text-info);
             background: var(--color-background-info);
-            border-color: var(--color-border-info);
         }
 
         .checks {
@@ -781,15 +794,123 @@
                                 <p class="help">A labelled field with an identifiable boundary.</p></div>
                             <p id="demo-feedback" class="secondary" role="status"></p>
                             <hr/>
+                            <!--
+Lucide notice icons: https://github.com/lucide-icons/lucide
+Official circle-check, triangle-alert, circle-x and info SVG geometry.
+Lucide and Feather-derived icon licences:
+ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The MIT License (MIT) (for the icons listed above)
+
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+                            -->
                             <div class="status-grid">
-                                <div class="notice success"><span class="notice-icon" aria-hidden="true">✓</span>
-                                    <p><strong>Success</strong><br/>Your changes are ready.</p></div>
-                                <div class="notice warning"><span class="notice-icon" aria-hidden="true">!</span>
-                                    <p><strong>Warning</strong><br/>Review this setting before continuing.</p></div>
-                                <div class="notice error"><span class="notice-icon" aria-hidden="true">×</span>
-                                    <p><strong>Error</strong><br/>A required value is missing.</p></div>
-                                <div class="notice info"><span class="notice-icon" aria-hidden="true">i</span>
-                                    <p><strong>Information</strong><br/>This is a demonstration of the palette.</p>
+                                <div class="notice success">
+                                    <svg class="notice-icon" aria-hidden="true" focusable="false"
+                                         xmlns="http://www.w3.org/2000/svg"
+                                         width="20"
+                                         height="20"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="m16 9-5.5 5.5L8 12"/>
+                                    </svg>
+                                    <p class="notice-content"><strong class="notice-title">Success</strong> Your changes
+                                        are ready.</p>
+                                </div>
+                                <div class="notice warning">
+                                    <svg class="notice-icon" aria-hidden="true" focusable="false"
+                                         xmlns="http://www.w3.org/2000/svg"
+                                         width="20"
+                                         height="20"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                    >
+                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                                        <path d="M12 9v4"/>
+                                        <path d="M12 17h.01"/>
+                                    </svg>
+                                    <p class="notice-content"><strong class="notice-title">Warning</strong> Review this
+                                        setting before continuing.</p>
+                                </div>
+                                <div class="notice error">
+                                    <svg class="notice-icon" aria-hidden="true" focusable="false"
+                                         xmlns="http://www.w3.org/2000/svg"
+                                         width="20"
+                                         height="20"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="m15 9-6 6"/>
+                                        <path d="m9 9 6 6"/>
+                                    </svg>
+                                    <p class="notice-content"><strong class="notice-title">Error</strong> A required
+                                        value is missing.</p>
+                                </div>
+                                <div class="notice info">
+                                    <svg class="notice-icon" aria-hidden="true" focusable="false"
+                                         xmlns="http://www.w3.org/2000/svg"
+                                         width="20"
+                                         height="20"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 16v-4"/>
+                                        <path d="M12 8h.01"/>
+                                    </svg>
+                                    <p class="notice-content"><strong class="notice-title">Information</strong> This is
+                                        a demonstration of the palette.</p>
                                 </div>
                             </div>
                         </div>
@@ -1175,7 +1296,7 @@
       for (const state of ["button-primary", "button-primary-hover", "button-primary-active"]) add(`Button label / ${roleLabels[state]}`, "button-text", state, 4.5);
       for (const [status, label] of Object.entries(statuses)) {
         add(`${label} text / message`, "text-" + status, "background-" + status, 4.5);
-        for (const background of ["background-" + status, "surface", "background"]) add(`${label} border / ${background === "background-" + status ? "message" : background === "surface" ? "surface" : "page"}`, "border-" + status, background, 3);
+        for (const background of ["background-" + status, "surface", "background"]) add(`${label} ${background === "background-" + status ? "accent and icon / message" : background === "surface" ? "accent / surface" : "accent / page"}`, "border-" + status, background, 3);
       }
       return checks;
     }
