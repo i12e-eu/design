@@ -420,14 +420,18 @@
 
         /* Section-only spectra; the shared palette and semantic roles stay unchanged.
            Unrounded EU seed: OKLCH(0.4600934180655314 0.21133300995276857 263.12808373363487).
-           Hue rotations: blue 0, green +240, yellow +180, orange +150, red +120, info -30 degrees.
-           Gamut-map each seed by reducing chroma at fixed lightness and hue. Keep its
-           exact HEX in an independent base token; numbered stops are not base aliases.
+           Hue rotations: blue 0, green +240, yellow +180, red +120, info -30 degrees.
+           Keep each exact base HEX in an independent token; numbered stops are not
+           base aliases. All spectra start from the unrounded EU seed above.
            Eleven stops use L = .98 - .074 * index (0..10). This 98%..24% range is a
            palette design choice. Numbers 50..950 identify positions, not percentages.
-           At fixed hue, C = seedC * (1-L)/(1-seedL) above the seed's lightness,
-           otherwise C = seedC * L/seedL. Reduce chroma further only if needed to fit
-           linear sRGB channels in [0, 1], then round to the nearest 8-bit value. */
+           First calculate master C = seedC * (1-L)/(1-seedL) at or above the EU
+           seed's lightness, otherwise C = seedC * L/seedL. Then rotate each shade's
+           hue for its family. Do not construct spectra from gamut-reduced bases.
+           At fixed L and hue, keep the calculated C if linear sRGB channels are in
+           [0, 1]. Otherwise binary-search C in [0, calculated C] for 60 iterations,
+           retaining the in-gamut lower bound. Convert to sRGB and round to the
+           nearest 8-bit value only at the end. The same rule applies to all families. */
         #palette {
             --palette-blue-base: #0E47CB;
             --palette-blue-50: #F6F9FE;
@@ -442,62 +446,50 @@
             --palette-blue-900: #052779;
             --palette-blue-950: #021852;
             --palette-green-base: #006C08;
-            --palette-green-50: #F6F9F6;
-            --palette-green-100: #D6E5D5;
-            --palette-green-200: #B6D0B4;
-            --palette-green-300: #97BC95;
-            --palette-green-400: #78A875;
-            --palette-green-500: #599456;
-            --palette-green-600: #378035;
-            --palette-green-700: #026C0A;
+            --palette-green-50: #F5FAF5;
+            --palette-green-100: #D2E7D1;
+            --palette-green-200: #AFD4AD;
+            --palette-green-300: #8CC089;
+            --palette-green-400: #69AD65;
+            --palette-green-500: #419940;
+            --palette-green-600: #00850D;
+            --palette-green-700: #006C09;
             --palette-green-800: #005405;
             --palette-green-900: #003E03;
             --palette-green-950: #002801;
             --palette-yellow-base: #715200;
-            --palette-yellow-50: #F9F8F6;
-            --palette-yellow-100: #E5DFD4;
-            --palette-yellow-200: #D1C7B3;
-            --palette-yellow-300: #BEAF92;
-            --palette-yellow-400: #AA9772;
-            --palette-yellow-500: #978053;
-            --palette-yellow-600: #846931;
-            --palette-yellow-700: #725302;
+            --palette-yellow-50: #FBF8F3;
+            --palette-yellow-100: #ECDEC5;
+            --palette-yellow-200: #DDC597;
+            --palette-yellow-300: #CEAB68;
+            --palette-yellow-400: #BE922F;
+            --palette-yellow-500: #A77B00;
+            --palette-yellow-600: #8C6600;
+            --palette-yellow-700: #725300;
             --palette-yellow-800: #594000;
             --palette-yellow-900: #412E00;
             --palette-yellow-950: #2A1D00;
-            --palette-orange-base: #884200;
-            --palette-orange-50: #FBF8F6;
-            --palette-orange-100: #EBDDD4;
-            --palette-orange-200: #DCC2B3;
-            --palette-orange-300: #CCA892;
-            --palette-orange-400: #BC8E72;
-            --palette-orange-500: #AB7552;
-            --palette-orange-600: #9A5C31;
-            --palette-orange-700: #894202;
-            --palette-orange-800: #6C3200;
-            --palette-orange-900: #4F2300;
-            --palette-orange-950: #351500;
             --palette-red-base: #A7001F;
-            --palette-red-50: #FDF7F6;
-            --palette-red-100: #F5D8D6;
-            --palette-red-200: #ECBAB6;
-            --palette-red-300: #E19C98;
-            --palette-red-400: #D47E79;
-            --palette-red-500: #C75E5C;
-            --palette-red-600: #B83C3F;
-            --palette-red-700: #A80320;
+            --palette-red-50: #FEF6F6;
+            --palette-red-100: #F8D7D5;
+            --palette-red-200: #F0B8B4;
+            --palette-red-300: #E79994;
+            --palette-red-400: #DB7975;
+            --palette-red-500: #CF5756;
+            --palette-red-600: #C02F37;
+            --palette-red-700: #A80020;
             --palette-red-800: #840017;
             --palette-red-900: #62000E;
             --palette-red-950: #420007;
             --palette-info-base: #006084;
-            --palette-info-50: #F6F9FA;
-            --palette-info-100: #D6E2E9;
-            --palette-info-200: #B6CCD8;
-            --palette-info-300: #96B6C8;
-            --palette-info-400: #77A0B7;
-            --palette-info-500: #588BA6;
-            --palette-info-600: #367595;
-            --palette-info-700: #026185;
+            --palette-info-50: #F4F9FD;
+            --palette-info-100: #C9E5F5;
+            --palette-info-200: #9ED0EC;
+            --palette-info-300: #6FBBE3;
+            --palette-info-400: #35A6D9;
+            --palette-info-500: #008EC2;
+            --palette-info-600: #0077A3;
+            --palette-info-700: #006185;
             --palette-info-800: #004B68;
             --palette-info-900: #00364D;
             --palette-info-950: #002333;
@@ -905,7 +897,8 @@
         <section class="section" id="palette" aria-labelledby="palette-title">
             <p class="eyebrow">01 / Fixed values</p>
             <h2 id="palette-title">The palette</h2>
-            <p>Six colour scales with evenly spaced OKLCH lightness, alongside the existing neutral scale.
+            <p>Five colour scales derived from one EU-blue spectrum with evenly spaced OKLCH lightness,
+                alongside the existing neutral scale.
                 Each fixed base colour is shown separately. Select a HEX value or RGB button to copy it.</p>
             <p class="help">These spectra are shown in this section only. Interface samples, colour roles,
                 comparisons and theme exports retain their existing colours.</p>
@@ -918,15 +911,18 @@
                     <p>Use white and grey surfaces, charcoal body text, and readable secondary text. Decorative lines
                         should remain quiet; input boundaries need stronger contrast.</p></div>
                 <div><h3 class="type-panel-title">Supporting colour families</h3>
-                    <p>Green, yellow / amber, orange, red and information blue-green each have a spectrum derived
+                    <p>Green, yellow / amber, red and information blue-green each have a spectrum derived
                         from EU blue. The neutral scale and the flag colours keep their existing values.</p></div>
             </div>
             <p class="help">Each coloured scale keeps its base hue and runs from 98% to 24% OKLCH lightness in
                 eleven evenly spaced shades. L shows the target lightness; shade numbers identify positions in the
-                scale.
-                This range keeps the dark end visibly coloured. Chroma follows the base colour and is reduced
-                where needed to fit sRGB before rounding to HEX. Base colours remain exact, independently of the
-                numbered shades. Check contrast when choosing text and background combinations.</p>
+                scale. This range keeps the dark end visibly coloured. Base colours remain exact,
+                independently of the numbered shades.</p>
+            <p class="help">All five families use the same calculation: first derive each shade's lightness
+                and colour intensity from the original EU blue, then rotate its hue for the family. Reduce
+                colour intensity only where needed to fit sRGB, keeping lightness and hue fixed, and round
+                to HEX at the end. This gives the scales a consistent fade; pale yellows are softer and dark
+                yellows appear brown. Check contrast when choosing text and background combinations.</p>
         </section>
         <section class="section" id="roles" aria-labelledby="roles-title">
             <p class="eyebrow">02 / Approved assignments</p>
@@ -1089,7 +1085,6 @@
       neutral: families.neutral,
       green: {title: "Green", description: "OKLCH hue rotation +240° from EU blue.", shades},
       yellow: {title: "Yellow / amber", description: "OKLCH hue rotation +180° from EU blue.", shades},
-      orange: {title: "Orange", description: "OKLCH hue rotation +150° from EU blue.", shades},
       red: {title: "Red", description: "OKLCH hue rotation +120° from EU blue.", shades},
       info: {title: "Information", description: "Blue-green · OKLCH hue rotation −30° from EU blue.", shades},
     };
