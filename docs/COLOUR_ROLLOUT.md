@@ -4,6 +4,45 @@ Current project policy: keep only static site assets, domain/Git configuration,
 and Markdown documentation. The Node tooling and tests described in this
 historical rollout have been removed; do not recreate them for this static site.
 
+## Shared palette rollout, 11 September 2026
+
+The approved OKLCH palettes now live in `assets/css/colours.css` and supply all
+four design-reference pages. The 68 numbered shades and five independent bases
+are unchanged from the approved Palette section; its duplicate values have been
+removed. Blue, Neutral, Green, Yellow / amber, Red and Information are the shared
+families. Orange is no longer part of the interface palette.
+
+EU blue remains exactly `#0E47CB` through `--palette-blue-base` and
+`--brand-primary`. Primary buttons use the base, Blue 800 on hover and Blue 900
+when pressed. Light links follow those same states; dark links use Blue
+300 / 200 / 400. Light focus uses the base, dark focus uses Blue 300, and dark
+button boundaries retain Blue 400. All neutral roles remain unchanged.
+
+Success uses Green, Warning uses Yellow, Error uses Red and Information uses its
+own family. Light text / background / border use shades 800 / 100 / 600; dark
+roles use 300 / 950 / 500. Shared stylesheet links and downloads use
+`?v=palette-20260911` on every page.
+
+The role table, comparisons and exports read the same shared values. Exact bases
+are selectable and correctly labelled; comparison reset selects Blue base.
+JSON keeps schema version 1 and its existing fields, adding a `bases` mapping
+while `palette` continues to contain numbered shades. CSS and Tailwind exports
+include all five base tokens. Experiments remain isolated to the sample and are
+included only in explicitly selected experiment exports.
+
+Validation confirmed 73 unchanged palette values, all 27 role assignments per
+appearance, and 35 passing contrast checks in each appearance (70 total).
+Browser checks covered all four pages at 320px and 1440px in light and dark
+appearances, with no horizontal overflow or role mismatches. Copying, comparison
+matching/reset, invalid inputs, experiment isolation, export values, keyboard
+focus and primary-button hover were checked. Pressed-state rules were verified
+from the stylesheet; forced-state browser inspection was unavailable because
+developer-control access was declined. Local assets and inline scripts passed
+their checks. Artwork, appearance helpers and the unrelated staged files were
+unchanged. This rollout is local only: nothing was committed, pushed or published.
+
+The earlier rollout records below remain historical.
+
 ## Design-reference follow-up, 6 September 2026
 
 The 7 September appearance update makes the SVG the source of its own palette:

@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;0,700;1,400;1,700&amp;family=Roboto+Mono:wght@400&amp;display=swap"
           rel="stylesheet"/>
-    <link rel="stylesheet" href="./assets/css/colours.css"/>
+    <link rel="stylesheet" href="./assets/css/colours.css?v=palette-20260911"/>
     <link rel="stylesheet" href="./assets/css/typography.css?v=css-type-1-logo-canvas-2"/>
     <script src="./assets/js/typography.js?v=css-type-1" defer></script>
     <style>
@@ -418,83 +418,6 @@
             font-family: var(--font-mono);
         }
 
-        /* Section-only spectra; the shared palette and semantic roles stay unchanged.
-           Unrounded EU seed: OKLCH(0.4600934180655314 0.21133300995276857 263.12808373363487).
-           Hue rotations: blue 0, green +240, yellow +180, red +120, info -30 degrees.
-           Keep each exact base HEX in an independent token; numbered stops are not
-           base aliases. All spectra start from the unrounded EU seed above.
-           Eleven stops use L = .98 - .074 * index (0..10). This 98%..24% range is a
-           palette design choice. Numbers 50..950 identify positions, not percentages.
-           First calculate master C = seedC * (1-L)/(1-seedL) at or above the EU
-           seed's lightness, otherwise C = seedC * L/seedL. Then rotate each shade's
-           hue for its family. Do not construct spectra from gamut-reduced bases.
-           At fixed L and hue, keep the calculated C if linear sRGB channels are in
-           [0, 1]. Otherwise binary-search C in [0, calculated C] for 60 iterations,
-           retaining the in-gamut lower bound. Convert to sRGB and round to the
-           nearest 8-bit value only at the end. The same rule applies to all families. */
-        #palette {
-            --palette-blue-base: #0E47CB;
-            --palette-blue-50: #F6F9FE;
-            --palette-blue-100: #D3E1F9;
-            --palette-blue-200: #B2C9F4;
-            --palette-blue-300: #91B0ED;
-            --palette-blue-400: #7198E6;
-            --palette-blue-500: #517FDE;
-            --palette-blue-600: #3165D5;
-            --palette-blue-700: #0F48CB;
-            --palette-blue-800: #0937A1;
-            --palette-blue-900: #052779;
-            --palette-blue-950: #021852;
-            --palette-green-base: #006C08;
-            --palette-green-50: #F5FAF5;
-            --palette-green-100: #D2E7D1;
-            --palette-green-200: #AFD4AD;
-            --palette-green-300: #8CC089;
-            --palette-green-400: #69AD65;
-            --palette-green-500: #419940;
-            --palette-green-600: #00850D;
-            --palette-green-700: #006C09;
-            --palette-green-800: #005405;
-            --palette-green-900: #003E03;
-            --palette-green-950: #002801;
-            --palette-yellow-base: #715200;
-            --palette-yellow-50: #FBF8F3;
-            --palette-yellow-100: #ECDEC5;
-            --palette-yellow-200: #DDC597;
-            --palette-yellow-300: #CEAB68;
-            --palette-yellow-400: #BE922F;
-            --palette-yellow-500: #A77B00;
-            --palette-yellow-600: #8C6600;
-            --palette-yellow-700: #725300;
-            --palette-yellow-800: #594000;
-            --palette-yellow-900: #412E00;
-            --palette-yellow-950: #2A1D00;
-            --palette-red-base: #A7001F;
-            --palette-red-50: #FEF6F6;
-            --palette-red-100: #F8D7D5;
-            --palette-red-200: #F0B8B4;
-            --palette-red-300: #E79994;
-            --palette-red-400: #DB7975;
-            --palette-red-500: #CF5756;
-            --palette-red-600: #C02F37;
-            --palette-red-700: #A80020;
-            --palette-red-800: #840017;
-            --palette-red-900: #62000E;
-            --palette-red-950: #420007;
-            --palette-info-base: #006084;
-            --palette-info-50: #F4F9FD;
-            --palette-info-100: #C9E5F5;
-            --palette-info-200: #9ED0EC;
-            --palette-info-300: #6FBBE3;
-            --palette-info-400: #35A6D9;
-            --palette-info-500: #008EC2;
-            --palette-info-600: #0077A3;
-            --palette-info-700: #006185;
-            --palette-info-800: #004B68;
-            --palette-info-900: #00364D;
-            --palette-info-950: #002333;
-        }
-
         .family {
             margin-top: 28px;
         }
@@ -779,7 +702,7 @@
         <div class="anchors">
             <section class="brand-anchor" aria-labelledby="primary-title">
                 <div class="anchor-swatch" aria-hidden="true"></div>
-                <div class="anchor-copy"><p class="eyebrow">Primary / Blue 600</p>
+                <div class="anchor-copy"><p class="eyebrow">Primary / EU blue base</p>
                     <h2 class="type-card-title" id="primary-title">EU website blue</h2>
                     <p class="mono">#0E47CB · RGB 14, 71, 203</p>
                     <button type="button" data-copy-token="--brand-primary" data-copy-format="hex">Copy HEX</button>
@@ -796,7 +719,8 @@
                 </div>
                 <p class="help"><a href="#emblem-sources">Read the official distinction ↓</a></p></section>
         </div>
-        <noscript><p>The approved styles are available in <a href="./assets/css/colours.css">colours.css</a>. Enable
+        <noscript><p>The approved styles are available in <a href="./assets/css/colours.css?v=palette-20260911">colours.css</a>.
+            Enable
             JavaScript for
             the full swatches, theme controls, contrast checks, and exports.</p></noscript>
         <section id="playground" aria-labelledby="playground-title">
@@ -900,8 +824,8 @@
             <p>Five colour scales derived from one EU-blue spectrum with evenly spaced OKLCH lightness,
                 alongside the existing neutral scale.
                 Each fixed base colour is shown separately. Select a HEX value or RGB button to copy it.</p>
-            <p class="help">These spectra are shown in this section only. Interface samples, colour roles,
-                comparisons and theme exports retain their existing colours.</p>
+            <p class="help">These shared palettes supply the interface samples, colour roles, comparisons and
+                theme exports throughout the design references.</p>
             <div id="palette-families"></div>
             <div class="usage-grid">
                 <div><h3 class="type-panel-title">Blue signals action</h3>
@@ -1027,7 +951,8 @@
                 </li>
                 <li>
                     <a href="https://github.com/ec-europa/europa-component-library/blob/v5.2.1/src/themes/eu/maps/color.scss">Europa
-                        Component Library, EU theme v5.2.1</a> — the fixed blue scale. ECL primary-100 is i12e blue-600.
+                        Component Library, EU theme v5.2.1</a> — the fixed EU-blue base reference. The spectra here
+                    are derived from that base in OKLCH.
                 </li>
                 <li>
                     <a href="https://style-guide.europa.eu/o/opportal-service/isg?resource=en/annex-a1-graphics-guide-european-emblem.html">Interinstitutional
@@ -1050,7 +975,7 @@
         </section>
     </main>
     <footer class="page-footer"><a href="./index.html">← Design index</a> · <a href="./typography.html">Typography</a> ·
-        <a href="./assets/css/colours.css">Shared colour stylesheet</a></footer>
+        <a href="./assets/css/colours.css?v=palette-20260911">Shared colour stylesheet</a></footer>
 </div>
 <p id="copy-status" class="copy-status" role="status"></p>
 <dialog id="copy-dialog" aria-labelledby="copy-dialog-title"><h2 class="type-card-title" id="copy-dialog-title">Copy
@@ -1069,20 +994,12 @@
     const $ = id => document.getElementById(id);
     const shades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
     const families = {
-      blue: {title: "Blue", description: "EU interface blue · Exact ECL values, i12e shade numbers.", shades},
+      blue: {title: "Blue", description: "EU blue · Original base colour.", shades},
       neutral: {
         title: "Neutral",
         description: "White, grey, and charcoal · The reading foundation.",
         shades: [0, ...shades, 1000],
       },
-      green: {title: "Green", description: "Success · i12e seed at shade 600.", shades},
-      orange: {title: "Orange", description: "Warning · i12e seed at shade 600.", shades},
-      red: {title: "Red", description: "Error · i12e seed at shade 600.", shades},
-    };
-    // Only the Palette section uses these spectra. Other references retain the shared palette.
-    const spectrumFamilies = {
-      blue: {title: "Blue", description: "EU blue · Original base colour.", shades},
-      neutral: families.neutral,
       green: {title: "Green", description: "OKLCH hue rotation +240° from EU blue.", shades},
       yellow: {title: "Yellow / amber", description: "OKLCH hue rotation +180° from EU blue.", shades},
       red: {title: "Red", description: "OKLCH hue rotation +120° from EU blue.", shades},
@@ -1164,11 +1081,8 @@
     const rootStyle = getComputedStyle(document.documentElement);
     const palette = Object.fromEntries(Object.entries(families).map(([name, family]) => [name,
       Object.fromEntries(family.shades.map(shade => [shade, readColour(rootStyle, `--palette-${name}-${shade}`)]))]));
-    const spectrumStyle = getComputedStyle($("palette"));
-    const spectrumPalette = Object.fromEntries(Object.entries(spectrumFamilies).map(([name, family]) => [name,
-      Object.fromEntries(family.shades.map(shade => [shade, readColour(spectrumStyle, `--palette-${name}-${shade}`)]))]));
-    const spectrumBases = Object.fromEntries(Object.keys(spectrumFamilies).filter(name => name !== "neutral")
-      .map(name => [name, readColour(spectrumStyle, `--palette-${name}-base`)]));
+    const bases = Object.fromEntries(Object.keys(families).filter(name => name !== "neutral")
+      .map(name => [name, readColour(rootStyle, `--palette-${name}-base`)]));
     const brand = {primary: readColour(rootStyle, "--brand-primary")};
     const emblem = {blue: readColour(rootStyle, "--emblem-blue"), yellow: readColour(rootStyle, "--emblem-yellow")};
     const defaults = Object.fromEntries(["light", "dark"].map(mode => {
@@ -1179,7 +1093,9 @@
       name: `${family}-${shade}`,
       hex,
     })));
-    const fixedEntries = [...paletteEntries, {name: "emblem-blue", hex: emblem.blue}, {
+    const baseEntries = Object.entries(bases).map(([family, hex]) => ({name: `${family}-base`, hex}));
+    const colourEntries = [...baseEntries, ...paletteEntries];
+    const fixedEntries = [...colourEntries, {name: "emblem-blue", hex: emblem.blue}, {
       name: "emblem-yellow",
       hex: emblem.yellow,
     }];
@@ -1194,23 +1110,23 @@
 
     function buildReference() {
       const container = $("palette-families");
-      for (const [name, family] of Object.entries(spectrumFamilies)) {
+      for (const [name, family] of Object.entries(families)) {
         const section = document.createElement("section");
         section.className = "family";
         section.setAttribute("aria-labelledby", `family-${name}`);
         section.innerHTML = `<div class="family-header"><h3 class="type-card-title" id="family-${name}">${family.title}</h3><p class="secondary">${family.description}</p></div><div class="swatches"></div>`;
-        if (spectrumBases[name]) {
-          const hex = spectrumBases[name];
+        if (bases[name]) {
+          const hex = bases[name];
           const base = document.createElement("div");
           base.className = "family-base";
           base.innerHTML = `<span class="family-base-swatch" style="background:${hex}" aria-hidden="true"></span><span>Base</span><button type="button" data-copy-token="--palette-${name}-base" data-copy-format="hex" aria-label="Copy ${name} base HEX ${hex}">${hex}</button><button type="button" data-copy-token="--palette-${name}-base" data-copy-format="rgb" aria-label="Copy ${name} base ${rgbString(hex)}">RGB</button>`;
           section.querySelector(".family-header").append(base);
         }
         const grid = section.querySelector(".swatches");
-        for (const [shade, hex] of Object.entries(spectrumPalette[name])) {
+        for (const [shade, hex] of Object.entries(palette[name])) {
           const card = document.createElement("div");
           card.className = "swatch";
-          const lightness = spectrumBases[name] ? `<span class="swatch-lightness">L ${spectrumLightness[shade]}%</span>` : "";
+          const lightness = bases[name] ? `<span class="swatch-lightness">L ${spectrumLightness[shade]}%</span>` : "";
           card.innerHTML = `<div class="swatch-colour" style="background:${hex}" aria-hidden="true"></div><div class="swatch-content"><p class="swatch-name">${name}<br/>${shade}${lightness}</p><button type="button" data-copy-token="--palette-${name}-${shade}" data-copy-format="hex" aria-label="Copy ${name} ${shade} HEX ${hex}">${hex}</button><button type="button" data-copy-token="--palette-${name}-${shade}" data-copy-format="rgb" aria-label="Copy ${name} ${shade} ${rgbString(hex)}">RGB</button></div>`;
           grid.append(card);
         }
@@ -1219,7 +1135,7 @@
       for (const [role, label] of Object.entries(roleLabels)) {
         $("edit-role").append(option(role, label));
         const row = document.createElement("tr");
-        const nameFor = hex => paletteEntries.find(entry => entry.hex === hex)?.name || "custom";
+        const nameFor = hex => colourEntries.find(entry => entry.hex === hex)?.name || "custom";
         row.innerHTML = `<th scope="row">${label}<span class="token">--color-${role}</span></th>` + ["light", "dark"].map(mode => `<td><span class="dot" style="background:${defaults[mode][role]}" aria-hidden="true"></span><code>${defaults[mode][role]}</code><span class="token">${nameFor(defaults[mode][role])}</span></td>`).join("");
         $("roles-body").append(row);
       }
@@ -1230,7 +1146,7 @@
         for (const [family, definition] of Object.entries(families)) {
           const group = document.createElement("optgroup");
           group.label = definition.title;
-          paletteEntries.filter(entry => entry.name.startsWith(family + "-")).forEach(entry => group.append(option(entry.name, `${entry.name} · ${entry.hex}`)));
+          colourEntries.filter(entry => entry.name.startsWith(family + "-")).forEach(entry => group.append(option(entry.name, `${entry.name} · ${entry.hex}`)));
           select.append(group);
         }
         const group = document.createElement("optgroup");
@@ -1349,7 +1265,7 @@
     function resetComparison() {
       comparison.foreground = brand.primary;
       comparison.background = palette.neutral[0];
-      $("compare-foreground").value = "blue-600";
+      $("compare-foreground").value = "blue-base";
       $("compare-background").value = "neutral-0";
       for (const side of ["foreground", "background"]) {
         $(side + "-hex").value = comparison[side];
@@ -1360,7 +1276,12 @@
 
     function exportData(kind) {
       return {
-        schemaVersion: 1, kind, brand: {...brand}, emblem: {...emblem}, palette,
+        schemaVersion: 1,
+        kind,
+        brand: {...brand},
+        emblem: {...emblem},
+        palette,
+        bases: {...bases},
         themes: Object.fromEntries(["light", "dark"].map(mode => [mode, kind === "experiment" ? valuesFor(mode) : {...defaults[mode]}])),
       };
     }
@@ -1368,6 +1289,7 @@
     function cssExport(data) {
       const lines = [`/* i12e — ${data.kind === "approved" ? "Approved defaults" : "Temporary experiment"}. Both appearances. */`, ":root {"];
       for (const [family, scale] of Object.entries(data.palette)) for (const [shade, hex] of Object.entries(scale)) lines.push(`  --palette-${family}-${shade}: ${hex};`);
+      for (const [family, hex] of Object.entries(data.bases)) lines.push(`  --palette-${family}-base: ${hex};`);
       lines.push(`  --brand-primary: ${data.brand.primary};`, `  --emblem-blue: ${data.emblem.blue};`, `  --emblem-yellow: ${data.emblem.yellow};`, "}", "");
       for (const mode of ["light", "dark"]) {
         lines.push(mode === "light" ? ":root, [data-theme=\"light\"] {" : "[data-theme=\"dark\"] {", `  color-scheme: ${mode};`);
@@ -1380,6 +1302,7 @@
     function tailwindExport(data) {
       const lines = ["@import \"tailwindcss\";", "", `/* i12e — ${data.kind === "approved" ? "Approved defaults" : "Temporary experiment"}. Tailwind CSS v4, verified with 4.3.3. */`, "@custom-variant dark (&:where([data-theme=\"dark\"], [data-theme=\"dark\"] *));", "", "@theme static {"];
       for (const [family, scale] of Object.entries(data.palette)) for (const [shade, hex] of Object.entries(scale)) lines.push(`  --color-i12e-${family}-${shade}: ${hex};`);
+      for (const [family, hex] of Object.entries(data.bases)) lines.push(`  --color-i12e-${family}-base: ${hex};`);
       lines.push(`  --color-i12e-brand: ${data.brand.primary};`, `  --color-i12e-emblem-blue: ${data.emblem.blue};`, `  --color-i12e-emblem-yellow: ${data.emblem.yellow};`, "}", "");
       for (const mode of ["light", "dark"]) {
         lines.push(mode === "light" ? ":root, [data-theme=\"light\"] {" : "[data-theme=\"dark\"] {", `  color-scheme: ${mode};`);
@@ -1403,7 +1326,7 @@
       const count = Object.keys(overrides.light).length + Object.keys(overrides.dark).length;
       const notes = {
         css: "Use as a plain stylesheet. Theme roles use --color-* properties; set data-theme=\"dark\" to switch.",
-        json: "Schema version 1. Palette and theme values are resolved HEX strings. Theme keys map to --color-* properties.",
+        json: "Schema version 1. Numbered palette shades, exact bases and theme values are resolved HEX strings. The bases object contains the fixed family colours. Theme keys map to --color-* properties.",
         tailwind: "Add to your Tailwind CSS entry file; this output requires Tailwind processing. Utilities use the i12e- prefix and preserve Tailwind’s default palette.",
       };
       $("export-help").textContent = notes[format] + (kind === "experiment" ? ` Includes ${count} changed ${count === 1 ? "role" : "roles"} across both appearances. ` : " ") + "Copying does not save changes to the specification.";
@@ -1504,8 +1427,7 @@
     document.addEventListener("click", event => {
       const button = event.target.closest("[data-copy-token]");
       if (!button) return;
-      const scope = button.closest("#palette") || document.documentElement;
-      const hex = readColour(getComputedStyle(scope), button.dataset.copyToken);
+      const hex = readColour(rootStyle, button.dataset.copyToken);
       copyText(button.dataset.copyFormat === "rgb" ? rgbString(hex) : hex, `${button.dataset.copyToken.replace(/^--(?:palette-)?/, "")} ${button.dataset.copyFormat.toUpperCase()}`);
     });
     document.querySelectorAll("[data-demo-message]").forEach(button => button.addEventListener("click", () => {
