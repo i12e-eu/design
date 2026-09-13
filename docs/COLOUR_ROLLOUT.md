@@ -4,6 +4,29 @@ Current project policy: keep only static site assets, domain/Git configuration,
 and Markdown documentation. The Node tooling and tests described in this
 historical rollout have been removed; do not recreate them for this static site.
 
+## Notice spacing and dark text follow-up, 11 September 2026
+
+Notice titles no longer end with colons and have 12px of extra logical end
+spacing before the normal text space. Title and message remain one naturally
+wrapping paragraph with matching colours and unchanged typography.
+The four shared dark status-text roles now use shade 200: Success #AFD4AD,
+Warning #DDC597, Error #F0B8B4 and Information #9ED0EC. Light text remains at
+shade 800; backgrounds, icons and accent borders retain their prior values.
+
+All 35 contrast checks pass in each appearance (70 total). Dark notice text
+measures 9.82:1 to 9.90:1, and the four status roles exceed 9:1 on ordinary
+dark page/surface backgrounds. Browser checks confirmed the shared colours in
+form errors, pass/fail labels and the Typography warning. Desktop (1440px) and
+narrow (320px) layouts, including temporary long-message fixtures, passed in
+both appearances without overflow. Twelve text/background/accent experiment
+cases and reset passed; an intentional contrast failure was correctly reported.
+
+All 73 palette values remain exact. CSS, JSON and Tailwind exports differ only
+in the four intended dark text roles, including while experiments are active.
+Independent source verification confirmed the other role mappings, icon artwork,
+scripts and unrelated staging are unchanged. Previous records below are retained.
+This update remains local: no commit, push or publication was performed.
+
 ## Inline status text follow-up, 11 September 2026
 
 Each notice now uses one flowing paragraph: a semibold status title followed by
