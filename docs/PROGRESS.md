@@ -16,6 +16,50 @@ Earlier test results and setup instructions below describe the removed tooling;
 they are not requirements to restore it. A future Qwik City migration belongs in
 the platform monorepo, not this directory.
 
+## Logo alignment modes, 14 September 2026
+
+The Logotype page now offers Left aligned and Centred under Typography & Spacing.
+Left aligned remains the saved default, including all site headers. Centred keeps
+the changing layout footprint at the canvas midpoint using one translation around
+the existing artwork. Canvas dimensions, scale, vertical placement, local sprite
+motion, colours, timing, looping and country-flag interactions remain unchanged.
+
+Use `assets/images/logo.svg?variant=6&alignment=center` for a centred standalone
+or embedded animation, or call `i12e.configure({alignment: 'center'})` / `'left'`.
+The existing configuration message supports the same property and state reports
+include `config.alignment`. Valid URL values override the SVG's saved
+`--logo-alignment: left` default; invalid values retain the current/default mode.
+Alignment-only edits, including the editor's whole-form messages, preserve the
+playback clock, pause position and an active country-flag fold. Open SVG links
+follow each specimen's acknowledged alignment without reloading its iframe.
+The static logomark also aligns without acquiring animation. Script-free image
+fallbacks retain their existing behaviour.
+
+Glyph bounds are measured once per geometry build. Ordinary transitions use the
+same eased movement as the artwork, including the final flag's travel delay and
+both collapse phases. Hidden faces and temporarily fading letters do not drive
+the centring measurement. The older “06 / Visible Glyphs” draft fades complete
+stationary cards: its occupied row therefore recentres in steps as cards appear
+or disappear. Counting the complete occupied row prevents clipped edge cards
+without changing that draft's card animation. The main V1 animation centres
+continuously.
+
+All 21 SVG references across the four pages use `v=logo-alignment-1`; shared
+stylesheets and the appearance helper keep their existing versions. These changes
+remain local for review; no commit, push or publication was performed by this task.
+
+Validation: 4,938 sampled poses across 64 in-memory configurations matched the
+previous left-aligned sprite rendering, paint, state and canvas. Another 23 cases
+preserved playback and flag-interaction continuity, and 25,680 geometry samples
+covered all eight variants, both canvas formats, custom dimensions and transition
+boundaries without overflow. Defaults, invalid values, configuration messages and
+reduced-motion handling passed. These checks use approximate font measurements;
+the independent browser check used the loaded font and passed 1,292 poses across
+20 configurations, including extreme geometry, with unchanged local artwork and
+no clipping. Desktop and 320px light/dark inspections confirmed placement and
+wrapping; the live controls retained the exact paused time and an active flag
+fold when changing alignment. No dependencies or permanent test files were added.
+
 ## Transparent SVG startup, 7 September 2026
 
 The logo SVG declares `background: transparent; color-scheme: light dark` on its
