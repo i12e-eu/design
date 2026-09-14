@@ -19,6 +19,8 @@
         it returns automatically or on a second trigger, separately from the countdown.
         The default canvas fits the complete animation without padding and is always transparent.
         Use ?variant=2 to open a standalone option; &amp;preview=1 uses the reference artboard.
+        Add &amp;alignment=center to keep the changing logotype centred; left is the default.
+        configure({alignment: 'center' | 'left'}) changes placement without restarting playback.
         State messages report intrinsicSize so the embedding page can match its container's ratio.
         Appearance follows the embedding page or device until i12e.setAppearance()
         selects light or dark; auto resumes that preference. configure({textColor: null})
@@ -41,6 +43,7 @@
         --easing: cubic-bezier(0.5, 0, 0.5, 1);
         --font-size: 48px;
         --character-spacing: 0.2px;
+        --logo-alignment: left; /* left or center; keeps the canvas and artwork scale fixed. */
         --flap-width: 0.85em; /* Card width relative to font size; plain text keeps its own spacing. */
         --flap-height: 1.42; /* Height in em. */
         --eu-star-scale: 1; /* Uniform scale of the complete star circle, clipped to the cards. */
@@ -142,7 +145,8 @@
         const milliseconds = value => parseFloat(value) * (/ms\s*$/.test(value) ? 1 : 1000);
         let config, ease, duration, expansionEnd, collapseStart, collapseEnd, loopStartTime, hasCollapse;
         let characterAdvance, flapAdvance, glyphWidth, tileWidth, tileHeight, baseline;
-        let intrinsicSize;
+        let intrinsicSize, artwork, alignmentCenter;
+        let modelBounds = [];
         let flagArtwork, joinedFlag, loopFlagCover, drawFlagFold, solidClips = [];
         let models = [], sprites = new Map();
         let playing = false, position = 0, startedAt = 0, originTime = 0, frame = 0;
@@ -150,7 +154,7 @@
         let flagFrame = 0;
         const flagRun = { phase: 'idle', country: 'NL', startedAt: 0 };
 
-        function create(tag, attributes = {}, parent = layer) {
+        function create(tag, attributes = {}, parent = artwork || layer) {
             const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
             for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
             parent.append(element);
@@ -168,6 +172,8 @@
                 collapsedHoldDuration: numeric(milliseconds(value('--collapsed-hold-duration')), 0, 10000, 2500),
                 easing: value('--easing'), fontSize: parseFloat(value('--font-size')),
                 characterSpacing: parseFloat(value('--character-spacing')),
+                alignment: ['left', 'center'].includes(params.get('alignment')) ? params.get('alignment')
+                    : value('--logo-alignment') === 'center' ? 'center' : 'left',
                 flapWidth: numeric(parseFloat(value('--flap-width')), 0.6, 2, 0.85),
                 flapHeight: parseFloat(value('--flap-height')),
                 flapGap: parseFloat(value('--flap-gap')),
@@ -615,6 +621,7 @@
 
         function build() {
             layer.replaceChildren();
+            artwork = create('g', { id: 'alignment' }, layer);
             definitions.replaceChildren();
             sprites = new Map();
             solidClips = [];
@@ -686,7 +693,7 @@
                 sprites.set(key, { group, flapped, draw: flapped ? makeFlap(group, digit ? Number(key.split(':')[1]) : null) : makePlain(group) });
             }
             if (swapVariant) {
-                layer.append(sprites.get('letter:0').group);
+                artwork.append(sprites.get('letter:0').group);
                 // During the text return, letters pass behind one seamless flag.
                 loopFlagCover = create('g', { 'data-loop-flag': 'true', 'clip-path': 'url(#flag-joined)', display: 'none' });
                 create('use', { href: '#flag-interaction-eu' }, loopFlagCover);
@@ -695,6 +702,7 @@
             // comparison with variant 6. Default embeds fit only their actual artwork.
             const contentWidth = Math.max(...models.flatMap(model => [...model].map(([key, cell]) =>
                 cell.x + (sprites.get(key).flapped ? tileWidth : glyphWidth))));
+            const bounds = animationBounds();
             let scale = 1;
             if (preview) {
                 scale = Math.min(1, 952 / contentWidth, 132 / tileHeight);
@@ -704,17 +712,18 @@
                 root.setAttribute('height', '180');
                 root.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                 layer.setAttribute('transform', `translate(24 ${(180 - tileHeight * scale) / 2}) scale(${scale})`);
+                alignmentCenter = (500 - 24) / scale;
             } else {
-                const bounds = animationBounds();
                 const width = bounds.right - bounds.left;
                 const height = bounds.bottom - bounds.top;
                 intrinsicSize = {width, height};
                 root.setAttribute('viewBox', `${bounds.left} ${bounds.top} ${width} ${height}`);
                 root.setAttribute('width', String(width));
                 root.setAttribute('height', String(height));
-                root.setAttribute('preserveAspectRatio', 'xMinYMin meet');
                 layer.removeAttribute('transform');
+                alignmentCenter = (bounds.left + bounds.right) / 2;
             }
+            applyAlignmentMode();
             root.dataset.fitScale = String(scale);
             root.dataset.contentWidth = String(contentWidth);
             fallback.setAttribute('visibility', 'hidden');
@@ -725,7 +734,7 @@
             const bounds = {left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity};
             const measure = text('', layer);
             const glyphs = new Map();
-            function include(key, character, x) {
+            function boxFor(key, character) {
                 let box;
                 if (sprites.get(key).flapped) box = {x: 0, y: 0, width: tileWidth, height: tileHeight};
                 else {
@@ -736,6 +745,21 @@
                     }
                     box = glyphs.get(character);
                 }
+                return box;
+            }
+            // Cache stable layout footprints once. Fading faces and the i's
+            // invisible side-change must not make the entire logo jump sideways.
+            modelBounds = models.map(model => {
+                let left = Infinity, right = -Infinity;
+                for (const [key, cell] of model) {
+                    const box = boxFor(key, cell.character);
+                    left = Math.min(left, cell.x + box.x);
+                    right = Math.max(right, cell.x + box.x + box.width);
+                }
+                return {left, right};
+            });
+            function include(key, character, x) {
+                const box = boxFor(key, character);
                 bounds.left = Math.min(bounds.left, x + box.x);
                 bounds.right = Math.max(bounds.right, x + box.x + box.width);
                 bounds.top = Math.min(bounds.top, box.y);
@@ -773,6 +797,53 @@
             return bounds;
         }
 
+        function applyAlignmentMode() {
+            root.dataset.alignment = config.alignment;
+            if (!preview) root.setAttribute('preserveAspectRatio',
+                config.alignment === 'center' ? 'xMidYMin meet' : 'xMinYMin meet');
+        }
+
+        function alignmentBoundsAt(time) {
+            const interpolate = (from, to, progress) => ({
+                left: mix(from.left, to.left, progress), right: mix(from.right, to.right, progress),
+            });
+            if (markVariant || (config.loop && time >= duration) || (hasCollapse && time >= collapseEnd)) {
+                return modelBounds[0];
+            }
+            const returning = sampleReturn(time);
+            if (returning) {
+                // The terminal e follows the same two-stage compact→initial
+                // path as the existing return. Include the leading i's place
+                // throughout its fade rather than measuring its painted pixels.
+                const compact = {
+                    left: modelBounds[0].left,
+                    right: modelBounds[0].right - (flapAdvance - tileWidth),
+                };
+                return returning.phase === 'text'
+                    ? interpolate(modelBounds[count], compact, ease(returning.progress))
+                    : interpolate(compact, modelBounds[0], ease(returning.progress));
+            }
+            const {step, progress, eased} = sample(time);
+            if (variant === 3) {
+                // This draft fades whole stationary cards, so occupied width
+                // changes in steps. Centre every present card without clipping
+                // an entering/retiring outer card or changing its original motion.
+                const before = modelBounds[step], after = modelBounds[Math.min(lastModelStep, step + 1)];
+                return progress > 0 ? {
+                    left: Math.min(before.left, after.left), right: Math.max(before.right, after.right),
+                } : before;
+            }
+            const movement = swapVariant && step === count - 1
+                ? ease(clamp((progress - flagTravelDelay) / (1 - flagTravelDelay), 0, 1)) : eased;
+            return interpolate(modelBounds[step], modelBounds[Math.min(lastModelStep, step + 1)], movement);
+        }
+
+        function alignArtwork(time) {
+            const bounds = alignmentBoundsAt(time);
+            const offset = config.alignment === 'center' ? alignmentCenter - (bounds.left + bounds.right) / 2 : 0;
+            artwork.setAttribute('transform', `translate(${offset} 0)`);
+        }
+
         function currentTime() {
             if (!playing) return position;
             const elapsed = originTime + Math.max(0, clock() - startedAt);
@@ -798,6 +869,11 @@
         }
 
         function render(time) {
+            renderPose(time);
+            alignArtwork(time);
+        }
+
+        function renderPose(time) {
             if (markVariant) {
                 renderCountdown(0);
                 return;
@@ -1146,6 +1222,19 @@
         }
 
         function configure(next = {}, options = {}) {
+            // The editor sends the whole form. A placement-only edit must not
+            // rebuild sprites, reset clocks or interrupt a country-flag fold.
+            const colorEdits = Array.isArray(options.editedColors) ? options.editedColors : Object.keys(next);
+            const alignmentOnly = Object.hasOwn(next, 'alignment')
+                && !colorEdits.some(key => Object.hasOwn(automaticColors, key))
+                && Object.keys(next).every(key => key === 'alignment' || next[key] === config[key]);
+            if (alignmentOnly) {
+                if (['left', 'center'].includes(next.alignment)) config.alignment = next.alignment;
+                applyAlignmentMode();
+                render(currentTime());
+                publish();
+                return;
+            }
             // The reference sends its whole form, plus explicit edit intent.
             // Existing direct callers supplying a colour still make an override.
             const editedColors = Array.isArray(options.editedColors) ? options.editedColors : Object.keys(next);
@@ -1180,6 +1269,7 @@
                 easing: typeof next.easing === 'string' && easingFor(next.easing) ? next.easing : config.easing,
                 fontSize: numeric(next.fontSize ?? config.fontSize, 12, 96, config.fontSize),
                 characterSpacing: numeric(next.characterSpacing ?? config.characterSpacing, 0, 8, config.characterSpacing),
+                alignment: ['left', 'center'].includes(next.alignment) ? next.alignment : config.alignment,
                 flapWidth: numeric(next.flapWidth ?? config.flapWidth, 0.6, 2, config.flapWidth),
                 flapHeight: numeric(next.flapHeight ?? config.flapHeight, 1, 2.5, config.flapHeight),
                 flapGap: numeric(next.flapGap ?? config.flapGap, 0, 0.5, config.flapGap),
